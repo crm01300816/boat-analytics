@@ -42,6 +42,8 @@ export function aggregateLocal(records, racers, venue) {
   const ids = new Set(racers.map(e => e.id));
   const table = Object.fromEntries([...ids].map(id => [id, { frames: Array.from({ length: 6 }, blank), escape: blank() }]));
   for (const { card, result } of records) {
+    // Results CSV can spell '逃　げ' with an ideographic space.
+    const finishMove = String(result['決まり手'] || '').replace(/[\s\u3000]/g, '');
     const code = String(card['レース場コード'] || card['レースコード']?.slice(8, 10)).padStart(2, '0');
     if (code !== String(venue).padStart(2, '0')) continue;
     const first = Number(result['1着_艇番']), second = Number(result['2着_艇番']), third = Number(result['3着_艇番']);
@@ -57,12 +59,12 @@ export function aggregateLocal(records, racers, venue) {
       const course = [1,2,3,4,5,6].find(k => Number(result[`${k}コース_艇番`]) === lane);
       if (course === 1) {
         obj.escape.course1Starts++;
-        if (first === lane && result['決まり手'] === '逃げ') obj.escape.escape++;
+        if (first === lane && finishMove === '逃げ') obj.escape.escape++;
       }
       if (course === 2) {
         obj.escape.course2Starts++;
         const firstCourse = Number(result['1コース_艇番']);
-        if (first === firstCourse && result['決まり手'] === '逃げ') obj.escape.allowEscape++;
+        if (first === firstCourse && finishMove === '逃げ') obj.escape.allowEscape++;
       }
     }
   }
@@ -93,7 +95,9 @@ export function rateRacers(race, localStats = null) {
   const exhib = race.previews?.tkz || {};
   const stt = race.previews?.stt || {};
   const entries = race.entries.map(e => ({ ...e, exhibition: numeric(exhib[`艇${e.lane}_展示タイム`]),
-    demoST: numeric(stt[`艇${e.lane}_スタート展示`]), course: numeric(stt[`艇${e.lane}_コース`]) }));
+    // Negative demonstration ST means a start before the zero line. Do not reward it as the 'fastest'.
+    demoST: (() => { const t = numeric(stt[`艇${e.lane}_スタート展示`]); return t !== null && t >= 0 && t <= 0.35 ? t : null; })(),
+    course: numeric(stt[`艇${e.lane}_コース`]) }));
   const expoMap = normalizeAcross(entries, 'exhibition', true);
   const startMap = normalizeAcross(entries, 'demoST', true);
   return entries.map(e => {
@@ -102,6 +106,15 @@ export function rateRacers(race, localStats = null) {
     const fr2 = rate(fr.first + fr.second, fr.starts);
     const confidence = fr.starts / (fr.starts + 18);
     const frameLocalNormalized = fr2 == null ? null : 50 + (fr2 - 50) * confidence;
+    // When locally collected records exist, shrink small-sample escape / allow-escape rates.
+    // Frame-specific results remain separate from actual entry-course results.
+    const actualCourse = e.course != null && e.course >= 1 && e.course <= 6 ? e.course : e.lane;
+    const cs = local?.escape;
+    const localCourseSignal = actualCourse === 1 && cs?.course1Starts >= 5
+      ? 50 + ((cs.escape / cs.course1Starts) * 100 - 50) * (cs.course1Starts / (cs.course1Starts + 35))
+      : actualCourse === 2 && cs?.course2Starts >= 5
+        ? 50 + (50 - (cs.allowEscape / cs.course2Starts) * 100) * (cs.course2Starts / (cs.course2Starts + 35))
+        : null;
     const features = [
       ['全国勝率', normalizedWin(e.win), .16], ['全国2連率', e.n2, .12],
       ['全国3連率', e.n3, .04], ['当地勝率', normalizedWin(e.localWin), .10],
@@ -110,6 +123,7 @@ export function rateRacers(race, localStats = null) {
       ['ボート2連率', e.b2, .025], ['平均ST', projectedST(e.st), .07],
       ['枠番別ST', projectedST(e.frameST), .035], ['同枠直近10走', recentScore(e.recent), .05],
       ['当地同枠2連率', frameLocalNormalized, .06],
+      ['当地実進入コース傾向', localCourseSignal, .035],
       ['展示タイム', expoMap?.[e.lane], .05], ['展示ST', startMap?.[e.lane], .03]
     ];
     const active = features.filter(([,v]) => v != null && Number.isFinite(v));
@@ -132,10 +146,18 @@ const COMBOS = allTrifectas();
 
 export function trifectaProbabilities(racers) {
   if (racers.length !== 6 || racers.some(x => x.score == null || !x.isComplete)) return null;
-  // Plackett-Luce ranking likelihood with explicitly heuristic strength and lane prior.
-  // The course advantage is NOT inferred from a verified historical model.
-  const lanePrior = [1.55,1.04,1,0.92,0.86,0.79];
-  const strength = racers.map((r, i) => Math.exp((r.score - 50) / 23) * lanePrior[i]);
+  // Lane prior is deliberately kept conservative: strengthening it without
+  // cross-date validation worsened ordered-finish log loss on the sampled archive.
+  // Use demonstrated entry course ONLY if all six courses form a valid permutation.
+  // Otherwise fall back to frame; never guess a course from a missing field.
+  const coursePrior = [1.55, 1.04, 1, 0.92, 0.86, 0.79];
+  const actualCourses = racers.map(r => r.course);
+  const hasValidEntry = actualCourses.every(c => Number.isInteger(c) && c >= 1 && c <= 6)
+    && new Set(actualCourses).size === 6;
+  const strength = racers.map((r, i) => {
+    const courseIndex = hasValidEntry ? r.course - 1 : i;
+    return Math.exp((r.score - 50) / 23) * coursePrior[courseIndex];
+  });
   const total = strength.reduce((a,b) => a+b, 0);
   const items = COMBOS.map(lanes => {
     const [a,b,c] = lanes.map(x => x-1);
