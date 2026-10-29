@@ -1,0 +1,11 @@
+{
+  "name": "boat-analytics-codex",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "No-build, no-credits Japanese boat racing browser analytics",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "dev": "python3 -m http.server 8080"
+  }
+}
