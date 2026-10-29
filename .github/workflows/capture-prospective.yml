@@ -1,0 +1,29 @@
+name: Freeze prospective BOATRACE picks before deadline
+
+on:
+  schedule:
+    # 09:00, 12:00, 15:00, 18:00 JST
+    - cron: '0 0,3,6,9 * * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/capture-prospective.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: boat-daily-trend-history
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check model and date handling
+        run: node --test tests
