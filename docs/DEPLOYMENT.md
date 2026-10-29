@@ -1,7 +1,9 @@
 # GitHub Pagesへの公開
 
 環境のPublishは開発環境の保存です。アプリの公開にはGitHub側の操作が必要です。
-この変更ではGitHubへのpushやPages設定の変更をまだ実行していません。
+2026-10-29にmainへ反映し、テストとPagesデプロイの成功を確認しました。公開URL: https://crm01300816.github.io/boat-analytics/
+検証した実行: https://github.com/crm01300816/boat-analytics/actions/runs/40807042818
+既存のブランチ公開も有効なため、以下の手順3でGitHub Actionsに統一すると二重デプロイを防げます。
 
 1. ローカルで `node --test tests/*.test.mjs`、`node scripts/build-site.mjs` を実行します。
 2. 今回の追加ファイルをGitHubの `crm01300816/boat-analytics` のmainへ反映します。通常はブランチとPRでレビューしてマージします。
@@ -20,4 +22,4 @@ Actionsは既存機能と評価処理のテスト後、`_site` の5ファイル�
 - 外部CSVが失敗する場合: 実機の開発者ツールでHTTP status/CORSを確認します。主配信元は `boatracecsv.github.io`、代替は `raw.githubusercontent.com` です。未配信のレース情報は架空の数値で補いません。
 - クラウドから公開状況を調べるには、ネットワーク許可に `api.github.com` と `crm01300816.github.io` が必要です。Git読取権限だけではPages設定のAPI権限は証明できません。既存認証で再試行し、認証が必要ならGitHubの接続設定で許可してください。トークンをチャットへ貼らないでください。
 
-2026-10-29の確認では主CSV配信元の接続は復旧しました。一方、GitHub APIと公開サイトの接続はクラウドの通信ポリシーにより403で、Pages設定と公開URLは未確認です。
+2026-10-29の確認では主CSV配信元の接続は復旧しました。GitHubの公開Actions画面でデプロイ成功と公開URLを確認できました。一方、GitHub APIと公開サイトの直接接続はクラウドの通信ポリシーにより403です。このためPagesのSource設定変更と公開サイトへの直接HTTP・実機確認は未実施です。スマホからのアクセスにクラウドの通信許可変更は不要です。
