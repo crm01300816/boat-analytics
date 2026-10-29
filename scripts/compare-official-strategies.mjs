@@ -73,7 +73,7 @@ export function predictions(race,kind,count){
   return topCombinations(entries,kind,count);
 }
 function dailyRow(date,venue,kind,count,threshold){
-  return {date,split:splitOf(date),strategy:kind,count,threshold,eligible:0,purchased:0,hits:0,stakes:0,payout:0,skipped:0};
+  return {date,split:splitOf(date),strategy:kind,count,threshold,eligible:0,purchased:0,hits:0,stakes:0,payout:0,skipped:0,venues:{}};
 }
 export function evaluateMonth(data){
   if(!Array.isArray(data.days)||!Array.isArray(data.races))throw new Error('Bad B/K month schema');
@@ -101,7 +101,7 @@ export function evaluateMonth(data){
         if(!map.has(key))map.set(key,dailyRow(date,race.venue,kind,count,threshold));
         const rec=map.get(key);rec.eligible++;
         if(threshold!==null&&confidence<threshold){rec.skipped++;continue;}
-        rec.purchased++;rec.stakes+=1000;
+        rec.purchased++;rec.stakes+=1000;rec.venues[String(race.venue)]=(rec.venues[String(race.venue)]||0)+1;
         const match=picks.find(p=>p.combo===win);
         if(match){rec.hits++;rec.payout+=payout*match.stake/100;}
       }
