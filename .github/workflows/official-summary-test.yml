@@ -1,0 +1,45 @@
+name: Verify official three-year summary combiner
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/official-summary-test.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate aggregate math and missing-month detection
+        run: |
+          mkdir -p monthly
+          python3 - <<'PY'
+          import json
+          sample={"parsedDaySummary":[{"date":"2023-10-29","B":{"race_headers":2},"joined":1}],
+                  "racesWithSixEntriesAndPayout":1,"statistics":{}}
+          for c in (3,5,7,10):
+              sample["statistics"][str(c)]={"count":c,"analyzed":1,"hits":1,"stakes":1000,
+                "provisionalPayout":1500,"omitted":0,"hitRate":1,"provisionalRoi":1.5}
+          with open('monthly/official-2023-10.json','w') as f:json.dump(sample,f)
+          PY
+          node scripts/merge-official-months.mjs monthly output
+          node --input-type=module - <<'JS'
+          import {readFileSync} from 'node:fs';
+          import {strict as assert} from 'node:assert';
+          const r=JSON.parse(readFileSync('output/official-three-year-exploratory.json','utf8'));
+          assert.equal(r.status,'incomplete');
+          assert.equal(r.expectedMonths,37);
+          assert.equal(r.monthsRead,1);
+          assert.equal(r.racesAnalyzed,1);
+          assert.equal(r.statistics[7].provisionalRoi,1.5);
+          assert.equal(r.missingMonths.includes('2023-11'),true);
+          assert.equal(r.missingDates.includes('2026-10-28'),true);
+          console.log('AGGREGATOR_SANITY_OK');
+          JS
