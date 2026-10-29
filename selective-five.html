@@ -1,0 +1,39 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>厳選5点 | BOAT ANALYTICS</title><style>body{margin:0;background:#091627;color:#eaf2ff;font-family:system-ui,sans-serif}main{max-width:960px;margin:auto;padding:20px}h1{font-size:25px}.muted{color:#a9bed1}.panel{background:#13263d;border:1px solid #2a4560;border-radius:16px;padding:18px;margin:16px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.card{background:#1a3049;border-radius:12px;padding:15px}button,input,select{font:inherit;padding:10px;border-radius:9px;border:1px solid #45617a;background:#19344f;color:white}button{cursor:pointer}button:disabled{opacity:.45}.yes{color:#7fe3a9}.no{color:#d1a8a8}.combo{font-size:24px;font-weight:800;letter-spacing:2px}.tag{font-size:12px;color:#b9cde0}.stat{font-size:25px;font-weight:800}a{color:#8ad2ff}</style></head><body><main><p><a href="./index.html">← BOAT ANALYTICSに戻る</a></p><h1>厳選5点予想 <span class="tag">過去検証方式</span></h1><p class="muted">2023〜2026年の公式B/K過去検証で比較した「厳選5点」の条件と買い目を表示。締切前に取得したデータのみで使ってください。</p><section class="grid"><div class="panel"><div class="tag">過去テスト 暫定回収率</div><div class="stat">80.42%</div></div><div class="panel"><div class="tag">購入対象レースの的中率</div><div class="stat">35.91%</div></div><div class="panel"><div class="tag">購入対象</div><div class="stat">5,956 / 26,064R</div></div></section><div class="panel"><label>開催日 <input id="date" type="date"></label> <button id="load">レースを取得</button><p id="status" class="muted">取得後、条件を満たすレースだけ買い目を表示します。</p></div><div id="results" class="grid"></div><p class="muted">注意：信頼度0.40以上が購入条件。1レース1,000円、5点に配分。過去の払戻監査は未完了。締切済みレースの表示は検証用であり事前予想ではありません。公開CSVの取得状況によって表示できない場合があります。結果や確定オッズは選定に使用しません。</p></main><script type="module">
+import {fetchCsv,jstToday,venueName} from './csv.js';
+import {createRaceList,makePicks} from './analytics.js';
+const $=id=>document.getElementById(id), clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+$('date').value=jstToday();
+function confidence(r){
+ const es=[...r.entries].sort((a,b)=>Number(a.lane)-Number(b.lane));
+ if(es.length!==6||es.some((e,i)=>Number(e.lane)!==i+1||['win','n2','localWin','l2','m2'].some(k=>!Number.isFinite(Number(e[k])))))return null;
+ const priors=[2.05,1.02,.94,.87,.81,.75];
+ const strengths=es.map((e,i)=>{const score=.28*clamp(Number(e.win)/10,0,1)+.23*clamp(Number(e.n2)/100,0,1)+.18*clamp(Number(e.localWin)/10,0,1)+.15*clamp(Number(e.l2)/100,0,1)+.16*clamp(Number(e.m2)/100,0,1);return Math.exp((score-.5)*3.5)*priors[i]});
+ return strengths[0]/strengths.reduce((a,b)=>a+b,0);
+}
+$('load').onclick=async()=>{
+ $('load').disabled=true;$('results').replaceChildren();$('status').textContent='出走表を取得中…';
+ try{
+  const date=$('date').value;
+  const [cards,titles,wakus]=await Promise.all([fetchCsv('programs/race_cards',date),fetchCsv('programs/title',date),fetchCsv('programs/waku10',date).catch(()=>[])]);
+  const races=createRaceList(cards,titles,wakus,{});
+  let selected=0;
+  for(const r of races){
+   const c=confidence(r);if(c===null||c<.40||r.canceled)continue;
+   const pred=makePicks({id:r.id,venue:r.venue,number:r.number,entries:r.entries,previews:{}},null,{mode:'balance',count:5});
+   if(pred.picks?.length!==5||pred.picks.reduce((s,p)=>s+p.stake,0)!==1000)continue;
+   selected++;
+   const box=document.createElement('article');box.className='card';
+   const deadline=String(r.deadline||'');
+   const deadlineLabel=deadline?'締切表示：'+deadline:'締切未確認';
+   const title=document.createElement('h2');title.textContent=venueName(r.venue)+' '+r.number+'R';
+   const note=document.createElement('p');note.className='muted';note.textContent='信頼度 '+(c*100).toFixed(1)+'% ・ '+deadlineLabel;
+   box.append(title,note);
+   for(const p of pred.picks){const row=document.createElement('p');row.className='combo';row.textContent=p.combo+'　'+p.stake.toLocaleString()+'円';box.append(row)}
+   const foot=document.createElement('p');foot.className='tag';foot.textContent='5点・合計1,000円｜参考予想（購入推奨ではありません）';box.append(foot);
+   $('results').append(box);
+  }
+  $('status').textContent=races.length+'レース中、条件を満たす '+selected+'レースを表示。条件に合わないレースは購入対象外。';
+ }catch(e){$('status').textContent='取得できませんでした：'+e.message}
+ finally{$('load').disabled=false}
+};
+</script></body></html>
