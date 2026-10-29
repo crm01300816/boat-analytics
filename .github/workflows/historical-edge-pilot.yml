@@ -1,0 +1,43 @@
+name: Historical B/K edge scan pilot (one day)
+on:
+  workflow_dispatch:
+  push:
+    branches: [experiment/historical-edge-search-20261030]
+    paths: [.github/workflows/historical-edge-pilot.yml]
+permissions:
+  contents: read
+concurrency:
+  group: historical-edge-pilot
+  cancel-in-progress: false
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Tests
+        run: node --test tests/*.test.mjs
+      - name: LZH tool
+        run: |
+          if ! command -v 7z >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq 7zip
+          fi
+      - name: Collect one historical day and aggregate
+        run: |
+          python3 scripts/official-month-collector.py --start 2025-01-15 --end 2025-01-15 --out .local/edge-input.json
+          node scripts/historical-edge-scan.mjs .local/edge-input.json edge-aggregate.json
+      - name: Erase private source records
+        if: always()
+        run: rm -f .local/edge-input.json /tmp/bkm-*.lzh
+      - name: Upload aggregate only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-edge-pilot-aggregate
+          path: edge-aggregate.json
+          if-no-files-found: warn
+          retention-days: 14
