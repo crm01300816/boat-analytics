@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "description": "Daily summary of published BOATRACE result/weather observations; not a prediction accuracy or training record",
+  "sources": [
+    "BoatraceCSV results/realtime",
+    "BoatraceCSV results/payouts"
+  ],
+  "days": []
+}
