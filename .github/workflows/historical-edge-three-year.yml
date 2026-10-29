@@ -1,0 +1,150 @@
+name: Historical B/K three-year edge scan
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - experiment/historical-edge-search-20261030
+    paths:
+      - .github/workflows/historical-edge-three-year.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: historical-edge-three-year-20261030
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test tests/*.test.mjs
+
+  month:
+    needs: [tests]
+    name: Edge archives ${{ matrix.month }}
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        month:
+          - "2023-10"
+          - "2023-11"
+          - "2023-12"
+          - "2024-01"
+          - "2024-02"
+          - "2024-03"
+          - "2024-04"
+          - "2024-05"
+          - "2024-06"
+          - "2024-07"
+          - "2024-08"
+          - "2024-09"
+          - "2024-10"
+          - "2024-11"
+          - "2024-12"
+          - "2025-01"
+          - "2025-02"
+          - "2025-03"
+          - "2025-04"
+          - "2025-05"
+          - "2025-06"
+          - "2025-07"
+          - "2025-08"
+          - "2025-09"
+          - "2025-10"
+          - "2025-11"
+          - "2025-12"
+          - "2026-01"
+          - "2026-02"
+          - "2026-03"
+          - "2026-04"
+          - "2026-05"
+          - "2026-06"
+          - "2026-07"
+          - "2026-08"
+          - "2026-09"
+          - "2026-10"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install LZH extractor
+        run: |
+          if ! command -v 7z >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq 7zip
+          fi
+      - name: Define bounded month dates
+        id: bounds
+        env:
+          MONTH: ${{ matrix.month }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import calendar,datetime,os
+          year,month=map(int,os.environ['MONTH'].split('-'))
+          start=max(datetime.date(year,month,1),datetime.date(2023,10,29))
+          end=min(datetime.date(year,month,calendar.monthrange(year,month)[1]),datetime.date(2026,10,28))
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write('start='+start.isoformat()+'\n')
+              f.write('end='+end.isoformat()+'\n')
+          PY
+      - name: Collect official B/K privately and compare pre-race strategies
+        run: |
+          python3 scripts/official-month-collector.py \
+            --start "${{ steps.bounds.outputs.start }}" \
+            --end "${{ steps.bounds.outputs.end }}" \
+            --out ".local/official-${{ matrix.month }}.json"
+          node scripts/historical-edge-scan.mjs \
+            ".local/official-${{ matrix.month }}.json" \
+            "edge-${{ matrix.month }}.json"
+      - name: Erase source race-level rows and archive files
+        if: always()
+        run: |
+          rm -f ".local/official-${{ matrix.month }}.json"
+          rm -f /tmp/bkm-*.lzh
+      - name: Upload daily aggregate metrics only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: edge-month-${{ matrix.month }}
+          path: edge-${{ matrix.month }}.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  combine:
+    needs: [month]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: edge-month-*
+          path: collected-edges
+          merge-multiple: true
+      - name: Validate coverage, baseline equivalence and split reports
+        run: |
+          node scripts/merge-historical-edge.mjs collected-edges edge-results
+          cat edge-results/historical-edge-summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload isolated comparison report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-edge-three-year-report
+          path: edge-results/
+          if-no-files-found: warn
+          retention-days: 30
