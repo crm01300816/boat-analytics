@@ -4,7 +4,7 @@ import { backtestPage, loadBacktest, setBacktestCount } from './backtest-view.js
 import { resultsPage } from './race-results.js';
 
 const MENU=[['races','▦','レース分析'],['results','≋','結果・水面'],['local','◎','当地・枠別'],['predict','✧','3連単1,000円'],['backtest','◷','過去検証'],['sources','▤','データ・算出法']];
-const s={date:jstToday(),tab:'races',venue:'',raceId:'',races:[],loading:true,error:'',availability:{},at:'',history:null,historyBusy:false,histProgress:'',histError:'',historyDays:60,mode:'balance',count:7,controller:null,resultRows:[],payoutRows:[],daily:null,dailyLoading:false,dailyLoaded:false,dailyError:''};
+const s={date:jstToday(),tab:'races',venue:'',raceId:'',races:[],loading:true,error:'',availability:{},at:'',history:null,historyBusy:false,histProgress:'',histError:'',historyDays:60,mode:'balance',count:7,controller:null,resultRows:[],payoutRows:[],daily:null,prospective:null,dailyLoading:false,dailyLoaded:false,dailyError:''};
 const $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(v,d=1)=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':Number(v).toFixed(d);
@@ -41,7 +41,7 @@ function render() {
   }
   let page='';
   if(s.tab==='races')page=overview();
-  else if(s.tab==='results')page=headline('レース結果・水面','3連単払戻・着順・決まり手・波の高さ・風速を当日と過去日で確認。')+resultsPage({date:s.date,races:s.races,results:s.resultRows,payouts:s.payoutRows,venue:s.venue,raceId:s.raceId,daily:s.daily,dailyError:s.dailyError});
+  else if(s.tab==='results')page=headline('レース結果・水面','3連単払戻・着順・決まり手・波の高さ・風速を当日と過去日で確認。')+resultsPage({date:s.date,races:s.races,results:s.resultRows,payouts:s.payoutRows,venue:s.venue,raceId:s.raceId,daily:s.daily,dailyError:s.dailyError,prospective:s.prospective});
   else if(s.tab==='local')page=localPage();
   else if(s.tab==='predict')page=picksPage();
   else page=sourcesPage();
@@ -56,6 +56,13 @@ async function loadDailyTrends(){
     const data=await response.json();
     if(!Array.isArray(data.days))throw new Error('日別集計の形式が不正');
     s.daily=data;s.dailyLoaded=true;s.dailyError='';
+    try{
+      const future=await fetch('./public/prospective-summary.json',{cache:'no-store'});
+      if(future.ok){
+        const parsed=await future.json();
+        if(Array.isArray(parsed.days))s.prospective=parsed;
+      }
+    }catch{ /* Future-score display is optional; daily results remain available. */ }
   }catch(e){s.dailyError=e.message||String(e);}
   finally{s.dailyLoading=false;if(s.tab==='results')render();}
 }
