@@ -1,4 +1,4 @@
-name: Evaluate one day from official B and K archives
+name: Evaluate seven dates from official B and K archives
 on:
   workflow_dispatch:
   push:
@@ -23,9 +23,9 @@ jobs:
             sudo apt-get update -qq
             sudo apt-get install -y -qq 7zip
           fi
-      - name: Extract one historical day and match entrants and payouts
+      - name: Join seven days of historical entrants and payouts
         run: |
-          python3 scripts/official-backtest-pilot.py --end 2026-10-28 --days 1 --out .local/official-pilot-input.json
+          python3 scripts/official-backtest-pilot.py --end 2026-10-28 --days 7 --out .local/official-pilot-input.json
       - name: Score current model against actual 3連単 payouts
         run: |
           node --test tests/*.test.mjs
@@ -37,7 +37,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: one-day-official-3rentan-model-evaluation
+          name: seven-day-official-3rentan-model-evaluation
           path: official-backtest-pilot-report.json
           retention-days: 7
           if-no-files-found: warn
