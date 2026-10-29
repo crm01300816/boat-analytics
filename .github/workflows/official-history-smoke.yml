@@ -1,0 +1,45 @@
+name: Smoke test official three-year collection
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/official-history-smoke.yml
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install LZH extractor
+        run: |
+          if ! command -v 7z >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq 7zip
+          fi
+      - name: Collect 2023 October sample
+        run: |
+          python3 scripts/official-month-collector.py \
+            --start 2023-10-29 --end 2023-10-31 \
+            --out .local/official-2023-10.json
+      - name: Evaluate the frozen app model
+        run: |
+          node --test tests/*.test.mjs
+          node scripts/official-backtest-pilot.mjs \
+            .local/official-2023-10.json official-2023-10-smoke-report.json
+      - name: Remove transient source records
+        if: always()
+        run: rm -rf .local/official-2023-10.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: 2023-10-smoke-aggregate
+          path: official-2023-10-smoke-report.json
+          if-no-files-found: warn
+          retention-days: 14
