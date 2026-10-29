@@ -1,0 +1,142 @@
+name: Three-year official BOATRACE B/K exploratory backtest
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/official-three-year.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: official-three-year-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  month:
+    name: Official archives ${{ matrix.month }}
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        month:
+          - "2023-10"
+          - "2023-11"
+          - "2023-12"
+          - "2024-01"
+          - "2024-02"
+          - "2024-03"
+          - "2024-04"
+          - "2024-05"
+          - "2024-06"
+          - "2024-07"
+          - "2024-08"
+          - "2024-09"
+          - "2024-10"
+          - "2024-11"
+          - "2024-12"
+          - "2025-01"
+          - "2025-02"
+          - "2025-03"
+          - "2025-04"
+          - "2025-05"
+          - "2025-06"
+          - "2025-07"
+          - "2025-08"
+          - "2025-09"
+          - "2025-10"
+          - "2025-11"
+          - "2025-12"
+          - "2026-01"
+          - "2026-02"
+          - "2026-03"
+          - "2026-04"
+          - "2026-05"
+          - "2026-06"
+          - "2026-07"
+          - "2026-08"
+          - "2026-09"
+          - "2026-10"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install LZH extractor
+        run: |
+          if ! command -v 7z >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq 7zip
+          fi
+      - name: Define month bounds inside three-year window
+        id: bounds
+        env:
+          MONTH: ${{ matrix.month }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import calendar, datetime, os
+          year,month=map(int,os.environ['MONTH'].split('-'))
+          start=max(datetime.date(year,month,1),datetime.date(2023,10,29))
+          end=min(datetime.date(year,month,calendar.monthrange(year,month)[1]),datetime.date(2026,10,28))
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write('start='+start.isoformat()+'\n')
+              f.write('end='+end.isoformat()+'\n')
+          print('Monthly bounds:',start,end)
+          PY
+      - name: Download, decode and join B/K in date order
+        run: |
+          python3 scripts/official-month-collector.py \
+            --start "${{ steps.bounds.outputs.start }}" \
+            --end "${{ steps.bounds.outputs.end }}" \
+            --out ".local/official-${{ matrix.month }}.json"
+      - name: Evaluate the frozen current model
+        run: |
+          node --test tests/*.test.mjs
+          node scripts/official-backtest-pilot.mjs \
+            ".local/official-${{ matrix.month }}.json" \
+            "official-${{ matrix.month }}.json"
+      - name: Erase race-level data and archive files from job
+        if: always()
+        run: |
+          rm -f ".local/official-${{ matrix.month }}.json"
+          rm -f /tmp/bkm-*.lzh
+      - name: Upload metadata and aggregate results only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-month-${{ matrix.month }}
+          path: official-${{ matrix.month }}.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  combine:
+    name: Merge 37 monthly exploratory scores
+    needs: [month]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: official-month-*
+          path: collected-months
+          merge-multiple: true
+      - name: Audit missing months and combine counts
+        run: |
+          node scripts/merge-official-months.mjs collected-months combined-results
+          cat combined-results/official-three-year-exploratory.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload final aggregate (no race-level data)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-three-year-summary
+          path: combined-results/
+          if-no-files-found: warn
+          retention-days: 30
