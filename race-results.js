@@ -6,7 +6,7 @@ const val=(x,unit='')=>has(x)?esc(x)+unit:'—';
 const yen=x=>{const n=numeric(x);return n===null?'—':new Intl.NumberFormat('ja-JP').format(n)+'円';};
 const formatPct=x=>x==null?'—':Number(x).toFixed(1)+'%';
 
-export function resultsPage({date,races=[],results=[],payouts=[],venue='',raceId='',daily=null,dailyError=''}) {
+export function resultsPage({date,races=[],results=[],payouts=[],venue='',raceId='',daily=null,dailyError='',prospective=null}) {
   const rmap=new Map(results.filter(x=>/^\d{12}$/.test(x['レースコード']||'')).map(x=>[x['レースコード'],x]));
   const pmap=new Map(payouts.filter(x=>/^\d{12}$/.test(x['レースコード']||'')).map(x=>[x['レースコード'],x]));
   const all=new Map(races.map(x=>[x.id,{id:x.id,venue:x.venue,number:x.number,race:x}]));
@@ -69,5 +69,13 @@ export function resultsPage({date,races=[],results=[],payouts=[],venue='',raceId
   html+=`<div class="panel"><div class="panel-header"><div><h3>過去の日別結果・水面データ</h3><p>日付を押すとその日のレース結果を確認できます。</p></div><span class="small-pill">${daily?.days?.length||0}日分蓄積</span></div>`;
   if(days.length)html+=`<div class="table-wrap"><table class="data-table result-history-table"><thead><tr><th>開催日</th><th>記録R数</th><th>平均波高</th><th>最大波高</th><th>平均風速</th><th>1号艇1着率</th></tr></thead><tbody>${days.map(x=>`<tr><td><button class="result-day-button" data-history-date="${esc(x.date)}">${esc(x.date)}</button></td><td>${x.results}R</td><td>${x.averageWaveCm==null?'—':x.averageWaveCm+'cm'}</td><td>${x.maxWaveCm==null?'—':x.maxWaveCm+'cm'}</td><td>${x.averageWindMps==null?'—':x.averageWindMps+'m/s'}</td><td>${formatPct(x.winnerOneRate)}</td></tr>`).join('')}</tbody></table></div>`;
   else html+=`<div class="panel-body"><p class="page-description">${dailyError?esc(dailyError):'毎日自動取得する集計履歴はまだ未登録です。最新結果は上の一覧で確認できます。'}</p></div>`;
-  return html+'<div class="footnote">日別データは終了後の集計です。予想精度・回収率の検証とは別に扱い、未公開・中止のレースを補完しません。</div></div>';
+  const recentProspective=Array.isArray(prospective?.days)?prospective.days.slice(-14).reverse():[];
+  html+='<div class="panel"><div class="panel-header"><div><h3>締切前予想の実績検証</h3><p>未来のレースを予想した時刻に買い目を固定し、後日の結果と照合。3連単・各1,000円想定。</p></div></div>';
+  if(recentProspective.length){
+    html+='<div class="table-wrap"><table class="data-table result-history-table"><thead><tr><th>日付</th><th>保存予想</th><th>通常精算</th><th>3点 回収率</th><th>5点 回収率</th><th>7点 回収率</th><th>10点 回収率</th></tr></thead><tbody>'+
+      recentProspective.map(d=>'<tr><td>'+esc(d.date)+'</td><td>'+d.captured+'R</td><td>'+d.settled+'R</td>'+
+      [3,5,7,10].map(k=>'<td>'+formatPct(d.byCount?.[k]?.provisionalRoi==null?null:d.byCount[k].provisionalRoi*100)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+  }else html+='<div class="panel-body"><p class="page-description">締切前に保存した買い目の評価結果は、翌日以降に追加されます。</p></div>';
+  html+='</div>';
+  return html+'<div class="footnote">日別データは終了後の集計。予想精度と回収率は締切前に保存した買い目のみ評価し、返還・特殊決済の監査がない場合は暫定値として扱います。</div></div>';
 }
