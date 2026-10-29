@@ -1,0 +1,44 @@
+name: Audit historical BOATRACE archive samples
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/official-history-spots.yml
+
+permissions:
+  contents: read
+
+jobs:
+  samples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure LZH extraction tool
+        run: |
+          if ! command -v 7z >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq 7zip
+          fi
+      - name: Check one date per year (small pilot, no retries)
+        shell: bash
+        run: |
+          set -u
+          mkdir -p reports
+          total_errors=0
+          for date in 2023-10-29 2024-10-29 2025-10-29; do
+            echo "=== Inspecting $date ==="
+            python3 scripts/probe-official-week.py --end "$date" --days 1 --output "reports/$date.json" || total_errors=$((total_errors+1))
+          done
+          if [ "$total_errors" -ne 0 ]; then
+            echo "One or more years unavailable or extraction failed; check report."
+            exit 1
+          fi
+      - name: Archive only metadata summaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-history-samples
+          path: reports/*.json
+          retention-days: 7
+          if-no-files-found: warn
