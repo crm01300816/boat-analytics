@@ -36,5 +36,5 @@ console.log('DAILY_HISTORY '+JSON.stringify({
   first:merged.days[0]?.date||null,last:merged.days.at(-1)?.date||null,
   errors:failed
 }));
-if(changes.length===0 && !Array.isArray(base.days)?.length)
+if(changes.length===0 && (!Array.isArray(base.days) || base.days.length===0))
   throw new Error('No results retrieved; nothing to store');
