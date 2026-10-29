@@ -11,3 +11,4 @@ for (const file of ['index.html', 'styles.css', 'app.js', 'csv.js', 'analytics.j
 await mkdir('_site/public');
 await copyFile('public/backtest.json','_site/public/backtest.json');
 await copyFile('public/daily-trends.json','_site/public/daily-trends.json');
+await copyFile('public/prospective-summary.json','_site/public/prospective-summary.json');
