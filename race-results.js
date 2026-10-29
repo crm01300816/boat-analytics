@@ -77,5 +77,5 @@ export function resultsPage({date,races=[],results=[],payouts=[],venue='',raceId
       [3,5,7,10].map(k=>'<td>'+formatPct(d.byCount?.[k]?.provisionalRoi==null?null:d.byCount[k].provisionalRoi*100)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
   }else html+='<div class="panel-body"><p class="page-description">締切前に保存した買い目の評価結果は、翌日以降に追加されます。</p></div>';
   html+='</div>';
-  return html+'<div class="footnote">日別データは終了後の集計。予想精度と回収率は締切前に保存した買い目のみ評価し、返還・特殊決済の監査がない場合は暫定値として扱います。</div></div>';
+  return html+'<div class="footnote">日別データは終了後の集計。予想精度と回収率は締切前に保存した買い目のみ評価し、返還・特殊決済の監査がない場合は暫定値として扱います。</div>';
 }
