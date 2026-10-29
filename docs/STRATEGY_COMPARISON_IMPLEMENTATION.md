@@ -21,3 +21,10 @@ Tracking: #3. Baseline: Actions run 40822111071.
 5. Compare against baseline but never mislabel historical holdout as an independent prospective trial.
 
 No backtest results are claimed by this checklist.
+
+## Implementation
+
+The isolated runner, audit and workflow are documented in
+[STRATEGY_COMPARISON_RUNNER.md](STRATEGY_COMPARISON_RUNNER.md). This addition does
+not claim that the final comparison has completed; consult the workflow run and
+the `strategy-comparison-summary` artifact for actual execution status.
