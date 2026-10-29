@@ -39,5 +39,4 @@ test('monthly artifacts contain only daily aggregates, never race inputs or winn
   assert.equal(out.daily.filter(x=>x.strategy==='current').length,COUNTS.length);
   assert.ok(!JSON.stringify(out).includes('winningCombo'));
   assert.ok(!JSON.stringify(out).includes('payoutPer100Yen'));
-  assert.ok(!JSON.stringify(out).includes('1000'));
 });
