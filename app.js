@@ -1,7 +1,8 @@
 import { fetchCsv, shiftDate, jstToday, venueName } from './csv.js';
 import { createRaceList, aggregateLocal, rateRacers, rate, makePicks } from './analytics.js';
+import { backtestPage, loadBacktest, setBacktestCount } from './backtest-view.js';
 
-const MENU=[['races','▦','レース分析'],['local','◎','当地・枠別'],['predict','✧','3連単1,000円'],['sources','▤','データ・算出法']];
+const MENU=[['races','▦','レース分析'],['local','◎','当地・枠別'],['predict','✧','3連単1,000円'],['backtest','◷','過去検証'],['sources','▤','データ・算出法']];
 const s={date:jstToday(),tab:'races',venue:'',raceId:'',races:[],loading:true,error:'',availability:{},at:'',history:null,historyBusy:false,histProgress:'',histError:'',historyDays:60,mode:'balance',count:7,controller:null};
 const $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -10,7 +11,7 @@ const pct=v=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':fmt(v)+'
 const yen=v=>v==null?'—':new Intl.NumberFormat('ja-JP').format(v)+'円';
 const current=()=>s.races.find(r=>r.id===s.raceId)||s.races.find(r=>r.venue===s.venue)||null;
 const currentLocal=()=>{const r=current();return r&&s.history?.venue===r.venue&&s.history?.date===s.date?aggregateLocal(s.history.records,r.entries,r.venue):null;};
-function goto(tab){s.tab=tab;location.hash=tab;render();window.scrollTo(0,0);}
+function goto(tab){s.tab=tab;location.hash=tab;render();if(tab==='backtest')loadBacktest(render);window.scrollTo(0,0);}
 function nav(){return MENU.map(([id,icon,name])=>`<button class="nav-link ${id===s.tab?'active':''}" data-nav="${id}"><span class="nav-icon">${icon}</span>${name}</button>`).join('');}
 function headline(title,subtitle){return `<div class="page-top"><div><div class="page-eyebrow"><span class="dot"></span> BOAT RACE DATA STUDIO</div><h1 class="page-title">${title}</h1><p class="page-description">${subtitle}</p></div><div class="date-status">${s.date===jstToday()?'TODAY':'ARCHIVE'} · ${s.date}</div></div>`;}
 function selectors(){const venues=[...new Set(s.races.map(r=>r.venue))].sort();const races=s.races.filter(r=>r.venue===s.venue);return `<div class="section-head"><div><h2>競艇場を選択</h2><p>開催場から分析対象を選択</p></div><span class="time">${venues.length}場</span></div><div class="venue-list">${venues.map(v=>`<button class="venue ${s.venue===v?'active':''}" data-venue="${v}">${esc(venueName(v))}<small>${s.races.filter(r=>r.venue===v).length}R</small></button>`).join('')}</div><div class="section-head"><div><h2>${esc(venueName(s.venue))} レース一覧</h2><p>1R〜12Rから選択</p></div><span class="time">${races.length}レース</span></div><div class="race-pills">${races.map(r=>`<button class="race-pill ${r.id===s.raceId?'active':''}" data-race="${r.id}"><small>${esc(r.name)}</small><b>${r.number}<span>R</span></b></button>`).join('')}</div>`;}
@@ -31,6 +32,7 @@ function render() {
   $('date-input').max=jstToday();
   $('date-next').disabled=s.date>=jstToday();
   const root=$('app-content');
+  if(s.tab==='backtest'){root.innerHTML=`<div class="content">${backtestPage()}</div>`;return;}
   if(s.loading){root.innerHTML=`<div class="content">${headline('データを取得中','公開CSVを照合しています。')}<div class="panel empty"><h2>レース情報を読み込み中…</h2><p>外部データ取得後に結果を表示します。</p></div></div>`;return;}
   if(s.error&&s.tab!=='sources'){
     root.innerHTML=`<div class="content">${headline('取得できませんでした','実データがなければ予想を出しません。')}<div class="panel empty"><h2>公開CSVの読み込みに失敗しました</h2><p>${esc(s.error)}</p><button class="button" id="retry-load">再取得する</button><p>CSV未公開 / CORS制限 / 接続エラーが考えられます。日付の変更も試してください。</p></div></div>`;
@@ -94,6 +96,7 @@ async function getHistory(){
   render();
 }
 function handleClick(event){
+  if(event.target.closest('#retry-backtest')){loadBacktest(render,true);return;}
   const node=event.target.closest('[data-nav],[data-venue],[data-race],[data-mode],#refresh-btn,#date-prev,#date-next,#copy-bets,#copy-race,#retry-load,#load-history,#stop-history');
   if(!node)return;
   if(node.dataset.nav){goto(node.dataset.nav);return;}
@@ -118,6 +121,7 @@ function handleClick(event){
 }
 function handleChange(event){
   const t=event.target;
+  if(t.id==='backtest-count'){setBacktestCount(t.value);render();return;}
   if(t.id==='date-input'&&/^\d{4}-\d{2}-\d{2}$/.test(t.value)&&t.value<=jstToday()){s.date=t.value;loadDay();}
   if(t.id==='history-days'){s.historyDays=Number(t.value);s.history=null;render();}
   if(t.id==='bet-count'){s.count=Number(t.value);render();}
@@ -128,4 +132,4 @@ document.addEventListener('click',handleClick);
 document.addEventListener('change',handleChange);
 const hash=location.hash.slice(1);
 if(MENU.some(([id])=>id===hash))s.tab=hash;
-render();loadDay();
+render();loadDay();if(s.tab==='backtest')loadBacktest(render);
