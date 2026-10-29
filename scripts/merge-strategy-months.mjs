@@ -68,9 +68,8 @@ const summaries=[];
 for(const strategy of STRATEGIES)for(const count of COUNTS)for(const split of ['train','validation','test']){
   const threshold=strategy==='selective'?thresholds[count].selected:null;
   const rows=group(strategy,count,split,threshold),s=stats(rows);
-  const venues=new Set();
-  // Venue count unavailable from daily-only aggregates: do not invent it.
-  summaries.push({strategy,count,split,threshold,...s,venues:null,
+  const venues=new Set(rows.flatMap(r=>Object.keys(r.venues||{})));
+  summaries.push({strategy,count,split,threshold,...s,venues:venues.size,
     provisionalRoiCI95:bootstrap(rows,123456+count*100+STRATEGIES.indexOf(strategy)*7+['train','validation','test'].indexOf(split)),
     roiOver100:s.provisionalRoi===null?null:s.provisionalRoi>1});
 }
