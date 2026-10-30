@@ -8,6 +8,30 @@ import {DEFAULT_WEIGHTS,modelPage,loadModels,saveModel,deleteModel,verifyCustom}
 const MENU=[['dashboard','◉','今日のナビ'],['races','▦','レース分析'],['results','≋','結果・水面'],['local','◎','当地・枠別'],['predict','✧','3連単1,000円'],['custom','⚙','マイモデル'],['backtest','◷','過去検証'],['sources','▤','データ・算出法']];
 const s={date:jstToday(),tab:'dashboard',venue:'',raceId:'',races:[],loading:true,error:'',availability:{},at:'',history:null,historyBusy:false,histProgress:'',histError:'',historyDays:60,mode:'balance',count:7,controller:null,resultRows:[],payoutRows:[],daily:null,prospective:null,dailyLoading:false,dailyLoaded:false,dailyError:''};
 let customWeights={...DEFAULT_WEIGHTS},customController=null;
+const LIVE_INTERVAL_MS=60000;
+let liveBusy=false,liveTimer=null;
+function exhibitionSignature(races){return JSON.stringify(races.map(r=>[r.id,r.previews?.tkz||null,r.previews?.stt||null]));}
+function liveStatus(){return s.date===jstToday()?`<div class="live-exhibition"><span class="live-dot"></span><div><b>展示情報の自動更新</b><small>${s.liveBusy?'更新確認中…':s.liveAt?'最終確認 '+esc(s.liveAt)+' JST':'初回データ確認待ち'} ／ 60秒間隔</small></div><button type="button" id="live-refresh" ${s.liveBusy?'disabled':''}>今すぐ更新</button></div>`:'';}
+async function refreshExhibition(){
+ if(liveBusy||s.loading||s.date!==jstToday()||document.hidden||!s.races.length)return;
+ liveBusy=true;s.liveBusy=true;
+ const date=s.date,controller=s.controller;
+ const before=exhibitionSignature(s.races);
+ try{
+  const [tkz,stt,sui,od3]=await Promise.allSettled(['previews/tkz','previews/stt','previews/sui','previews/od3'].map(path=>fetchCsv(path,date,controller?.signal)));
+  if(s.date!==date||controller?.signal.aborted)return;
+  const previews={};
+  for(const [key,result] of [['tkz',tkz],['stt',stt],['sui',sui],['od3',od3]])if(result.status==='fulfilled'){previews[key]=new Map(result.value.map(row=>[String(row['レースコード']),row]));s.availability[key]=true;}
+  for(const race of s.races){for(const [key,map] of Object.entries(previews)){const row=map.get(String(race.id));if(row)race.previews[key]=row;}}
+  const changed=before!==exhibitionSignature(s.races);
+  s.liveAt=new Date().toLocaleTimeString('ja-JP',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit'});
+  s.liveChanged=changed;
+  snapshotOdds(s.races,s.date);
+  render();
+ }catch(e){if(!controller?.signal.aborted){s.liveError=e.message||String(e);render();}}
+ finally{liveBusy=false;s.liveBusy=false;const el=document.querySelector('.live-exhibition small');if(el&&s.liveAt)el.textContent='最終確認 '+s.liveAt+' JST ／ 60秒間隔';}
+}
+
 const $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(v,d=1)=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':Number(v).toFixed(d);
@@ -94,7 +118,7 @@ function render() {
   $('date-input').max=jstToday();
   $('date-next').disabled=s.date>=jstToday();
   const root=$('app-content');
-  const dateTabs=recentDateTabs();
+  const dateTabs=recentDateTabs()+liveStatus();
   if(s.tab==='menu'){root.innerHTML=`<div class="content">${menuPage()}</div>`;return;}
   if(s.tab==='backtest'){root.innerHTML=`<div class="content">${dateTabs}${backtestPage()}</div>`;return;}
   if(s.loading){root.innerHTML=`<div class="content">${dateTabs}${headline('データを取得中','公開CSVを照合しています。')}<div class="panel empty"><h2>レース情報を読み込み中…</h2><p>外部データ取得後に結果を表示します。</p></div></div>`;return;}
@@ -212,6 +236,7 @@ async function handleClick(event){
   if(node.dataset.venue){s.venue=node.dataset.venue;s.raceId=s.races.find(r=>r.venue===s.venue)?.id||s.resultRows.find(r=>String(r['レースコード']||'').slice(8,10)===s.venue)?.['レースコード']||'';render();return;}
   if(node.dataset.race){s.raceId=node.dataset.race;render();return;}
   if(node.dataset.mode){s.mode=node.dataset.mode;render();return;}
+  if(node.id==='live-refresh'){refreshExhibition();return;}
   if(node.id==='refresh-btn'||node.id==='retry-load'){loadDay();return;}
   if(node.id==='date-prev'){s.date=shiftDate(s.date,-1);loadDay();return;}
   if(node.id==='date-next'&&s.date<jstToday()){s.date=shiftDate(s.date,1);loadDay();return;}
@@ -245,3 +270,5 @@ if(hash==='menu'||MENU.some(([id])=>id===hash))s.tab=hash;
 render();loadDay();if(s.tab==='backtest')loadBacktest(render);if(s.tab==='results')loadDailyTrends();
 
 setInterval(refreshDeadlineCards,15000);
+setInterval(refreshExhibition,LIVE_INTERVAL_MS);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshExhibition();});
