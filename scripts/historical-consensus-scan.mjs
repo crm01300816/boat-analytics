@@ -35,10 +35,10 @@ export function analyzeConsensus(data){
    }
   }
  }
+ }
  return {schemaVersion:1,scope:'Exploratory retrospective no-odds consensus; NOT an expected-value model; unaudited refunds',start:data.start,end:data.end,excluded,rows:[...rows.values()].map(r=>({...r,hitRate:r.hits/r.purchased,provisionalROI:r.payout/r.stake}))};
 }
 if(process.argv[1]?.endsWith('historical-consensus-scan.mjs')){
  const [input,output]=process.argv.slice(2);if(!input||!output)throw Error('input and output required');
- const report=analyzeConsensus(JSON.parse(await readFile(input,'utf8')));await mkdir(dirname(output),{recursive:true});await writeFile(output,JSON.stringify(report,null,2)+'
-');
+ const report=analyzeConsensus(JSON.parse(await readFile(input,'utf8')));await mkdir(dirname(output),{recursive:true});await writeFile(output,JSON.stringify(report,null,2)+'\n');
 }
