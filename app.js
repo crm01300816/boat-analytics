@@ -207,7 +207,7 @@ async function handleClick(event){
   if(!node)return;
   if(node.dataset.recentDate&&/^\d{4}-\d{2}-\d{2}$/.test(node.dataset.recentDate)&&node.dataset.recentDate<=jstToday()){s.date=node.dataset.recentDate;loadDay();return;}
   if(node.dataset.historyDate&&/^\d{4}-\d{2}-\d{2}$/.test(node.dataset.historyDate)&&node.dataset.historyDate<=jstToday()){s.date=node.dataset.historyDate;loadDay();return;}
-  if(node.dataset.nav){goto(node.dataset.nav);return;}
+  if(node.dataset.nav){if(node.dataset.selectVenue){s.venue=node.dataset.selectVenue;s.raceId=s.races.find(r=>r.venue===s.venue)?.id||'';}goto(node.dataset.nav);return;}
   if(node.dataset.venue){s.venue=node.dataset.venue;s.raceId=s.races.find(r=>r.venue===s.venue)?.id||s.resultRows.find(r=>String(r['レースコード']||'').slice(8,10)===s.venue)?.['レースコード']||'';render();return;}
   if(node.dataset.race){s.raceId=node.dataset.race;render();return;}
   if(node.dataset.mode){s.mode=node.dataset.mode;render();return;}
