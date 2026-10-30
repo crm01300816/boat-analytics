@@ -5,7 +5,8 @@ export const RESEARCH_THRESHOLDS=[0,.05,.1,.15,.2,.25,.3,.4];
 export function scoreSample(sample,model,count){
  const probs=model?.parameters?adjust(sample.probabilities,model.parameters):sample.probabilities;
  const picks=allocate(probs,count);
- const confidence=picks.reduce((sum,p)=>sum+p.p,0);
+ const probabilityByCombo=new Map(probs.map(p=>[p.combo,p.p]));
+ const confidence=picks.reduce((sum,p)=>sum+(probabilityByCombo.get(p.combo)||0),0);
  const hit=picks.find(p=>p.combo===sample.winner);
  const stake=picks.reduce((sum,p)=>sum+p.stake,0);
  const payout=sample.payout===null?null:(hit?.stake||0)/100*sample.payout;
