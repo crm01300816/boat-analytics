@@ -5,7 +5,7 @@ const existing = await lstat('_site').catch(error => { if (error.code !== 'ENOEN
 if (existing?.isSymbolicLink()) throw new Error('Refusing symlink output directory');
 await rm('_site', { recursive: true, force: true });
 await mkdir('_site');
-for (const file of ['index.html', 'selective-five.html', 'styles.css', 'app.js', 'csv.js', 'analytics.js', 'backtest-view.js', 'race-results.js', 'smart-navi.js', 'custom-model.js', 'backtest.js']) {
+for (const file of ['index.html', 'selective-five.html', 'styles.css', 'app.js', 'csv.js', 'analytics.js', 'backtest-view.js', 'race-results.js', 'smart-navi.js', 'custom-model.js', 'backtest.js', 'model-lab.js']) {
   await copyFile(file, `_site/${file}`);
 }
 await mkdir('_site/public');
