@@ -26,8 +26,10 @@ export function analyzeConsensus(data){
    if(!picks){excluded.insufficient_consensus=(excluded.insufficient_consensus||0)+1;continue}
    for(const threshold of [0,.4,.45]){
     if(conf<threshold)continue;
-    const key=count+'|'+threshold;
-    if(!rows.has(key))rows.set(key,{count,threshold,purchased:0,hits:0,stake:0,payout:0});
+    const venue=String(race.venue);
+    for(const segment of ['all','venue:'+venue]){
+    const key=count+'|'+threshold+'|'+segment;
+    if(!rows.has(key))rows.set(key,{count,threshold,segment,purchased:0,hits:0,stake:0,payout:0});
     const row=rows.get(key),match=picks.find(p=>p.combo===win);
     row.purchased++;row.stake+=1000;if(match){row.hits++;row.payout+=pay*match.stake/100}
    }
@@ -37,5 +39,6 @@ export function analyzeConsensus(data){
 }
 if(process.argv[1]?.endsWith('historical-consensus-scan.mjs')){
  const [input,output]=process.argv.slice(2);if(!input||!output)throw Error('input and output required');
- const report=analyzeConsensus(JSON.parse(await readFile(input,'utf8')));await mkdir(dirname(output),{recursive:true});await writeFile(output,JSON.stringify(report,null,2)+'\n');
+ const report=analyzeConsensus(JSON.parse(await readFile(input,'utf8')));await mkdir(dirname(output),{recursive:true});await writeFile(output,JSON.stringify(report,null,2)+'
+');
 }
