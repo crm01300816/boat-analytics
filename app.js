@@ -127,7 +127,7 @@ function render() {
     return;
   }
   let page='';
-  if(s.tab==='dashboard')page=dashboardPage({date:s.date,races:s.races,results:s.resultRows,payouts:s.payoutRows});
+  if(s.tab==='dashboard'){try{page=dashboardPage({date:s.date,races:s.races,results:s.resultRows,payouts:s.payoutRows});}catch(error){console.error('Dashboard render failed',error);page=headline('レースナビを復旧中','表示エラーが発生したため、安全なレース一覧を表示しています。')+selectors()+'<div class="panel"><div class="panel-header"><h3>レース一覧</h3></div><div class="panel-body">'+s.races.slice(0,40).map(r=>'<button class="button outline" data-jump-race="'+esc(r.id)+'">'+esc(venueName(r.venue))+' '+r.number+'R</button>').join('')+'</div></div><p class="notification warning">一部のホーム機能で表示エラーが発生しました。レース分析は引き続き利用できます。</p>';}}
   else if(s.tab==='races')page=overview();
   else if(s.tab==='results')page=headline('オッズ・レース結果・水面','払戻・着順・決まり手・波の高さ・風速を確認')+resultsPage({date:s.date,races:s.races,results:s.resultRows,payouts:s.payoutRows,venue:s.venue,raceId:s.raceId,daily:s.daily,dailyError:s.dailyError,prospective:s.prospective});
   else if(s.tab==='local')page=localPage();
