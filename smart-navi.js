@@ -18,7 +18,7 @@ export function candidateRows(races,date,results=[],limit=30){
  const done=new Set(results.map(x=>x['レースコード']));
  return races.filter(r=>!done.has(r.id)).map(r=>({...r,cutoff:deadlineInfo(r,date)}))
  .filter(r=>r.cutoff.minutes===null||r.cutoff.minutes>0)
- .sort((a,b)=>(a.cutoff.minutes??99999)-(b.cutoff.minutes??99999)).slice(0,limit);
+ .sort((a,b)=>((a.cutoff.minutes??(a.cutoff.time==='—'?99999:Number(a.cutoff.time.slice(0,2))*60+Number(a.cutoff.time.slice(3))))-(b.cutoff.minutes??(b.cutoff.time==='—'?99999:Number(b.cutoff.time.slice(0,2))*60+Number(b.cutoff.time.slice(3)))))).slice(0,limit);
 }
 export function evaluateRace(r){
  const pred=makePicks(r,null,{mode:'balance',count:5});
