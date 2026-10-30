@@ -17,6 +17,10 @@ const current=()=>s.races.find(r=>r.id===s.raceId)||s.races.find(r=>r.venue===s.
 const currentLocal=()=>{const r=current();return r&&s.history?.venue===r.venue&&s.history?.date===s.date?aggregateLocal(s.history.records,r.entries,r.venue):null;};
 function goto(tab){s.tab=tab;location.hash=tab;render();if(tab==='backtest')loadBacktest(render);if(tab==='results')loadDailyTrends();window.scrollTo(0,0);}
 function nav(){return MENU.map(([id,icon,name])=>`<button class="nav-link ${id===s.tab?'active':''}" data-nav="${id}"><span class="nav-icon">${icon}</span>${name}</button>`).join('');}
+const MOBILE_MENU=[['dashboard','⌂','ホーム'],['races','▦','レース'],['predict','✧','AI予想'],['backtest','◷','過去検証'],['menu','☰','メニュー']];
+function mobileNav(){return MOBILE_MENU.map(([id,icon,name])=>`<button class="nav-link ${id===s.tab||(id==='menu'&&['results','local','custom','sources'].includes(s.tab))?'active':''}" data-nav="${id}"><span class="nav-icon">${icon}</span><span>${name}</span></button>`).join('');}
+function menuPage(){return `<div class="simple-menu"><h1>メニュー</h1><p>各種データ・分析ツールはこちらから</p><div class="simple-menu-grid">${MENU.filter(([id])=>!['dashboard','races','predict','backtest'].includes(id)).map(([id,icon,name])=>`<button data-nav="${id}"><span>${icon}</span><strong>${name}</strong><small>開く ›</small></button>`).join('')}<a href="./selective-five.html"><span>★</span><strong>厳選5点予想</strong><small>専用ページ ›</small></a></div></div>`;}
+
 function selectiveLink(){return '<a href="./selective-five.html" style="display:block;text-align:center;padding:10px 8px;background:#19455a;color:#a6ffec;font-weight:800;text-decoration:none;border-top:1px solid #37687b">★ 厳選5点予想を見る ↗</a>';}
 function recentDateTabs(){const today=jstToday();return `<div class="recent-date-tabs" role="group" aria-label="表示する開催日">${Array.from({length:4},(_,i)=>{const date=shiftDate(today,-i),label=i===0?'今日':i===1?'昨日':i===2?'2日前':'3日前';return `<button type="button" class="recent-date-tab ${s.date===date?'active':''}" data-recent-date="${date}" aria-pressed="${s.date===date}"><span>${label}</span><strong>${date.slice(5).replace('-','/')}</strong></button>`;}).join('')}</div>`;}
 function headline(title,subtitle){return `<div class="page-top"><div><div class="page-eyebrow"><span class="dot"></span> BOAT RACE DATA STUDIO</div><h1 class="page-title">${title}</h1><p class="page-description">${subtitle}</p></div><div class="date-status">${s.date===jstToday()?'TODAY':'ARCHIVE'} · ${s.date}</div></div>`;}
@@ -77,19 +81,20 @@ function picksPage(){const r=current(), local=currentLocal();const prediction=r?
 function sourcesPage(){return headline('データ・算出法','取得元と計算式、データ不足時の処理を明確にしています。')+`<div class="two-col"><div class="panel"><div class="panel-header"><h3>使用データ</h3></div><div class="panel-body method-list">${[['出走表','全国・当地勝率、2/3連対率、モーター、ボート、平均ST、F本数'],['枠番別過去10走','枠別勝率、平均ST、直近10走'],['結果アーカイブ','当地×枠番別1〜3着率、実コースの逃げ率・逃がし率'],['直前情報','展示タイム・展示ST・進入・風・波・天候'],['オッズ','3連単120通りの締切前集計中オッズ']].map(([k,v])=>`<div class="method-item"><b>${k}</b><p>${v}</p></div>`).join('')}</div></div><div class="panel"><div class="panel-header"><h3>3連単予想の仕組み</h3></div><div class="panel-body method-list"><div class="method-item"><b>1. 6艇の参考スコア</b><p>勝率、全国・当地2/3連率、モーター、枠別、直近着順、ST、展示、取得済みの当地同枠実績を重み付き合成。欠損した項目は除外します。</p></div><div class="method-item"><b>2. 120通りの相対確率</b><p>6艇のスコアとコース優位の仮定からPlackett–Luceモデルで順位確率を作成。外部の検証済み予測モデルではありません。</p></div><div class="method-item"><b>3. 参考オッズの考慮</b><p>オッズがある場合は確率×オッズを参考に順位を調整。締切後の払戻や将来の収益は保証しません。</p></div><div class="method-item"><b>4. 合計1,000円で配分</b><p>3/5/7/10点を選べ、最低100円ずつ、合計1,000円になるよう配分。全組を購入するわけではありません。</p></div></div></div></div><div class="panel"><div class="panel-header"><h3>公開データとプライバシー</h3></div><div class="panel-body"><p class="page-description">BoatraceCSV (MIT) が公開するCSVを各端末のブラウザから取得する非公式アプリです。AppDeployのAPI・AI・DBは使っていません。ブラウザの通信量は発生します。上流の配信遅延・停止時は取得失敗と表示します。</p><div class="source-tags">${Object.entries(s.availability).map(([name,ok])=>`<span class="source-tag ${ok?'ok':''}">${esc(name)} ${ok?'✓':'未取得'}</span>`).join('')}</div><p class="page-description" style="margin-top:20px"><a href="https://boatracecsv.github.io/docs/" target="_blank" rel="noopener noreferrer" style="color:#56dbcd">公開CSV仕様 ↗</a>　<a href="https://www.boatrace.jp/owpc/pc/extra/data/download.html" target="_blank" rel="noopener noreferrer" style="color:#56dbcd">BOAT RACE公式ダウンロード ↗</a></p><p class="time">舟券の購入機能はありません。購入する場合は必ず公式出走表・締切時刻・欠場や返還情報を確認してください。</p></div></div>`;}
 function render() {
   $('side-nav').innerHTML=nav();
-  $('mobile-nav').innerHTML=nav();
+  $('mobile-nav').innerHTML=mobileNav();
   let link=$('selective-mobile-link');
   if(!link){link=document.createElement('div');link.id='selective-mobile-link';link.style.cssText='position:fixed;bottom:80px;right:12px;z-index:1000;border-radius:12px;overflow:hidden;box-shadow:0 5px 22px #0009';document.body.append(link);}
-  link.innerHTML=selectiveLink();
+  link.innerHTML='';link.style.display='none';
   let quick=$('custom-mobile-link');
   if(!quick){quick=document.createElement('a');quick.id='custom-mobile-link';quick.href='#custom';quick.textContent='⚙ マイモデル';quick.setAttribute('aria-label','マイ予想モデルを開く');document.body.append(quick);}
-  quick.style.display=s.tab==='custom'?'none':'';
+  quick.style.display='none';
   $('breadcrumb').textContent=MENU.find(([k])=>k===s.tab)?.[2]||'レース分析';
   $('date-input').value=s.date;
   $('date-input').max=jstToday();
   $('date-next').disabled=s.date>=jstToday();
   const root=$('app-content');
   const dateTabs=recentDateTabs();
+  if(s.tab==='menu'){root.innerHTML=`<div class="content">${menuPage()}</div>`;return;}
   if(s.tab==='backtest'){root.innerHTML=`<div class="content">${dateTabs}${backtestPage()}</div>`;return;}
   if(s.loading){root.innerHTML=`<div class="content">${dateTabs}${headline('データを取得中','公開CSVを照合しています。')}<div class="panel empty"><h2>レース情報を読み込み中…</h2><p>外部データ取得後に結果を表示します。</p></div></div>`;return;}
   if(s.error&&s.tab!=='sources'&&s.tab!=='results'){
@@ -97,7 +102,7 @@ function render() {
     return;
   }
   let page='';
-  if(s.tab==='dashboard')page=headline('今日のレースナビ','全国の締切順・注目候補・展示・オッズ変動・予想収支を確認。')+dashboardPage({date:s.date,races:s.races,results:s.resultRows,payouts:s.payoutRows});
+  if(s.tab==='dashboard')page=dashboardPage({date:s.date,races:s.races,results:s.resultRows,payouts:s.payoutRows});
   else if(s.tab==='races')page=overview();
   else if(s.tab==='results')page=headline('レース結果・水面','3連単払戻・着順・決まり手・波の高さ・風速を当日と過去日で確認。')+resultsPage({date:s.date,races:s.races,results:s.resultRows,payouts:s.payoutRows,venue:s.venue,raceId:s.raceId,daily:s.daily,dailyError:s.dailyError,prospective:s.prospective});
   else if(s.tab==='local')page=localPage();
@@ -235,7 +240,7 @@ $('date-input').max=jstToday();
 document.addEventListener('click',handleClick);
 document.addEventListener('change',handleChange);
 const hash=location.hash.slice(1);
-if(MENU.some(([id])=>id===hash))s.tab=hash;
+if(hash==='menu'||MENU.some(([id])=>id===hash))s.tab=hash;
 render();loadDay();if(s.tab==='backtest')loadBacktest(render);if(s.tab==='results')loadDailyTrends();
 
 setInterval(refreshDeadlineCards,15000);
