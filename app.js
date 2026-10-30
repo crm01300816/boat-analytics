@@ -18,6 +18,7 @@ const currentLocal=()=>{const r=current();return r&&s.history?.venue===r.venue&&
 function goto(tab){s.tab=tab;location.hash=tab;render();if(tab==='backtest')loadBacktest(render);if(tab==='results')loadDailyTrends();window.scrollTo(0,0);}
 function nav(){return MENU.map(([id,icon,name])=>`<button class="nav-link ${id===s.tab?'active':''}" data-nav="${id}"><span class="nav-icon">${icon}</span>${name}</button>`).join('');}
 function selectiveLink(){return '<a href="./selective-five.html" style="display:block;text-align:center;padding:10px 8px;background:#19455a;color:#a6ffec;font-weight:800;text-decoration:none;border-top:1px solid #37687b">★ 厳選5点予想を見る ↗</a>';}
+function recentDateTabs(){const today=jstToday();return `<div class="recent-date-tabs" role="group" aria-label="表示する開催日">${Array.from({length:4},(_,i)=>{const date=shiftDate(today,-i),label=i===0?'今日':i===1?'昨日':i===2?'2日前':'3日前';return `<button type="button" class="recent-date-tab ${s.date===date?'active':''}" data-recent-date="${date}" aria-pressed="${s.date===date}"><span>${label}</span><strong>${date.slice(5).replace('-','/')}</strong></button>`;}).join('')}</div>`;}
 function headline(title,subtitle){return `<div class="page-top"><div><div class="page-eyebrow"><span class="dot"></span> BOAT RACE DATA STUDIO</div><h1 class="page-title">${title}</h1><p class="page-description">${subtitle}</p></div><div class="date-status">${s.date===jstToday()?'TODAY':'ARCHIVE'} · ${s.date}</div></div>`;}
 function deadlineMinutes(value){
   const m=String(value||'').match(/(?:^|\\D)([01]?\\d|2[0-3]):([0-5]\\d)(?:\\D|$)/);
@@ -88,10 +89,11 @@ function render() {
   $('date-input').max=jstToday();
   $('date-next').disabled=s.date>=jstToday();
   const root=$('app-content');
-  if(s.tab==='backtest'){root.innerHTML=`<div class="content">${backtestPage()}</div>`;return;}
-  if(s.loading){root.innerHTML=`<div class="content">${headline('データを取得中','公開CSVを照合しています。')}<div class="panel empty"><h2>レース情報を読み込み中…</h2><p>外部データ取得後に結果を表示します。</p></div></div>`;return;}
+  const dateTabs=recentDateTabs();
+  if(s.tab==='backtest'){root.innerHTML=`<div class="content">${dateTabs}${backtestPage()}</div>`;return;}
+  if(s.loading){root.innerHTML=`<div class="content">${dateTabs}${headline('データを取得中','公開CSVを照合しています。')}<div class="panel empty"><h2>レース情報を読み込み中…</h2><p>外部データ取得後に結果を表示します。</p></div></div>`;return;}
   if(s.error&&s.tab!=='sources'&&s.tab!=='results'){
-    root.innerHTML=`<div class="content">${headline('取得できませんでした','実データがなければ予想を出しません。')}<div class="panel empty"><h2>公開CSVの読み込みに失敗しました</h2><p>${esc(s.error)}</p><button class="button" id="retry-load">再取得する</button><p>CSV未公開 / CORS制限 / 接続エラーが考えられます。日付の変更も試してください。</p></div></div>`;
+    root.innerHTML=`<div class="content">${dateTabs}${headline('取得できませんでした','実データがなければ予想を出しません。')}<div class="panel empty"><h2>公開CSVの読み込みに失敗しました</h2><p>${esc(s.error)}</p><button class="button" id="retry-load">再取得する</button><p>CSV未公開 / CORS制限 / 接続エラーが考えられます。日付の変更も試してください。</p></div></div>`;
     return;
   }
   let page='';
@@ -102,7 +104,7 @@ function render() {
   else if(s.tab==='predict')page=picksPage();
   else if(s.tab==='custom')page=modelPage(customWeights,s.races,s.raceId);
   else page=sourcesPage();
-  root.innerHTML=`<div class="content">${page}<div class="footer"><span>BOAT ANALYTICS FREE / 独立した静的Webアプリ</span><span>更新確認 ${esc(s.at||'未取得')} JST · <a target="_blank" rel="noopener noreferrer" href="https://boatracecsv.github.io/docs/">データ提供元 ↗</a></span></div></div>`;
+  root.innerHTML=`<div class="content">${dateTabs}${page}<div class="footer"><span>BOAT ANALYTICS FREE / 独立した静的Webアプリ</span><span>更新確認 ${esc(s.at||'未取得')} JST · <a target="_blank" rel="noopener noreferrer" href="https://boatracecsv.github.io/docs/">データ提供元 ↗</a></span></div></div>`;
 }
 async function loadDailyTrends(){
   if(s.dailyLoaded||s.dailyLoading)return;
@@ -196,8 +198,9 @@ async function handleClick(event){
   const jump=event.target.closest('[data-jump-race]');if(jump){const r=s.races.find(x=>x.id===jump.dataset.jumpRace);if(r){s.venue=r.venue;s.raceId=r.id;goto('races');document.querySelector('.deadline-event')?.scrollIntoView({behavior:'smooth',block:'start'});}return;}
   const saveNode=event.target.closest('[data-save-forecast]');if(saveNode){const r=s.races.find(x=>x.id===saveNode.dataset.saveForecast);if(r){const out=saveForecast(r,s.date);alert(out.message);render();}return;}
   const removeNode=event.target.closest('[data-remove-forecast]');if(removeNode){removeForecast(removeNode.dataset.removeForecast);render();return;}
-  const node=event.target.closest('[data-history-date],[data-nav],[data-venue],[data-race],[data-mode],#refresh-btn,#date-prev,#date-next,#copy-bets,#copy-race,#retry-load,#load-history,#stop-history');
+  const node=event.target.closest('[data-recent-date],[data-history-date],[data-nav],[data-venue],[data-race],[data-mode],#refresh-btn,#date-prev,#date-next,#copy-bets,#copy-race,#retry-load,#load-history,#stop-history');
   if(!node)return;
+  if(node.dataset.recentDate&&/^\d{4}-\d{2}-\d{2}$/.test(node.dataset.recentDate)&&node.dataset.recentDate<=jstToday()){s.date=node.dataset.recentDate;loadDay();return;}
   if(node.dataset.historyDate&&/^\d{4}-\d{2}-\d{2}$/.test(node.dataset.historyDate)&&node.dataset.historyDate<=jstToday()){s.date=node.dataset.historyDate;loadDay();return;}
   if(node.dataset.nav){goto(node.dataset.nav);return;}
   if(node.dataset.venue){s.venue=node.dataset.venue;s.raceId=s.races.find(r=>r.venue===s.venue)?.id||s.resultRows.find(r=>String(r['レースコード']||'').slice(8,10)===s.venue)?.['レースコード']||'';render();return;}
