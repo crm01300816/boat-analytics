@@ -3,7 +3,7 @@ import { createRaceList, aggregateLocal, rateRacers, rate, makePicks } from './a
 import { backtestPage, loadBacktest, setBacktestCount } from './backtest-view.js';
 import { resultsPage } from './race-results.js';
 import {dashboardPage,snapshotOdds,saveForecast,removeForecast} from './smart-navi.js';
-import {DEFAULT_WEIGHTS,modelPage,loadModels,saveModel,deleteModel,verifyCustom} from './custom-model.js';
+import {DEFAULT_WEIGHTS,modelPage,loadModels,saveModel,deleteModel,verifyCustom} from './custom-model.js?v=20261030-custom3';
 
 const MENU=[['dashboard','◉','今日のナビ'],['races','▦','レース分析'],['results','≋','結果・水面'],['local','◎','当地・枠別'],['predict','✧','3連単1,000円'],['custom','⚙','マイモデル'],['backtest','◷','過去検証'],['sources','▤','データ・算出法']];
 const s={date:jstToday(),tab:'dashboard',venue:'',raceId:'',races:[],loading:true,error:'',availability:{},at:'',history:null,historyBusy:false,histProgress:'',histError:'',historyDays:60,mode:'balance',count:7,controller:null,resultRows:[],payoutRows:[],daily:null,prospective:null,dailyLoading:false,dailyLoaded:false,dailyError:''};
@@ -80,6 +80,9 @@ function render() {
   let link=$('selective-mobile-link');
   if(!link){link=document.createElement('div');link.id='selective-mobile-link';link.style.cssText='position:fixed;bottom:80px;right:12px;z-index:1000;border-radius:12px;overflow:hidden;box-shadow:0 5px 22px #0009';document.body.append(link);}
   link.innerHTML=selectiveLink();
+  let quick=$('custom-mobile-link');
+  if(!quick){quick=document.createElement('a');quick.id='custom-mobile-link';quick.href='#custom';quick.textContent='⚙ マイモデル';quick.setAttribute('aria-label','マイ予想モデルを開く');document.body.append(quick);}
+  quick.style.display=s.tab==='custom'?'none':'';
   $('breadcrumb').textContent=MENU.find(([k])=>k===s.tab)?.[2]||'レース分析';
   $('date-input').value=s.date;
   $('date-input').max=jstToday();
