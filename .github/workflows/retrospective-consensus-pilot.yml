@@ -1,0 +1,39 @@
+name: Retrospective consensus B/K pilot
+on:
+  workflow_dispatch:
+  push:
+    branches: [experiment/value-ensemble-research-20261030]
+    paths: [.github/workflows/retrospective-consensus-pilot.yml]
+permissions:
+  contents: read
+jobs:
+  pilot:
+    strategy:
+      fail-fast: false
+      matrix:
+        period:
+          - {label: validation, start: '2026-03-01', end: '2026-03-31'}
+          - {label: test, start: '2026-09-01', end: '2026-09-30'}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install LZH extractor
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq 7zip
+      - name: Collect official B/K and run historical consensus
+        run: |
+          python3 scripts/official-month-collector.py --start "${{ matrix.period.start }}" --end "${{ matrix.period.end }}" --out ".local/private.json"
+          node scripts/historical-consensus-scan.mjs ".local/private.json" "consensus-${{ matrix.period.label }}.json"
+      - name: Remove private race-level data
+        if: always()
+        run: rm -f .local/private.json /tmp/bkm-*.lzh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: consensus-${{ matrix.period.label }}
+          path: consensus-${{ matrix.period.label }}.json
+          if-no-files-found: warn
+          retention-days: 30
