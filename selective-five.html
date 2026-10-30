@@ -18,7 +18,9 @@ $('load').onclick=async()=>{
   const [cards,titles,wakus]=await Promise.all([fetchCsv('programs/race_cards',date),fetchCsv('programs/title',date),fetchCsv('programs/waku10',date).catch(()=>[])]);
   const races=createRaceList(cards,titles,wakus,{});
   let selected=0;selectedRecords=[];loadedDate=date;$('refresh-results').disabled=true;$('day-summary').hidden=true;
-  for(const r of races){
+  const deadlineMinutes=r=>{const raw=String(r.deadline||'');const m=raw.match(/(\d{1,2}):(\d{2})/);return m?Number(m[1])*60+Number(m[2]):Number.POSITIVE_INFINITY;};
+  const sortedRaces=[...races].sort((a,b)=>deadlineMinutes(a)-deadlineMinutes(b)||Number(a.venue)-Number(b.venue)||Number(a.number)-Number(b.number));
+  for(const r of sortedRaces){
    const c=confidence(r);if(c===null||c<.40||r.canceled)continue;
    const pred=makePicks({id:r.id,venue:r.venue,number:r.number,entries:r.entries,previews:{}},null,{mode:'balance',count:5});
    if(pred.picks?.length!==5||pred.picks.reduce((s,p)=>s+p.stake,0)!==1000)continue;
@@ -36,7 +38,7 @@ $('load').onclick=async()=>{
    selectedRecords.push({id:r.id,picks:pred.picks,outcome});
    $('results').append(box);
   }
-  $('status').textContent=races.length+'レース中、条件を満たす '+selected+'レースを表示。条件に合わないレースは購入対象外。';
+  $('status').textContent=races.length+'レース中、条件を満たす '+selected+'レースを締切時刻の早い順に表示。条件に合わないレースは購入対象外。';
   $('refresh-results').disabled=!selectedRecords.length;
   if(selectedRecords.length)await refreshResults();
  }catch(e){$('status').textContent='取得できませんでした：'+e.message}
