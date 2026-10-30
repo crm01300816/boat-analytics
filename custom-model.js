@@ -1,4 +1,5 @@
-import {rateRacers,trifectaProbabilities} from './analytics.js';
+import {rateRacers,trifectaProbabilities,raceEntries} from './analytics.js';
+import {allocate} from './backtest.js';
 import {fetchCsv,shiftDate,jstToday} from './csv.js';
 import {normalFinish,finalSettlement} from './backtest.js';
 export const FACTORS=[['win','全国勝率'],['local','当地勝率'],['motor','モーター成績'],['lane','枠番・コース実績'],['exhibit','展示タイム'],['start','スタート力']];
@@ -56,16 +57,17 @@ export async function verifyCustom(weights,{days=7,count=5,signal,onProgress=()=
    for(const row of cards){
     scanned++;const id=row['レースコード'],result=out.get(id),winner=result?normalFinish(result):null;
     if(!winner)continue;
-    const entries=(await import('./analytics.js')).raceEntries(row,waku.get(id)||{});
+    const entries=raceEntries(row,waku.get(id)||{});
     const race={id,entries,previews:{}};
-    const pred=customPicks(race,w,count);
-    if(!pred.picks.length)continue;
+    const probs=trifectaProbabilities(customScores(race,w));
+    if(!probs)continue;
+    const bets=allocate(probs,count);
     eligible++;
     const final=finalSettlement(money.get(id),winner);
     if(final===null){missing++;continue;}
     stake+=1000;
-    const pick=pred.picks.find(x=>x.combo===winner);
-    if(pick){hits++;payout+=Math.round(final*(1000/count)/100);}
+    const pick=bets.find(x=>x.combo===winner);
+    if(pick){hits++;payout+=final*pick.stake/100;}
    }
   }catch(e){if(signal?.aborted)throw e;}
   onProgress({done:i,days,loaded,scanned,eligible});
