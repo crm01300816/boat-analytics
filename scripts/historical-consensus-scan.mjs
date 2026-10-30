@@ -14,6 +14,24 @@ export function consensusPicks(race,count){
  for(let n=count;n<10;n++)stakes[n%count]+=100;
  return choices.map((x,i)=>({combo:x.combo,stake:stakes[i]}));
 }
+export function raceSegments(race){
+ const entries=[...(race.entries||[])].sort((a,b)=>Number(a.lane)-Number(b.lane));
+ const segments=['all','venue:'+String(race.venue),'race_number:'+String(race.number)];
+ if(entries.length!==6||entries.some((e,i)=>Number(e.lane)!==i+1))return segments;
+ const num=(e,k)=>Number(e[k]);
+ const leader=(k)=>entries.reduce((best,e)=>num(e,k)>num(best,k)?e:best,entries[0]);
+ const l1=entries[0];
+ const band=(v,low,high)=>v<low?'low':v>=high?'high':'mid';
+ if(Number.isFinite(num(l1,'win')))segments.push('lane1_national_win:'+band(num(l1,'win'),4,6));
+ if(Number.isFinite(num(l1,'m2')))segments.push('lane1_motor2:'+band(num(l1,'m2'),30,45));
+ if(entries.every(e=>Number.isFinite(num(e,'m2')))){
+  const strongest=leader('m2');segments.push('best_motor_lane:'+strongest.lane);
+  segments.push('lane1_motor_gap:'+band(num(l1,'m2')-Math.max(...entries.slice(1).map(e=>num(e,'m2'))),-10,5));
+ }
+ if(entries.every(e=>Number.isFinite(num(e,'win'))))segments.push('best_national_win_lane:'+leader('win').lane);
+ if(entries.every(e=>Number.isFinite(num(e,'localWin'))))segments.push('best_local_win_lane:'+leader('localWin').lane);
+ return [...new Set(segments)];
+}
 export function analyzeConsensus(data){
  const rows=new Map(),excluded={};
  for(const race of data.races||[]){
@@ -26,8 +44,7 @@ export function analyzeConsensus(data){
    if(!picks){excluded.insufficient_consensus=(excluded.insufficient_consensus||0)+1;continue}
    for(const threshold of [0,.4,.45]){
     if(conf<threshold)continue;
-    const venue=String(race.venue);
-    for(const segment of ['all','venue:'+venue]){
+    for(const segment of raceSegments(race)){
     const key=count+'|'+threshold+'|'+segment;
     if(!rows.has(key))rows.set(key,{count,threshold,segment,purchased:0,hits:0,stake:0,payout:0});
     const row=rows.get(key),match=picks.find(p=>p.combo===win);
