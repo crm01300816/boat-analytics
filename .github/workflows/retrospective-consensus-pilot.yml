@@ -1,4 +1,4 @@
-name: Retrospective consensus B/K multi-factor
+name: Retrospective consensus B/K index grid
 on:
   workflow_dispatch:
   push:
@@ -37,6 +37,7 @@ jobs:
         run: |
           python3 scripts/official-month-collector.py --start "${{ matrix.period.start }}" --end "${{ matrix.period.end }}" --out ".local/private.json"
           node scripts/historical-consensus-scan.mjs ".local/private.json" "consensus-${{ matrix.period.label }}.json"
+          node scripts/historical-index-grid.mjs ".local/private.json" "index-${{ matrix.period.label }}.json"
       - name: Remove private race-level data
         if: always()
         run: rm -f .local/private.json /tmp/bkm-*.lzh
@@ -44,7 +45,9 @@ jobs:
         if: always()
         with:
           name: consensus-${{ matrix.period.label }}
-          path: consensus-${{ matrix.period.label }}.json
+          path: |
+            consensus-${{ matrix.period.label }}.json
+            index-${{ matrix.period.label }}.json
           if-no-files-found: warn
           retention-days: 30
           overwrite: true
