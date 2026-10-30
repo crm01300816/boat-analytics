@@ -3,9 +3,11 @@ import { createRaceList, aggregateLocal, rateRacers, rate, makePicks } from './a
 import { backtestPage, loadBacktest, setBacktestCount } from './backtest-view.js';
 import { resultsPage } from './race-results.js';
 import {dashboardPage,snapshotOdds,saveForecast,removeForecast} from './smart-navi.js';
+import {DEFAULT_WEIGHTS,modelPage,loadModels,saveModel,deleteModel,verifyCustom} from './custom-model.js';
 
-const MENU=[['dashboard','◉','今日のナビ'],['races','▦','レース分析'],['results','≋','結果・水面'],['local','◎','当地・枠別'],['predict','✧','3連単1,000円'],['backtest','◷','過去検証'],['sources','▤','データ・算出法']];
+const MENU=[['dashboard','◉','今日のナビ'],['races','▦','レース分析'],['results','≋','結果・水面'],['local','◎','当地・枠別'],['predict','✧','3連単1,000円'],['custom','⚙','マイモデル'],['backtest','◷','過去検証'],['sources','▤','データ・算出法']];
 const s={date:jstToday(),tab:'dashboard',venue:'',raceId:'',races:[],loading:true,error:'',availability:{},at:'',history:null,historyBusy:false,histProgress:'',histError:'',historyDays:60,mode:'balance',count:7,controller:null,resultRows:[],payoutRows:[],daily:null,prospective:null,dailyLoading:false,dailyLoaded:false,dailyError:''};
+let customWeights={...DEFAULT_WEIGHTS},customController=null;
 const $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(v,d=1)=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':Number(v).toFixed(d);
@@ -95,6 +97,7 @@ function render() {
   else if(s.tab==='results')page=headline('レース結果・水面','3連単払戻・着順・決まり手・波の高さ・風速を当日と過去日で確認。')+resultsPage({date:s.date,races:s.races,results:s.resultRows,payouts:s.payoutRows,venue:s.venue,raceId:s.raceId,daily:s.daily,dailyError:s.dailyError,prospective:s.prospective});
   else if(s.tab==='local')page=localPage();
   else if(s.tab==='predict')page=picksPage();
+  else if(s.tab==='custom')page=modelPage(customWeights,s.races,s.raceId);
   else page=sourcesPage();
   root.innerHTML=`<div class="content">${page}<div class="footer"><span>BOAT ANALYTICS FREE / 独立した静的Webアプリ</span><span>更新確認 ${esc(s.at||'未取得')} JST · <a target="_blank" rel="noopener noreferrer" href="https://boatracecsv.github.io/docs/">データ提供元 ↗</a></span></div></div>`;
 }
@@ -170,7 +173,22 @@ async function getHistory(){
   }else s.histError='集計を中止しました。';
   render();
 }
-function handleClick(event){
+async function handleClick(event){
+ if(event.target.closest('#custom-save')){try{saveModel($('custom-model-name')?.value,customWeights);render();}catch(e){alert(e.message);}return;}
+ if(event.target.closest('#custom-reset')){customWeights={...DEFAULT_WEIGHTS};render();return;}
+ if(event.target.closest('#custom-load')){const m=loadModels().find(x=>x.name===$('custom-saved')?.value);if(m){customWeights={...m.weights};render();}return;}
+ if(event.target.closest('#custom-delete')){const n=$('custom-saved')?.value;if(n){deleteModel(n);render();}return;}
+ if(event.target.closest('#custom-cancel')){customController?.abort();return;}
+ if(event.target.closest('#custom-verify')){
+  if(customController)return;
+  const days=Number($('custom-days')?.value||7),count=Number($('custom-count')?.value||5),progress=$('custom-progress'),output=$('custom-result'),btn=$('custom-verify'),cancel=$('custom-cancel');
+  customController=new AbortController();btn.disabled=true;cancel.disabled=false;
+  try{
+   const result=await verifyCustom({...customWeights},{days,count,signal:customController.signal,onProgress:p=>{if(progress)progress.textContent=p.done+'/'+p.days+'日、取得成功 '+p.loaded+'日、評価対象 '+p.eligible+'R';}});
+   if(output)output.innerHTML='<div class="lab-grid"><div class="lab-card"><small>評価対象</small><strong>'+result.eligible+'R</strong><span>取得 '+result.loaded+'/'+days+'日</span></div><div class="lab-card"><small>参考的中率</small><strong>'+(result.hitRate==null?'未算出':(result.hitRate*100).toFixed(1)+'%')+'</strong><span>払戻欠損 '+result.missing+'R</span></div><div class="lab-card"><small>参考回収率</small><strong>'+(result.roi==null?'未算出':(result.roi*100).toFixed(1)+'%')+'</strong><span>払戻 '+result.payout.toLocaleString()+'円 ／ 賭金 '+result.stake.toLocaleString()+'円</span></div></div><p class="page-description">過去CSVの遡及検証。締切前に取得できた証拠がないため独立した予測実績ではありません。</p>';
+  }catch(e){if(progress)progress.textContent=e.message;}finally{customController=null;btn.disabled=false;cancel.disabled=true;}return;
+ }
+
   if(event.target.closest('#retry-backtest')){loadBacktest(render,true);return;}
   const jump=event.target.closest('[data-jump-race]');if(jump){const r=s.races.find(x=>x.id===jump.dataset.jumpRace);if(r){s.venue=r.venue;s.raceId=r.id;goto('races');document.querySelector('.deadline-event')?.scrollIntoView({behavior:'smooth',block:'start'});}return;}
   const saveNode=event.target.closest('[data-save-forecast]');if(saveNode){const r=s.races.find(x=>x.id===saveNode.dataset.saveForecast);if(r){const out=saveForecast(r,s.date);alert(out.message);render();}return;}
@@ -199,6 +217,7 @@ function handleClick(event){
   }
 }
 function handleChange(event){
+  const weight=event.target.closest('[data-custom-weight]');if(weight){customWeights[weight.dataset.customWeight]=Number(weight.value);render();return;}
   const t=event.target;
   if(t.id==='backtest-count'){setBacktestCount(t.value);render();return;}
   if(t.id==='date-input'&&/^\d{4}-\d{2}-\d{2}$/.test(t.value)&&t.value<=jstToday()){s.date=t.value;loadDay();}
