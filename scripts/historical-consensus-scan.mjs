@@ -21,9 +21,6 @@ export function raceSegments(race){
  const num=(e,k)=>Number(e[k]);
  const leader=(k)=>entries.reduce((best,e)=>num(e,k)>num(best,k)?e:best,entries[0]);
  const l1=entries[0];
- const winningLane=String(race.winningCombo||'').split('-')[0];
- if(/^[1-6]$/.test(winningLane))segments.push('winning_lane:'+winningLane);
-
  const band=(v,low,high)=>v<low?'low':v>=high?'high':'mid';
  if(Number.isFinite(num(l1,'win')))segments.push('lane1_national_win:'+band(num(l1,'win'),4,6));
  if(Number.isFinite(num(l1,'m2')))segments.push('lane1_motor2:'+band(num(l1,'m2'),30,45));
