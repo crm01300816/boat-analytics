@@ -1,4 +1,4 @@
-name: Retrospective consensus B/K pilot
+name: Retrospective consensus B/K by venue
 on:
   workflow_dispatch:
   push:
@@ -47,3 +47,4 @@ jobs:
           path: consensus-${{ matrix.period.label }}.json
           if-no-files-found: warn
           retention-days: 30
+          overwrite: true
