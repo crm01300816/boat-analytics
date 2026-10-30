@@ -1,6 +1,7 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>厳選5点 | BOAT ANALYTICS</title><style>body{margin:0;background:#091627;color:#eaf2ff;font-family:system-ui,sans-serif}main{max-width:960px;margin:auto;padding:20px}h1{font-size:25px}.muted{color:#a9bed1}.panel{background:#13263d;border:1px solid #2a4560;border-radius:16px;padding:18px;margin:16px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.card{background:#1a3049;border-radius:12px;padding:15px}button,input,select{font:inherit;padding:10px;border-radius:9px;border:1px solid #45617a;background:#19344f;color:white}button{cursor:pointer}button:disabled{opacity:.45}.yes{color:#7fe3a9}.no{color:#d1a8a8}.combo{font-size:24px;font-weight:800;letter-spacing:2px}.tag{font-size:12px;color:#b9cde0}.stat{font-size:25px;font-weight:800}a{color:#8ad2ff}</style></head><body><main><p><a href="./index.html">← BOAT ANALYTICSに戻る</a></p><h1>厳選5点予想 <span class="tag">過去検証方式</span></h1><p class="muted">2023〜2026年の公式B/K過去検証で比較した「厳選5点」の条件と買い目を表示。締切前に取得したデータのみで使ってください。</p><section class="grid"><div class="panel"><div class="tag">過去テスト 暫定回収率</div><div class="stat">80.42%</div></div><div class="panel"><div class="tag">購入対象レースの的中率</div><div class="stat">35.91%</div></div><div class="panel"><div class="tag">購入対象</div><div class="stat">5,956 / 26,064R</div></div></section><div class="panel"><label>開催日 <input id="date" type="date"></label> <button id="load">レースを取得</button><p id="status" class="muted">取得後、条件を満たすレースだけ買い目を表示します。</p></div><div id="results" class="grid"></div><p class="muted">注意：信頼度0.40以上が購入条件。1レース1,000円、5点に配分。過去の払戻監査は未完了。締切済みレースの表示は検証用であり事前予想ではありません。公開CSVの取得状況によって表示できない場合があります。結果や確定オッズは選定に使用しません。</p></main><script type="module">
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>厳選5点 | BOAT ANALYTICS</title><style>body{margin:0;background:#091627;color:#eaf2ff;font-family:system-ui,sans-serif}main{max-width:960px;margin:auto;padding:20px}h1{font-size:25px}.muted{color:#a9bed1}.panel{background:#13263d;border:1px solid #2a4560;border-radius:16px;padding:18px;margin:16px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.card{background:#1a3049;border-radius:12px;padding:15px}button,input,select{font:inherit;padding:10px;border-radius:9px;border:1px solid #45617a;background:#19344f;color:white}button{cursor:pointer}button:disabled{opacity:.45}.yes{color:#7fe3a9}.no{color:#d1a8a8}.combo{font-size:24px;font-weight:800;letter-spacing:2px}.tag{font-size:12px;color:#b9cde0}.stat{font-size:25px;font-weight:800}a{color:#8ad2ff}</style></head><body><main><p><a href="./index.html">← BOAT ANALYTICSに戻る</a></p><h1>厳選5点予想 <span class="tag">過去検証方式</span></h1><p class="muted">2023〜2026年の公式B/K過去検証で比較した「厳選5点」の条件と買い目を表示。締切前に取得したデータのみで使ってください。</p><section class="grid"><div class="panel"><div class="tag">過去テスト 暫定回収率</div><div class="stat">80.42%</div></div><div class="panel"><div class="tag">購入対象レースの的中率</div><div class="stat">35.91%</div></div><div class="panel"><div class="tag">購入対象</div><div class="stat">5,956 / 26,064R</div></div></section><div class="panel"><label>開催日 <input id="date" type="date"></label> <button id="load">レースを取得</button> <button id="refresh-results" disabled>結果を更新</button><p class="tag">結果は公開CSVに反映された時点で表示。ページを開いている間は90秒ごとに自動確認します。</p><p id="status" class="muted">取得後、条件を満たすレースだけ買い目を表示します。</p></div><div id="day-summary" class="panel" hidden></div><div id="results" class="grid"></div><p class="muted">注意：信頼度0.40以上が購入条件。1レース1,000円、5点に配分。過去の払戻監査は未完了。締切済みレースの表示は検証用であり事前予想ではありません。公開CSVの取得状況によって表示できない場合があります。結果や確定オッズは選定に使用しません。</p></main><script type="module">
 import {fetchCsv,jstToday,venueName} from './csv.js';
 import {createRaceList,makePicks} from './analytics.js';
+let selectedRecords=[],loadedDate='',refreshing=false;
 const $=id=>document.getElementById(id), clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 $('date').value=jstToday();
 function confidence(r){
@@ -16,7 +17,7 @@ $('load').onclick=async()=>{
   const date=$('date').value;
   const [cards,titles,wakus]=await Promise.all([fetchCsv('programs/race_cards',date),fetchCsv('programs/title',date),fetchCsv('programs/waku10',date).catch(()=>[])]);
   const races=createRaceList(cards,titles,wakus,{});
-  let selected=0;
+  let selected=0;selectedRecords=[];loadedDate=date;$('refresh-results').disabled=true;$('day-summary').hidden=true;
   for(const r of races){
    const c=confidence(r);if(c===null||c<.40||r.canceled)continue;
    const pred=makePicks({id:r.id,venue:r.venue,number:r.number,entries:r.entries,previews:{}},null,{mode:'balance',count:5});
@@ -30,10 +31,48 @@ $('load').onclick=async()=>{
    box.append(title,note);
    for(const p of pred.picks){const row=document.createElement('p');row.className='combo';row.textContent=p.combo+'　'+p.stake.toLocaleString()+'円';box.append(row)}
    const foot=document.createElement('p');foot.className='tag';foot.textContent='5点・合計1,000円｜参考予想（購入推奨ではありません）';box.append(foot);
+   const outcome=document.createElement('div');outcome.className='outcome';outcome.textContent='結果待ち';box.append(outcome);
+   selectedRecords.push({id:r.id,picks:pred.picks,outcome});
    $('results').append(box);
   }
   $('status').textContent=races.length+'レース中、条件を満たす '+selected+'レースを表示。条件に合わないレースは購入対象外。';
+  $('refresh-results').disabled=!selectedRecords.length;
+  if(selectedRecords.length)await refreshResults();
  }catch(e){$('status').textContent='取得できませんでした：'+e.message}
  finally{$('load').disabled=false}
 };
+async function refreshResults(){
+ if(refreshing||!selectedRecords.length||loadedDate!==$('date').value)return;
+ refreshing=true;$('refresh-results').disabled=true;
+ try{
+  const [results,payouts]=await Promise.all([fetchCsv('results/realtime',loadedDate),fetchCsv('results/payouts',loadedDate)]);
+  const rm=new Map(results.map(r=>[r['レースコード'],r])),pm=new Map(payouts.map(r=>[r['レースコード'],r]));
+  let settled=0,hits=0,returned=0,pending=0,excluded=0;
+  for(const rec of selectedRecords){
+   const r=rm.get(rec.id),p=pm.get(rec.id);
+   rec.outcome.replaceChildren();
+   if(!r||!p){rec.outcome.textContent='⏳ 結果待ち';pending++;continue;}
+   const finish=[1,2,3].map(i=>Number(r[i+'着_艇番']));
+   const combo=finish.join('-'),published=String(p['3連単_組番']||'').trim();
+   const payout100=Number(String(p['3連単_払戻金']||'').replaceAll(',',''));
+   const hasF=[1,2,3,4,5,6].some(i=>String(r[i+'コース_F']||'').trim()&&String(r[i+'コース_F'])!=='0');
+   if(hasF||!finish.every(n=>Number.isInteger(n)&&n>=1&&n<=6)||new Set(finish).size!==3||combo!==published||!Number.isFinite(payout100)||payout100<100){
+    rec.outcome.textContent='⚠ 返還・特殊精算または照合不可（集計対象外）';excluded++;continue;
+   }
+   settled++;
+   const match=rec.picks.find(x=>x.combo===combo),paid=match?match.stake/100*payout100:0;
+   if(match)hits++;
+   returned+=paid;
+   const head=document.createElement('p');head.className=match?'yes':'no';head.style.fontWeight='800';head.textContent=match?'🎯 的中':'✕ 不的中';
+   const detail=document.createElement('p');detail.textContent='結果 '+combo+' ／ 3連単 '+payout100.toLocaleString()+'円（100円あたり）';
+   const amount=document.createElement('p');amount.textContent='この予想の払戻 '+paid.toLocaleString()+'円 ／ 損益 '+(paid-1000).toLocaleString()+'円';
+   rec.outcome.append(head,detail,amount);
+  }
+  const summary=$('day-summary');summary.hidden=false;
+  summary.textContent='【'+loadedDate+' 厳選5点の結果】確定 '+settled+'R ／ 的中 '+hits+'R ／ 的中率 '+(settled?(hits/settled*100).toFixed(1)+'%':'—')+' ／ 投資 '+(settled*1000).toLocaleString()+'円 ／ 払戻 '+returned.toLocaleString()+'円 ／ 暫定回収率 '+(settled?(returned/(settled*1000)*100).toFixed(1)+'%':'—')+' ／ 結果待ち '+pending+'R ／ 集計対象外 '+excluded+'R';
+ }catch(e){$('day-summary').hidden=false;$('day-summary').textContent='結果を取得できませんでした：'+e.message+'。時間をおいて更新してください。';}
+ finally{refreshing=false;$('refresh-results').disabled=false;}
+}
+$('refresh-results').onclick=refreshResults;
+setInterval(()=>{if(selectedRecords.length&&loadedDate===$('date').value&&document.visibilityState==='visible')refreshResults()},90000);
 </script></body></html>
