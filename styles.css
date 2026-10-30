@@ -167,3 +167,6 @@
 .mobile-nav{overflow-x:auto;justify-content:flex-start}
 .mobile-nav .nav-link{min-width:74px;flex:1 0 74px}
 }
+
+/* Model research cards */
+.lab-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0 20px}.lab-card{display:grid;gap:8px;border:1px solid #34566c;border-radius:12px;padding:15px;background:#152e43}.lab-card small,.lab-card span{color:#a8c2d2;font-size:12px}.lab-card strong{color:#67e6cf;font-size:27px;font-variant-numeric:tabular-nums}.lab-card span{display:block}.panel-body>h3{margin-top:18px}@media(max-width:600px){.lab-grid{grid-template-columns:1fr}.lab-card strong{font-size:25px}}
