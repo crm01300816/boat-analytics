@@ -2,9 +2,10 @@ import { fetchCsv, shiftDate, jstToday, venueName } from './csv.js';
 import { createRaceList, aggregateLocal, rateRacers, rate, makePicks } from './analytics.js';
 import { backtestPage, loadBacktest, setBacktestCount } from './backtest-view.js';
 import { resultsPage } from './race-results.js';
+import {dashboardPage,snapshotOdds,saveForecast,removeForecast} from './smart-navi.js';
 
-const MENU=[['races','▦','レース分析'],['results','≋','結果・水面'],['local','◎','当地・枠別'],['predict','✧','3連単1,000円'],['backtest','◷','過去検証'],['sources','▤','データ・算出法']];
-const s={date:jstToday(),tab:'races',venue:'',raceId:'',races:[],loading:true,error:'',availability:{},at:'',history:null,historyBusy:false,histProgress:'',histError:'',historyDays:60,mode:'balance',count:7,controller:null,resultRows:[],payoutRows:[],daily:null,prospective:null,dailyLoading:false,dailyLoaded:false,dailyError:''};
+const MENU=[['dashboard','◉','今日のナビ'],['races','▦','レース分析'],['results','≋','結果・水面'],['local','◎','当地・枠別'],['predict','✧','3連単1,000円'],['backtest','◷','過去検証'],['sources','▤','データ・算出法']];
+const s={date:jstToday(),tab:'dashboard',venue:'',raceId:'',races:[],loading:true,error:'',availability:{},at:'',history:null,historyBusy:false,histProgress:'',histError:'',historyDays:60,mode:'balance',count:7,controller:null,resultRows:[],payoutRows:[],daily:null,prospective:null,dailyLoading:false,dailyLoaded:false,dailyError:''};
 const $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(v,d=1)=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':Number(v).toFixed(d);
@@ -89,7 +90,8 @@ function render() {
     return;
   }
   let page='';
-  if(s.tab==='races')page=overview();
+  if(s.tab==='dashboard')page=headline('今日のレースナビ','全国の締切順・注目候補・展示・オッズ変動・予想収支を確認。')+dashboardPage({date:s.date,races:s.races,results:s.resultRows,payouts:s.payoutRows});
+  else if(s.tab==='races')page=overview();
   else if(s.tab==='results')page=headline('レース結果・水面','3連単払戻・着順・決まり手・波の高さ・風速を当日と過去日で確認。')+resultsPage({date:s.date,races:s.races,results:s.resultRows,payouts:s.payoutRows,venue:s.venue,raceId:s.raceId,daily:s.daily,dailyError:s.dailyError,prospective:s.prospective});
   else if(s.tab==='local')page=localPage();
   else if(s.tab==='predict')page=picksPage();
@@ -130,6 +132,7 @@ async function loadDay(){
     const data=Object.fromEntries(entries);
     s.resultRows=data.results;s.payoutRows=data.payouts;
     s.races=createRaceList(data.cards,data.title,data.waku,{tkz:data.tkz,stt:data.stt,sui:data.sui,od3:data.od3});
+    snapshotOdds(s.races,s.date);
     if(!s.races.length&&s.tab!=='results')throw new Error('指定日の出走表がありません。');
     const possibleVenues=[...new Set([...s.races.map(r=>r.venue),...s.resultRows.map(r=>String(r['レースコード']||'').slice(8,10)).filter(v=>/^\d{2}$/.test(v))])].sort();
     s.venue=possibleVenues.includes(s.venue)?s.venue:(possibleVenues[0]||'');
@@ -169,6 +172,9 @@ async function getHistory(){
 }
 function handleClick(event){
   if(event.target.closest('#retry-backtest')){loadBacktest(render,true);return;}
+  const jump=event.target.closest('[data-jump-race]');if(jump){const r=s.races.find(x=>x.id===jump.dataset.jumpRace);if(r){s.venue=r.venue;s.raceId=r.id;goto('races');document.querySelector('.deadline-event')?.scrollIntoView({behavior:'smooth',block:'start'});}return;}
+  const saveNode=event.target.closest('[data-save-forecast]');if(saveNode){const r=s.races.find(x=>x.id===saveNode.dataset.saveForecast);if(r){const out=saveForecast(r,s.date);alert(out.message);render();}return;}
+  const removeNode=event.target.closest('[data-remove-forecast]');if(removeNode){removeForecast(removeNode.dataset.removeForecast);render();return;}
   const node=event.target.closest('[data-history-date],[data-nav],[data-venue],[data-race],[data-mode],#refresh-btn,#date-prev,#date-next,#copy-bets,#copy-race,#retry-load,#load-history,#stop-history');
   if(!node)return;
   if(node.dataset.historyDate&&/^\d{4}-\d{2}-\d{2}$/.test(node.dataset.historyDate)&&node.dataset.historyDate<=jstToday()){s.date=node.dataset.historyDate;loadDay();return;}
