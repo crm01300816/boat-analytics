@@ -123,7 +123,7 @@ function render() {
   if(s.tab==='backtest'){root.innerHTML=`<div class="content">${dateTabs}${backtestPage()}</div>`;return;}
   if(s.loading){root.innerHTML=`<div class="content">${dateTabs}${headline('データを取得中','公開CSVを照合しています。')}<div class="panel empty"><h2>レース情報を読み込み中…</h2><p>外部データ取得後に結果を表示します。</p></div></div>`;return;}
   if(s.error&&s.tab!=='sources'&&s.tab!=='results'){
-    root.innerHTML=`<div class="content">${dateTabs}${headline('取得できませんでした','実データがなければ予想を出しません。')}<div class="panel empty"><h2>公開CSVの読み込みに失敗しました</h2><p>${esc(s.error)}</p><button class="button" id="retry-load">再取得する</button><p>CSV未公開 / CORS制限 / 接続エラーが考えられます。日付の変更も試してください。</p></div></div>`;
+    root.innerHTML=`<div class="content">${dateTabs}${headline('取得できませんでした','実データがなければ予想を出しません。')}<div class="panel empty"><h2>公開CSVの読み込みに失敗しました</h2><p>${esc(s.error)}</p><button class="button" id="retry-load">再取得する</button> <button class="button outline" id="load-previous-day">前日のデータを見る</button><p>CSV未公開 / CORS制限 / 接続エラーが考えられます。日付の変更も試してください。</p></div></div>`;
     return;
   }
   let page='';
@@ -163,7 +163,7 @@ async function loadDay(){
   try{
     const jobs=Object.entries(paths).map(async([key,path])=>{
       try{const rows=await fetchCsv(path,s.date,ctrl.signal);s.availability[key]=true;return [key,rows];}
-      catch(err){if(ctrl.signal.aborted)throw err;s.availability[key]=false;if(key==='cards'&&s.tab!=='results')throw err;return [key,[]];}
+      catch(err){if(ctrl.signal.aborted)throw err;s.availability[key]=false;if(key==='cards'&&s.tab!=='results')throw new Error(s.date===jstToday()?'本日の出走表はまだ取得できません。公開元の更新待ちの可能性があります。前日のデータを表示するか、しばらくして再取得してください。':err.message);return [key,[]];}
     });
     const entries=await Promise.all(jobs);
     if(ctrl.signal.aborted)return;
@@ -226,6 +226,7 @@ async function handleClick(event){
   }catch(e){if(progress)progress.textContent=e.message;}finally{customController=null;btn.disabled=false;cancel.disabled=true;}return;
  }
 
+  if(event.target.closest('#load-previous-day')){s.date=shiftDate(s.date,-1);loadDay();return;}
   if(event.target.closest('#retry-backtest')){loadBacktest(render,true);return;}
   const jump=event.target.closest('[data-jump-race]');if(jump){const r=s.races.find(x=>x.id===jump.dataset.jumpRace);if(r){s.venue=r.venue;s.raceId=r.id;goto('races');document.querySelector('.deadline-event')?.scrollIntoView({behavior:'smooth',block:'start'});}return;}
   const saveNode=event.target.closest('[data-save-forecast]');if(saveNode){const r=s.races.find(x=>x.id===saveNode.dataset.saveForecast);if(r){const out=saveForecast(r,s.date);alert(out.message);render();}return;}
