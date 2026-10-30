@@ -33,13 +33,15 @@ jobs:
         run: node scripts/update-daily-results.mjs public/daily-trends.json 3
       - name: Score captured pre-deadline predictions against finished races
         run: node scripts/score-prospective.mjs public/prospective-summary.json 3
+      - name: Compare frozen predictions across venues, bet counts and chronological periods
+        run: node scripts/compare-prospective.mjs
       - name: Commit only derived public daily totals
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          git add -- public/daily-trends.json public/prospective-summary.json
+          git add -- public/daily-trends.json public/prospective-summary.json public/prospective-model-comparison.json
           if git diff --cached --quiet; then
             echo 'No new completed result data.'
             exit 0
