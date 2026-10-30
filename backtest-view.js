@@ -1,3 +1,4 @@
+import {researchReport} from './model-lab.js';
 let report=null, loading=false, error='', count=7;
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const n=x=>Number.isFinite(x)?x.toLocaleString('ja-JP'):'—';
@@ -44,7 +45,15 @@ export function backtestPage() {
   const reasons={'result_missing':'結果未収録','no_predeadline_card_evidence':'締切前の出走表保存証拠なし','deadline_unknown':'締切時刻不明','card_missing_at_deadline':'締切前版に当該レースなし','critical_features_missing':'必要成績の不足','abnormal_or_incomplete_finish':'F・異常／不完全な着順','invalid_race':'レース識別不正'};
   const exclusions=panel('除外したデータ',table(['理由','件数'],Object.entries(c.excluded).map(([key,value])=>[esc(reasons[key]||key),n(value)])),'後日追加された過去データを、当時入手できた情報として扱いません。F・返還・同着等の特殊結果は通常の不的中に混ぜず、対象外とします。');
   const notes=panel('現在のモデルの弱点・検証の限界',`<div class="panel-body">${r.weaknesses.map(x=>`<p class="page-description">${esc(x)}</p>`).join('')}<p class="page-description">過去の展示・オッズ・実進入、ブラウザで任意集計する当地履歴は使用していません。Git保存時刻は証拠になりますが、第三者による時刻認証ではありません。締切時刻は過去の結果CSVに収録された予定値を照合にだけ使用しています。</p><p class="page-description">現行モデルの過去の調整履歴は不明です。今回の候補については最終テストを選択に使用していませんが、将来の独立した検証も必要です。</p><p class="time">集計日時：${esc(r.generatedAt)} ／ 元データ：BoatraceCSV ／ <a href="https://github.com/BoatraceCSV/boatracecsv.github.io/tree/${esc(r.sourceRevision)}" target="_blank" rel="noopener">固定コミット</a></p></div>`);
-  return heading+metrics+`<div class="tools" style="margin-bottom:20px"><label>集計表の購入点数 <select id="backtest-count" class="select">${[3,5,7,10].map(v=>`<option value="${v}" ${v===count?'selected':''}>${v}点</option>`).join('')}</select></label><span class="time">以下の傾向表は最終テストのみ</span></div>`+points+comparison+calibration+
+  const lab=researchReport(r,count);
+  const modelLab=panel('予想モデル研究所｜AIモデル対決・見送り判定・自動改善',`
+    <div class="panel-body"><p class="page-description">学習 → 検証 → 未使用の最終テストを分離。ここに示すのは実際の厳格検証結果であり、架空の収益やモデル性能は掲載しません。</p>
+    <div class="lab-grid">${lab.candidates.map((item,i)=>`<div class="lab-card"><small>${esc(item.name)}</small><strong>${pc(item.metric.returnRate)}</strong><span>独立テスト回収率 ／ ${n(item.metric.races)}レース</span><span>的中率 ${pc(item.metric.hitRate)}</span><span>確定払戻欠損 ${n(item.metric.missingPayouts)}件</span></div>`).join('')}</div>
+    <h3>見送り判定（研究中）</h3><p class="page-description">${esc(lab.abstention)}</p>
+    <h3>モデル自動改善の安全ルール</h3><p class="page-description">${esc(lab.improvement)}</p>
+    <p class="page-description">研究用プログラムには予測確率に応じた見送り閾値・点数・モデルの総当たり比較を追加済み。学習・検証で候補を選び、最終テストは評価にだけ使う設計です。必要なレース単位データが揃うまでは、最適モデルを確定したと表示しません。</p></div>`,
+    '3・5・7・10点の比較。検証済み集計JSONに基づく。');
+  return heading+metrics+modelLab+`<div class="tools" style="margin-bottom:20px"><label>集計表の購入点数 <select id="backtest-count" class="select">${[3,5,7,10].map(v=>`<option value="${v}" ${v===count?'selected':''}>${v}点</option>`).join('')}</select></label><span class="time">以下の傾向表は最終テストのみ</span></div>`+points+comparison+calibration+
     groupTable('競艇場別ランキング',venues,`${count}点・最終テストの現行的中率順。標本数を併せて確認してください。0件の場は未算出です。`)+
     groupTable('1着艇の枠番別',r.groups.frames,`${count}点。実際の1着艇の枠で結果を層別した事後分析です。実進入コースとは区別します。`)+
     groupTable('確定人気別',r.groups.popularity,`${count}点。的中組番の確定人気による事後集計であり、締切前人気の再現ではありません。予想には使いません。`)+
