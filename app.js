@@ -14,6 +14,7 @@ const current=()=>s.races.find(r=>r.id===s.raceId)||s.races.find(r=>r.venue===s.
 const currentLocal=()=>{const r=current();return r&&s.history?.venue===r.venue&&s.history?.date===s.date?aggregateLocal(s.history.records,r.entries,r.venue):null;};
 function goto(tab){s.tab=tab;location.hash=tab;render();if(tab==='backtest')loadBacktest(render);if(tab==='results')loadDailyTrends();window.scrollTo(0,0);}
 function nav(){return MENU.map(([id,icon,name])=>`<button class="nav-link ${id===s.tab?'active':''}" data-nav="${id}"><span class="nav-icon">${icon}</span>${name}</button>`).join('');}
+function selectiveLink(){return '<a href="./selective-five.html" style="display:block;text-align:center;padding:10px 8px;background:#19455a;color:#a6ffec;font-weight:800;text-decoration:none;border-top:1px solid #37687b">★ 厳選5点予想を見る ↗</a>';}
 function headline(title,subtitle){return `<div class="page-top"><div><div class="page-eyebrow"><span class="dot"></span> BOAT RACE DATA STUDIO</div><h1 class="page-title">${title}</h1><p class="page-description">${subtitle}</p></div><div class="date-status">${s.date===jstToday()?'TODAY':'ARCHIVE'} · ${s.date}</div></div>`;}
 function selectors(){const venues=[...new Set(s.races.map(r=>r.venue))].sort();const races=s.races.filter(r=>r.venue===s.venue);return `<div class="section-head"><div><h2>競艇場を選択</h2><p>開催場から分析対象を選択</p></div><span class="time">${venues.length}場</span></div><div class="venue-list">${venues.map(v=>`<button class="venue ${s.venue===v?'active':''}" data-venue="${v}">${esc(venueName(v))}<small>${s.races.filter(r=>r.venue===v).length}R</small></button>`).join('')}</div><div class="section-head"><div><h2>${esc(venueName(s.venue))} レース一覧</h2><p>1R〜12Rから選択</p></div><span class="time">${races.length}レース</span></div><div class="race-pills">${races.map(r=>`<button class="race-pill ${r.id===s.raceId?'active':''}" data-race="${r.id}"><small>${esc(r.name)}</small><b>${r.number}<span>R</span></b></button>`).join('')}</div>`;}
 function intro(r){return `<div class="panel"><div class="panel-header"><div><div class="page-eyebrow">VENUE ${r.venue} / RACE ${r.number}</div><h2>${esc(r.venueName)} ${r.number}R <span class="small-pill">${esc(r.name)}</span></h2><p>${esc(r.event||'本日のレース')} / 締切表示：${esc(r.deadline)}${r.canceled?' / 中止・順延情報あり':''}</p></div><button class="button outline" id="copy-race">情報をコピー</button></div></div>`;}
@@ -28,6 +29,9 @@ function sourcesPage(){return headline('データ・算出法','取得元と計�
 function render() {
   $('side-nav').innerHTML=nav();
   $('mobile-nav').innerHTML=nav();
+  let link=$('selective-mobile-link');
+  if(!link){link=document.createElement('div');link.id='selective-mobile-link';link.style.cssText='position:fixed;bottom:80px;right:12px;z-index:1000;border-radius:12px;overflow:hidden;box-shadow:0 5px 22px #0009';document.body.append(link);}
+  link.innerHTML=selectiveLink();
   $('breadcrumb').textContent=MENU.find(([k])=>k===s.tab)?.[2]||'レース分析';
   $('date-input').value=s.date;
   $('date-input').max=jstToday();
