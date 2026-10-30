@@ -1,4 +1,4 @@
-name: Retrospective consensus B/K by venue
+name: Retrospective consensus B/K multi-factor
 on:
   workflow_dispatch:
   push:
