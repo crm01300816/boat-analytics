@@ -79,7 +79,8 @@ export function saveForecast(r,date){
 }
 export function removeForecast(id){save(KEY,read(KEY).filter(x=>x.race!==id))}
 export function dashboardPage({date,races,results,payouts}){
- const upcoming=candidateRows(races,date,results,24),evaluated=upcoming.map(evaluateRace);
+ const historical=date<jstToday();
+ const upcoming=historical?races.map(r=>({...r,cutoff:deadlineInfo(r,date)})).sort((a,b)=>a.cutoff.time.localeCompare(b.cutoff.time)).slice(0,24):candidateRows(races,date,results,24),evaluated=upcoming.map(evaluateRace);
  const ranked=[...evaluated].sort((a,b)=>b.score-a.score).slice(0,8);
  const ledger=settleLedger(results,payouts),settled=ledger.filter(x=>x.status==='settled');
  const stake=settled.reduce((n,x)=>n+x.stake,0),returns=settled.reduce((n,x)=>n+x.returnAmount,0);
@@ -93,9 +94,9 @@ export function dashboardPage({date,races,results,payouts}){
  const alerts=changes.map(x=>`<div class="nav-alert"><b>${esc(venueName(x.r.venue))} ${x.r.number}R　${esc(x.combo)}</b><span>${x.first.toFixed(1)}倍 → ${x.last.toFixed(1)}倍</span><button class="button outline" data-jump-race="${esc(x.r.id)}">確認</button></div>`).join('');
  const history=ledger.slice().reverse().slice(0,30).map(x=>`<div class="nav-ledger-item"><div><b>${esc(x.date)} ${esc(venueName(x.venue))} ${x.number}R</b><small>${x.status==='settled'?'確定':'未精算'} ／ 予想記録（購入実績ではありません）</small></div><div><b>${money(x.returnAmount)} / ${money(x.stake)}</b><button class="nav-remove" data-remove-forecast="${esc(x.race)}">削除</button></div></div>`).join('');
  return `<div class="nav-dashboard">
- <div class="nav-hero"><span>BOAT RACE SMART NAVI</span><h2>今日のレースナビ</h2><p>${esc(date)} ／ 全国の締切・注目レース・展示・予想記録</p></div>
- <div class="nav-section"><h3>締切が近いレース <small>予定時刻順・日本時間</small></h3><div class="nav-deadline-grid">${deadlineCards||'<p class="trend-muted">締切前のレースがありません。過去日または終了後の可能性があります。</p>'}</div></div>
- <div class="nav-section"><h3>今日の狙い目候補 <small>未校正モデル・参考順位</small></h3><p class="trend-muted">締切前の5点予想について推定確率合計で順位付け。回収率100%超を保証する順位ではありません。実際の購入は行いません。</p>${ranking||'<p>候補なし</p>'}</div>
+ <div class="nav-hero"><span>BOAT RACE SMART NAVI</span><h2>${historical?'過去のレースナビ':'今日のレースナビ'}</h2><p>${esc(date)} ／ ${historical?'当日の出走表・開催レースを振り返る（参考表示）':'全国の締切・注目レース・展示・予想記録'}</p></div>
+ <div class="nav-section"><h3>${historical?'当日の開催レース':'締切が近いレース'} <small>予定時刻順・日本時間</small></h3><div class="nav-deadline-grid">${deadlineCards||'<p class="trend-muted">締切前のレースがありません。過去日または終了後の可能性があります。</p>'}</div></div>
+ <div class="nav-section"><h3>${historical?'過去日の参考スコア':'今日の狙い目候補'} <small>未校正モデル・参考順位</small></h3><p class="trend-muted">${historical?'過去日の取得可能な出走表を使った遡及的な参考順位。締切前に利用できた情報とは限らず、実際の事前予想実績ではありません。':'締切前の5点予想について推定確率合計で順位付け。'}回収率100%超を保証する順位ではありません。実際の購入は行いません。</p>${ranking||'<p>候補なし</p>'}</div>
  <div class="nav-section"><h3>展示データ <small>公開CSVの直前情報</small></h3>${exhibit}<p class="trend-muted">展示データは未配信の場合「—」。表示中の展示値は学習済みの補正をしていません。</p></div>
  <div class="nav-section"><h3>オッズ変動アラート <small>この端末で取得した履歴</small></h3>${alerts||'<p class="trend-muted">変動記録はまだありません。アプリを再読み込みした際に取得したオッズの差分を記録します。バックグラウンド監視・通知は未対応です。</p>'}<p class="trend-muted">期待値は未校正の推定確率に基づく参考値で、利益保証ではありません。</p></div>
  <div class="nav-section"><h3>自動照合・予想収支 <small>端末内の保存予想のみ</small></h3><div class="nav-ledger-stats"><div><small>確定予想</small><b>${settled.length}件</b></div><div><small>確定分の仮想収支</small><b>${money(returns-stake)}</b></div><div><small>確定分の回収率</small><b>${stake?(returns/stake*100).toFixed(1)+'%':'—'}</b></div><div><small>保存済み合計</small><b>${ledger.length}件</b></div></div><p class="trend-muted">保存時点の予想を後日の結果・払戻CSVと照合。購入実績ではありません。確定済みは${money(stake)}相当、保存済み全件は${money(allStake)}相当。保存情報はこのブラウザのみ。</p>${history||'<p>まだ保存された予想がありません。</p>'}</div>
