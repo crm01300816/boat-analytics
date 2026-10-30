@@ -1,0 +1,37 @@
+name: Exhaustive custom model research
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - scripts/search-custom-models.mjs
+      - .github/workflows/custom-model-search.yml
+permissions:
+  contents: read
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install LZH extractor
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq 7zip
+      - name: Acquire completed official B/K dates
+        run: python3 scripts/official-backtest-pilot.py --end 2026-10-28 --days 7 --out .local/custom-search-input.json
+      - name: Enumerate all weights and evaluate holdout
+        run: node --max-old-space-size=4096 scripts/search-custom-models.mjs .local/custom-search-input.json custom-search-report.json
+      - name: Remove race-level data
+        if: always()
+        run: rm -f .local/custom-search-input.json
+      - name: Save aggregated top 3 research report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: custom-model-search-top3
+          path: custom-search-report.json
+          retention-days: 14
+          if-no-files-found: warn
