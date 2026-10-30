@@ -29,9 +29,10 @@ $('load').onclick=async()=>{
    const title=document.createElement('h2');title.textContent=venueName(r.venue)+' '+r.number+'R';
    const note=document.createElement('p');note.className='muted';note.textContent='信頼度 '+(c*100).toFixed(1)+'% ・ '+deadlineLabel;
    box.append(title,note);
+   const outcome=document.createElement('div');outcome.className='outcome';outcome.style.cssText='padding:12px;margin:12px 0;border:1px solid #52718b;border-radius:10px;background:#10273d;font-weight:700';outcome.textContent='⏳ 結果を確認中…';box.append(outcome);
    for(const p of pred.picks){const row=document.createElement('p');row.className='combo';row.textContent=p.combo+'　'+p.stake.toLocaleString()+'円';box.append(row)}
    const foot=document.createElement('p');foot.className='tag';foot.textContent='5点・合計1,000円｜参考予想（購入推奨ではありません）';box.append(foot);
-   const outcome=document.createElement('div');outcome.className='outcome';outcome.textContent='結果待ち';box.append(outcome);
+
    selectedRecords.push({id:r.id,picks:pred.picks,outcome});
    $('results').append(box);
   }
@@ -45,13 +46,19 @@ async function refreshResults(){
  if(refreshing||!selectedRecords.length||loadedDate!==$('date').value)return;
  refreshing=true;$('refresh-results').disabled=true;
  try{
-  const [results,payouts]=await Promise.all([fetchCsv('results/realtime',loadedDate),fetchCsv('results/payouts',loadedDate)]);
+  const [resultFetch,payoutFetch]=await Promise.allSettled([fetchCsv('results/realtime',loadedDate),fetchCsv('results/payouts',loadedDate)]);
+  const results=resultFetch.status==='fulfilled'?resultFetch.value:[];
+  const payouts=payoutFetch.status==='fulfilled'?payoutFetch.value:[];
+  if(!results.length&&!payouts.length){for(const rec of selectedRecords)rec.outcome.textContent='⏳ 結果データ未配信・取得待ち';$('day-summary').hidden=false;$('day-summary').textContent='結果データを取得できません。公開元の配信後に自動更新します。';return;}
   const rm=new Map(results.map(r=>[r['レースコード'],r])),pm=new Map(payouts.map(r=>[r['レースコード'],r]));
   let settled=0,hits=0,returned=0,pending=0,excluded=0;
   for(const rec of selectedRecords){
    const r=rm.get(rec.id),p=pm.get(rec.id);
    rec.outcome.replaceChildren();
-   if(!r||!p){rec.outcome.textContent='⏳ 結果待ち';pending++;continue;}
+   if(!r){rec.outcome.textContent='⏳ レース結果待ち';pending++;continue;}
+   const finishKnown=[1,2,3].map(i=>Number(r[i+'着_艇番']));
+   const knownCombo=finishKnown.every(n=>Number.isInteger(n)&&n>=1&&n<=6)&&new Set(finishKnown).size===3?finishKnown.join('-'):null;
+   if(!p){rec.outcome.textContent=knownCombo?'🏁 結果 '+knownCombo+' ／ 払戻データ待ち':'⏳ レース結果を照合中';pending++;continue;}
    const finish=[1,2,3].map(i=>Number(r[i+'着_艇番']));
    const combo=finish.join('-'),published=String(p['3連単_組番']||'').trim();
    const payout100=Number(String(p['3連単_払戻金']||'').replaceAll(',',''));
