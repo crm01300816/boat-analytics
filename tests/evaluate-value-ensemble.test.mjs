@@ -1,0 +1,11 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {evaluateForward} from '../scripts/evaluate-value-ensemble.mjs';
+const models=[{name:'motor',probabilities:{'1-2-3':.20}},{name:'racer',probabilities:{'1-2-3':.19}},{name:'in_escape',probabilities:{'1-2-3':.18}}];
+const record=(id,odds=7,result={winningCombo:'1-2-3',payoutPer100Yen:700})=>({id,models,predictionAt:'2026-10-30T10:00:00+09:00',oddsRecord:{observedAt:'2026-10-30T10:01:00+09:00',deadlineAt:'2026-10-30T10:10:00+09:00',source:'fixture',odds:{'1-2-3':odds}},result});
+test('no observed races means null ROI, never a fabricated win',()=>assert.equal(evaluateForward([]).provisionalROI,null));
+test('forward settled sample calculates realized payout',()=>{const r=evaluateForward([record('a')]);assert.equal(r.counts.hits,1);assert.equal(r.provisionalROI,.7)});
+test('missing odds rejected',()=>{const r=record('a');delete r.oddsRecord;assert.equal(evaluateForward([r]).counts.invalidOdds,1)});
+test('postdeadline prediction rejected',()=>{const r=record('a');r.predictionAt='2026-10-30T10:12:00+09:00';assert.equal(evaluateForward([r]).counts.invalidOdds,1)});
+test('pending results excluded from settled denominator',()=>{const r=evaluateForward([record('a',7,null)]);assert.equal(r.counts.pending,1);assert.equal(r.provisionalROI,null)});
+test('duplicate races excluded',()=>assert.equal(evaluateForward([record('a'),record('a')]).counts.duplicate,1));
+test('low-odds race skipped',()=>assert.equal(evaluateForward([record('a',3)]).counts.noCandidates,1));
