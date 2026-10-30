@@ -16,7 +16,52 @@ function goto(tab){s.tab=tab;location.hash=tab;render();if(tab==='backtest')load
 function nav(){return MENU.map(([id,icon,name])=>`<button class="nav-link ${id===s.tab?'active':''}" data-nav="${id}"><span class="nav-icon">${icon}</span>${name}</button>`).join('');}
 function selectiveLink(){return '<a href="./selective-five.html" style="display:block;text-align:center;padding:10px 8px;background:#19455a;color:#a6ffec;font-weight:800;text-decoration:none;border-top:1px solid #37687b">★ 厳選5点予想を見る ↗</a>';}
 function headline(title,subtitle){return `<div class="page-top"><div><div class="page-eyebrow"><span class="dot"></span> BOAT RACE DATA STUDIO</div><h1 class="page-title">${title}</h1><p class="page-description">${subtitle}</p></div><div class="date-status">${s.date===jstToday()?'TODAY':'ARCHIVE'} · ${s.date}</div></div>`;}
-function selectors(){const venues=[...new Set(s.races.map(r=>r.venue))].sort();const races=s.races.filter(r=>r.venue===s.venue);return `<div class="section-head"><div><h2>競艇場を選択</h2><p>開催場から分析対象を選択</p></div><span class="time">${venues.length}場</span></div><div class="venue-list">${venues.map(v=>`<button class="venue ${s.venue===v?'active':''}" data-venue="${v}">${esc(venueName(v))}<small>${s.races.filter(r=>r.venue===v).length}R</small></button>`).join('')}</div><div class="section-head"><div><h2>${esc(venueName(s.venue))} レース一覧</h2><p>1R〜12Rから選択</p></div><span class="time">${races.length}レース</span></div><div class="race-pills">${races.map(r=>`<button class="race-pill ${r.id===s.raceId?'active':''}" data-race="${r.id}"><small>${esc(r.name)}</small><b>${r.number}<span>R</span></b></button>`).join('')}</div>`;}
+function deadlineMinutes(value){
+  const m=String(value||'').match(/(?:^|\\D)([01]?\\d|2[0-3]):([0-5]\\d)(?:\\D|$)/);
+  return m?Number(m[1])*60+Number(m[2]):null;
+}
+function deadlineState(r,now=new Date()){
+  const minutes=deadlineMinutes(r.deadline);
+  if(minutes===null)return {cls:'unknown',label:'締切未取得',time:'—'};
+  const jst=new Date(now.toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
+  const selectedDay=s.date;
+  const currentDay=jst.getFullYear()+'-'+String(jst.getMonth()+1).padStart(2,'0')+'-'+String(jst.getDate()).padStart(2,'0');
+  const remain=minutes-(jst.getHours()*60+jst.getMinutes()+jst.getSeconds()/60);
+  const time=String(Math.floor(minutes/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0');
+  if(selectedDay<currentDay||selectedDay===currentDay&&remain<=0)return {cls:'closed',label:'締切済',time};
+  if(selectedDay>currentDay)return {cls:'future',label:'締切予定',time};
+  if(remain<=5)return {cls:'urgent',label:'締切まで '+Math.ceil(remain)+'分',time};
+  return {cls:'open',label:'締切予定',time};
+}
+function selectors(){
+  const venues=[...new Set(s.races.map(r=>r.venue))].sort();
+  const races=s.races.filter(r=>r.venue===s.venue);
+  const event=races.find(r=>r.event)?.event||'';
+  const venueButtons=venues.map(v=>`<button class="venue ${s.venue===v?'active':''}" data-venue="${v}">${esc(venueName(v))}<small>${s.races.filter(r=>r.venue===v).length}R</small></button>`).join('');
+  const raceCards=races.map(r=>{
+    const d=deadlineState(r);
+    return `<button class="deadline-race-card ${r.id===s.raceId?'active':''} deadline-${d.cls}" data-race="${r.id}" data-deadline-race="${r.id}" aria-label="${esc(venueName(r.venue))} ${r.number}R 締切予定 ${esc(d.time)}">
+      <span class="deadline-race-top"><b>${r.number}<small>R</small></b><span class="deadline-status" data-deadline-status>${esc(d.label)}</span></span>
+      <span class="deadline-race-name">${esc(r.name)}</span>
+      <span class="deadline-race-time"><small>締切予定</small><strong>${esc(d.time)}</strong></span>
+    </button>`;
+  }).join('');
+  return `<div class="section-head"><div><h2>競艇場を選択</h2><p>開催場から分析対象を選択</p></div><span class="time">${venues.length}場</span></div>
+    <div class="venue-list">${venueButtons}</div>
+    <div class="deadline-event"><div><span class="deadline-event-eyebrow">RACE SCHEDULE</span><h2>${esc(venueName(s.venue))}・開催レース</h2><p>${esc(event||'開催情報')} ／ 開催日 ${esc(s.date.replaceAll('-','/'))}</p></div><span class="deadline-event-date">${esc(s.date.slice(5).replace('-','/'))}</span></div>
+    <div class="deadline-race-grid">${raceCards}</div>
+    <p class="deadline-note">締切は取得データの予定時刻（日本時間）。5分前から赤く表示。時刻変更・中止などは公式発表を優先してください。カードを押すとレース分析へ移動します。</p>`;
+}
+function refreshDeadlineCards(){
+  if(s.tab!=='races')return;
+  for(const node of document.querySelectorAll('[data-deadline-race]')){
+    const r=s.races.find(x=>x.id===node.dataset.deadlineRace);if(!r)continue;
+    const d=deadlineState(r);
+    node.classList.remove('deadline-unknown','deadline-closed','deadline-future','deadline-urgent','deadline-open');
+    node.classList.add('deadline-'+d.cls);
+    const label=node.querySelector('[data-deadline-status]');if(label)label.textContent=d.label;
+  }
+}
 function intro(r){return `<div class="panel"><div class="panel-header"><div><div class="page-eyebrow">VENUE ${r.venue} / RACE ${r.number}</div><h2>${esc(r.venueName)} ${r.number}R <span class="small-pill">${esc(r.name)}</span></h2><p>${esc(r.event||'本日のレース')} / 締切表示：${esc(r.deadline)}${r.canceled?' / 中止・順延情報あり':''}</p></div><button class="button outline" id="copy-race">情報をコピー</button></div></div>`;}
 function metrics(){return `<div class="metrics"><div class="metric"><span class="metric-label">開催場</span><b class="metric-number">${new Set(s.races.map(r=>r.venue)).size}<small>/24</small></b></div><div class="metric"><span class="metric-label">本日のレース</span><b class="metric-number">${s.races.length}<small>R</small></b></div><div class="metric"><span class="metric-label">出走選手</span><b class="metric-number">${new Set(s.races.flatMap(r=>r.entries.map(e=>e.id)).filter(Boolean)).size}<small>名</small></b></div><div class="metric"><span class="metric-label">3連単オッズ収録</span><b class="metric-number">${s.races.filter(r=>r.previews?.od3).length}<small>R</small></b></div></div>`;}
 function racerTable(r){const local=currentLocal();return `<div class="panel"><div class="panel-header"><div><h3>6艇の選手・モーターを比較</h3><p>横にスクロールするとすべての数値を表示</p></div><button class="button outline" data-nav="predict">買い目を見る →</button></div><div class="table-wrap"><table class="data-table"><thead><tr><th>枠・選手</th><th>全国勝率</th><th>全国2連率</th><th>全国3連率</th><th>当地勝率</th><th>当地2連率</th><th>当地3連率</th><th>平均ST</th><th>枠番別勝率</th><th>モーター2連率</th><th>モーター3連率</th><th>ボート2連率</th><th>当地同枠2連率</th><th>独自スコア</th></tr></thead><tbody>${rateRacers(r,local).map(e=>`<tr><td><div class="racer-cell"><span class="lane lane-${e.lane}">${e.lane}</span><span><b>${esc(e.name)}</b><small>${esc(e.className)} / ${esc(e.branch)} / ${esc(e.id)}</small></span></div></td><td class="strong">${fmt(e.win,2)}</td><td>${pct(e.n2)}</td><td>${pct(e.n3)}</td><td>${fmt(e.localWin,2)}</td><td>${pct(e.l2)}</td><td>${pct(e.l3)}</td><td>${fmt(e.st,2)}</td><td>${fmt(e.frameWin,2)}</td><td>${esc(e.motor)}号機 / ${pct(e.m2)}</td><td>${pct(e.m3)}</td><td>${pct(e.b2)}</td><td class="accent">${e.localFrame.starts?pct(rate(e.localFrame.first+e.localFrame.second,e.localFrame.starts)):'未集計'}<small style="display:block">${e.localFrame.starts}走</small></td><td class="score">${fmt(e.score,0)}</td></tr>`).join('')}</tbody></table></div><div class="footnote">掲載値は公開CSV由来。当地同枠2連率のみ「当地・枠別」画面の履歴集計結果です。独自スコアは的中確率ではありません。</div></div>`;}
@@ -161,3 +206,5 @@ document.addEventListener('change',handleChange);
 const hash=location.hash.slice(1);
 if(MENU.some(([id])=>id===hash))s.tab=hash;
 render();loadDay();if(s.tab==='backtest')loadBacktest(render);if(s.tab==='results')loadDailyTrends();
+
+setInterval(refreshDeadlineCards,15000);
