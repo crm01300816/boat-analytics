@@ -211,3 +211,10 @@ html{scroll-behavior:smooth}
 .custom-boat{width:26px;height:26px;font-size:14px}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.custom-weight-bars>div{transition:none}}
+
+/* Always-visible mobile entry to the custom model (not hidden in scrolling tabs) */
+#custom-mobile-link{display:none}
+@media(max-width:720px){
+#custom-mobile-link{display:flex;align-items:center;justify-content:center;position:fixed;right:12px;bottom:146px;z-index:75;background:#1a605f;color:#eafff8;border:1px solid #65d7c6;border-radius:12px;padding:10px 14px;min-height:43px;font-size:13px;font-weight:900;text-decoration:none;box-shadow:0 5px 18px #0009}
+#custom-mobile-link:focus-visible{outline:3px solid #fff}
+}
