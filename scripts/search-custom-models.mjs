@@ -9,7 +9,11 @@ const races=source.races.filter(r=>r.entries?.length===6&&/^([1-6]-){2}[1-6]$/.t
 const counts=[3,5,7,10],candidates=[];
 function enumerate(remaining,parts=[]){if(parts.length===5){candidates.push([...parts,remaining]);return;}for(let n=0;n<=remaining;n++)enumerate(remaining-n,[...parts,n]);}
 enumerate(20);
-const split=Math.max(1,Math.floor(races.length*.7)),training=races.slice(0,split),holdout=races.slice(split);
+races.sort((a,b)=>String(a.id).localeCompare(String(b.id)));
+const split=Math.max(1,Math.floor(races.length*.7));
+const boundary=String(races[split]?.id||'').slice(0,8);
+const training=races.filter(r=>String(r.id).slice(0,8)<boundary);
+const holdout=races.filter(r=>String(r.id).slice(0,8)>=boundary);
 if(holdout.length<10)throw Error('Too few holdout races');
 function evaluate(weights,rows,count){
  let eligible=0,hits=0,stake=0,payout=0;
