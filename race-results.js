@@ -32,22 +32,6 @@ export function resultsPage({date,races=[],results=[],payouts=[],venue='',raceId
   <div><small>平均波高（確定結果）</small><b>${mean(waves)}<span>cm</span></b></div>
   <div><small>最大波高（確定結果）</small><b>${waves.length?Math.max(...waves):'—'}<span>cm</span></b></div>
   <div><small>平均風速（確定結果）</small><b>${mean(winds)}<span>m/s</span></b></div></div>`;
-  if(venues.length)html+=`<div class="section-head"><h2>競艇場を選択</h2><span class="time">${venues.length}場</span></div>
-    <div class="venue-list">${venues.map(code=>`<button data-venue="${esc(code)}" class="venue ${code===v?'active':''}">${esc(venueName(code))}<small>${options.filter(x=>x.venue===code&&rmap.has(x.id)).length}R確定</small></button>`).join('')}</div>`;
-  if(venues.length){
-    const summary=venues.map(code=>{
-      const rows=todayRows.filter(r=>String(r['レースコード']).slice(8,10)===code);
-      const first=rows.filter(r=>Number(r['1着_艇番'])===1).length;
-      const methods={};let totalPayout=0,payoutCount=0;
-      for(const r of rows){
-        const method=String(r['決まり手']||'').trim();if(method)methods[method]=(methods[method]||0)+1;
-        const pay=numeric(pmap.get(r['レースコード'])?.['3連単_払戻金']);
-        if(pay!==null&&pay>0){totalPayout+=pay;payoutCount++}
-      }
-      return {code,races:rows.length,first,methods,avg:payoutCount?Math.round(totalPayout/payoutCount):null};
-    });
-    html+=`<div class="panel"><div class="panel-header"><div><h3>競艇場別・当日の結果一覧</h3><p>開催場を選ぶと1〜12Rの着順・決まり手・払戻を確認できます。</p></div></div><div class="table-wrap"><table class="data-table result-history-table"><thead><tr><th>競艇場</th><th>結果</th><th>1号艇1着率</th><th>決まり手</th><th>平均3連単払戻</th></tr></thead><tbody>${summary.map(x=>`<tr><td><button class="result-day-button" data-venue="${esc(x.code)}">${esc(venueName(x.code))}</button></td><td>${x.races}R</td><td>${x.races?formatPct(x.first/x.races*100):'—'}</td><td>${Object.entries(x.methods).sort((a,b)=>b[1]-a[1]).map(([k,n])=>esc(k)+':'+n).join(' / ')||'—'}</td><td>${x.avg===null?'—':yen(x.avg)}</td></tr>`).join('')}</tbody></table></div></div>`;
-  }
   // Same-day venue trends use only published finishes, never forecasts.
   const venueRows=todayRows.filter(r=>String(r['レースコード']).slice(8,10)===v);
   const rankCounts=Array.from({length:3},()=>Array(6).fill(0));
@@ -89,6 +73,22 @@ export function resultsPage({date,races=[],results=[],payouts=[],venue='',raceId
     <h3>その他の傾向</h3><p class="page-description">平均波高：${mean(localWaves)}cm ／ 平均風速：${mean(localWinds)}m/s ／ 平均3連単払戻：${payValues.length?yen(Math.round(payValues.reduce((a,b)=>a+b,0)/payValues.length)):'—'}</p>
     <p class="page-description">3連単の頻出組番：${common.length?common.map(([combo,count])=>esc(combo)+'（'+count+'回）').join('、'):'—'}</p>
     <p class="time">当日の確定レースだけで集計。開催途中は母数が少なく、傾向が大きく変わることがあります。</p></div></div>`;
+  if(venues.length)html+=`<div class="section-head"><h2>競艇場を選択</h2><span class="time">${venues.length}場</span></div>
+    <div class="venue-list">${venues.map(code=>`<button data-venue="${esc(code)}" class="venue ${code===v?'active':''}">${esc(venueName(code))}<small>${options.filter(x=>x.venue===code&&rmap.has(x.id)).length}R確定</small></button>`).join('')}</div>`;
+  if(venues.length){
+    const summary=venues.map(code=>{
+      const rows=todayRows.filter(r=>String(r['レースコード']).slice(8,10)===code);
+      const first=rows.filter(r=>Number(r['1着_艇番'])===1).length;
+      const methods={};let totalPayout=0,payoutCount=0;
+      for(const r of rows){
+        const method=String(r['決まり手']||'').trim();if(method)methods[method]=(methods[method]||0)+1;
+        const pay=numeric(pmap.get(r['レースコード'])?.['3連単_払戻金']);
+        if(pay!==null&&pay>0){totalPayout+=pay;payoutCount++}
+      }
+      return {code,races:rows.length,first,methods,avg:payoutCount?Math.round(totalPayout/payoutCount):null};
+    });
+    html+=`<div class="panel"><div class="panel-header"><div><h3>競艇場別・当日の結果一覧</h3><p>開催場を選ぶと1〜12Rの着順・決まり手・払戻を確認できます。</p></div></div><div class="table-wrap"><table class="data-table result-history-table"><thead><tr><th>競艇場</th><th>結果</th><th>1号艇1着率</th><th>決まり手</th><th>平均3連単払戻</th></tr></thead><tbody>${summary.map(x=>`<tr><td><button class="result-day-button" data-venue="${esc(x.code)}">${esc(venueName(x.code))}</button></td><td>${x.races}R</td><td>${x.races?formatPct(x.first/x.races*100):'—'}</td><td>${Object.entries(x.methods).sort((a,b)=>b[1]-a[1]).map(([k,n])=>esc(k)+':'+n).join(' / ')||'—'}</td><td>${x.avg===null?'—':yen(x.avg)}</td></tr>`).join('')}</tbody></table></div></div>`;
+  }
   if(selection.length)html+=`<div class="section-head"><h2>${esc(venueName(v))}のレース結果</h2><span class="time">${selection.filter(x=>rmap.has(x.id)).length}/${selection.length}R確定</span></div>
     <div class="race-pills">${selection.map(x=>`<button data-race="${esc(x.id)}" class="race-pill ${picked?.id===x.id?'active':''}"><small>${rmap.has(x.id)?'結果確定':'結果待ち'}</small><b>${x.number}<span>R</span></b></button>`).join('')}</div>`;
   if(picked) {
