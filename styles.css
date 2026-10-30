@@ -29,3 +29,61 @@
 .result-finish{grid-template-columns:1fr}.result-weather{grid-template-columns:repeat(2,minmax(0,1fr))}
 .result-weather strong{font-size:16px}
 }
+
+
+/* Mobile-first same-day venue trends */
+.trend-panel{overflow:hidden;border-color:#2a6c73}
+.trend-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(110deg,#123c48,#10263b)}
+.trend-heading h3{font-size:22px;line-height:1.4;margin:7px 0}
+.trend-eyebrow{font-size:10px;letter-spacing:.15em;color:#53e4cc;font-weight:900}
+.trend-live{flex-shrink:0;border:1px solid #37bda9;color:#70f4d5;border-radius:99px;padding:5px 9px;font-size:10px;font-weight:800}
+.trend-body{padding:18px}
+.trend-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.trend-kpi{min-width:0;padding:14px;border:1px solid #344e66;border-radius:12px;background:#152a40}
+.trend-kpi-primary{background:linear-gradient(145deg,#12514e,#143343);border-color:#32b8a6}
+.trend-kpi small,.trend-kpi span{display:block;color:#abc4d4;font-size:11px}
+.trend-kpi strong{display:block;font-size:26px;line-height:1.4;color:#f2fbff;font-weight:900;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.trend-kpi-primary strong{color:#70f4d5}
+.trend-subtitle{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:25px 0 12px;font-size:17px;color:#eef9ff}
+.trend-subtitle span{font-size:11px;color:#93adbf;font-weight:500}
+.trend-lanes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.trend-lane-card{background:#12263a;border:1px solid #344a60;border-radius:12px;padding:13px;min-width:0}
+.trend-lane-head{display:flex;align-items:center;gap:8px}
+.trend-lane-head strong{font-size:13px}
+.trend-lane-name{margin-left:auto;font-size:10px;color:#a6bfd0}
+.trend-lane-badge{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:17px;font-weight:900;flex-shrink:0}
+.lane-1{background:#f6f8fc;color:#1b2a3b}.lane-2{background:#05080d;color:#fff;border:1px solid #66798a}.lane-3{background:#f44e5f;color:#fff}.lane-4{background:#2676e7;color:#fff}.lane-5{background:#f3cc49;color:#1c2735}.lane-6{background:#218d65;color:#fff}
+.trend-lane-primary{display:flex;align-items:baseline;gap:8px;margin:12px 0 7px}
+.trend-lane-primary strong{font-size:25px;font-weight:900;color:#f1f9ff;font-variant-numeric:tabular-nums}
+.trend-lane-primary span{font-size:10px;color:#a5bdcf}
+.trend-lane-track,.trend-method-track{height:7px;border-radius:10px;background:#304456;overflow:hidden}
+.trend-lane-track span,.trend-method-track span{height:100%;display:block;border-radius:10px}
+.trend-lane-places{display:flex;justify-content:space-between;gap:3px;margin-top:11px;color:#9fb8c9;font-size:11px}
+.trend-lane-places b{color:#f0f8ff}
+.trend-methods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.trend-method-row{background:#12263a;padding:12px;border:1px solid #30485e;border-radius:10px}
+.trend-method-label{display:flex;justify-content:space-between;gap:8px;margin-bottom:9px;font-size:13px}
+.trend-method-label small{color:#9cb8cc;font-size:11px}
+.trend-extra{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.trend-extra>div{border:1px solid #30485e;background:#12263a;border-radius:10px;padding:12px}
+.trend-extra small{display:block;color:#9fb7c9;font-size:11px;margin-bottom:6px}
+.trend-extra b{font-size:18px;color:#e8faff}
+.trend-frequent{font-size:12px;color:#c6e1e9;line-height:1.7;margin:14px 0 8px}
+.trend-muted{font-size:11px;color:#8ca9bd;line-height:1.7;margin:12px 0 0}
+@media(max-width:720px){
+.trend-heading h3{font-size:18px}
+.trend-body{padding:13px}
+.trend-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.trend-kpi{padding:12px}
+.trend-kpi strong{font-size:24px}
+.trend-lanes{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.trend-lane-card{padding:10px}
+.trend-lane-head{gap:5px}.trend-lane-head strong{font-size:12px}
+.trend-lane-name{display:none}
+.trend-lane-primary strong{font-size:23px}
+.trend-lane-places{font-size:10px}
+.trend-methods{grid-template-columns:1fr}
+.trend-extra{grid-template-columns:1fr 1fr}
+.trend-extra>div:first-child{grid-column:1/-1}
+.trend-subtitle{font-size:15px}
+}
