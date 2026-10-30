@@ -53,26 +53,39 @@ export function resultsPage({date,races=[],results=[],payouts=[],venue='',raceId
     if(wave!==null&&wave>=0)localWaves.push(wave);
     if(wind!==null&&wind>=0)localWinds.push(wind);
   }
-  const rankTable=rankCounts.map((counts,rank)=>{
-    const n=counts.reduce((a,b)=>a+b,0);
-    return `<tr><th>${rank+1}着</th>${counts.map((value,i)=>`<td><b>${value}</b><small style="display:block;color:#91abc1">${n?formatPct(value/n*100):'—'}</small></td>`).join('')}</tr>`;
-  }).join('');
   const methodsSorted=Object.entries(methodCounts).sort((a,b)=>b[1]-a[1]);
   const common=Object.entries(trifectas).sort((a,b)=>b[1]-a[1]).slice(0,3);
   const topPayout=payValues.length?Math.max(...payValues):null;
-  html+=`<div class="panel"><div class="panel-header"><div><h3>📊 ${esc(venueName(v)||'選択した競艇場')}・今日の傾向</h3><p>${esc(date)} / 結果公開済み ${venueRows.length}R。数字は当日の実績であり、次レースの的中を保証しません。</p></div><span class="small-pill">場別速報</span></div>
-    <div class="panel-body"><div class="result-metrics">
-      <div><small>1号艇の1着率</small><b>${validFinish?formatPct(rankCounts[0][0]/validFinish*100):'—'}</b></div>
-      <div><small>1→2着率（1-2）</small><b>${oneTwoValid?formatPct(oneTwo/oneTwoValid*100):'—'}</b></div>
-      <div><small>1〜3号艇が3着内独占</small><b>${top3Complete?formatPct(insideTop3/top3Complete*100):'—'}</b></div>
-      <div><small>3連単の最高払戻</small><b>${topPayout===null?'—':yen(topPayout)}</b></div>
-    </div>
-    <h3>枠番別・1着／2着／3着の回数と割合</h3>
-    <div class="table-wrap"><table class="data-table result-history-table"><thead><tr><th>着順</th>${[1,2,3,4,5,6].map(n=>`<th>${n}号艇</th>`).join('')}</tr></thead><tbody>${rankTable}</tbody></table></div>
-    <h3>決まり手の内訳</h3><div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px">${methodsSorted.length?methodsSorted.map(([name,count])=>`<span class="small-pill">${esc(name)} ${count}R（${formatPct(count/venueRows.length*100)}）</span>`).join(''):'結果待ち'}</div>
-    <h3>その他の傾向</h3><p class="page-description">平均波高：${mean(localWaves)}cm ／ 平均風速：${mean(localWinds)}m/s ／ 平均3連単払戻：${payValues.length?yen(Math.round(payValues.reduce((a,b)=>a+b,0)/payValues.length)):'—'}</p>
-    <p class="page-description">3連単の頻出組番：${common.length?common.map(([combo,count])=>esc(combo)+'（'+count+'回）').join('、'):'—'}</p>
-    <p class="time">当日の確定レースだけで集計。開催途中は母数が少なく、傾向が大きく変わることがあります。</p></div></div>`;
+  const laneColors=['#f4f7fb','#25364d','#f45e69','#5aa5fa','#f3cb56','#69d49b'];
+  const laneNames=['白','黒','赤','青','黄','緑'];
+  const laneGrid=[1,2,3,4,5,6].map((lane,i)=>{
+    const first=rankCounts[0][i],second=rankCounts[1][i],third=rankCounts[2][i];
+    const firstPct=validFinish?first/validFinish*100:0;
+    return `<div class="trend-lane-card">
+      <div class="trend-lane-head"><span class="trend-lane-badge lane-${lane}">${lane}</span><strong>${lane}号艇</strong><span class="trend-lane-name">${laneNames[i]}</span></div>
+      <div class="trend-lane-primary"><strong>${validFinish?formatPct(firstPct):'—'}</strong><span>1着率</span></div>
+      <div class="trend-lane-track"><span style="width:${firstPct.toFixed(1)}%;background:${laneColors[i]}"></span></div>
+      <div class="trend-lane-places"><span>1着 <b>${first}</b></span><span>2着 <b>${second}</b></span><span>3着 <b>${third}</b></span></div>
+    </div>`;
+  }).join('');
+  const methodGrid=methodsSorted.length?methodsSorted.map(([name,count],i)=>`<div class="trend-method-row"><div class="trend-method-label"><span>${esc(name)}</span><b>${count}R <small>${formatPct(count/venueRows.length*100)}</small></b></div><div class="trend-method-track"><span style="width:${(count/venueRows.length*100).toFixed(1)}%;background:${i===0?'#3edbc3':i===1?'#72aaff':'#a4b8ce'}"></span></div></div>`).join(''):'<p class="trend-muted">結果待ち</p>';
+  html+=`<section class="panel trend-panel" id="today-trends"><div class="panel-header trend-heading"><div><span class="trend-eyebrow">TODAY’S VENUE REPORT</span><h3>${esc(venueName(v)||'選択した競艇場')}｜今日の傾向</h3><p>${esc(date)} ・ ${venueRows.length}レース確定</p></div><span class="trend-live">当日速報</span></div>
+    <div class="trend-body">
+      <div class="trend-kpis">
+        <div class="trend-kpi trend-kpi-primary"><small>1号艇 1着率</small><strong>${validFinish?formatPct(rankCounts[0][0]/validFinish*100):'—'}</strong><span>${rankCounts[0][0]} / ${validFinish}R</span></div>
+        <div class="trend-kpi"><small>1→2着率</small><strong>${oneTwoValid?formatPct(oneTwo/oneTwoValid*100):'—'}</strong><span>1-2の着順</span></div>
+        <div class="trend-kpi"><small>1〜3号艇で3着内独占</small><strong>${top3Complete?formatPct(insideTop3/top3Complete*100):'—'}</strong><span>${insideTop3} / ${top3Complete}R</span></div>
+        <div class="trend-kpi"><small>最高3連単払戻</small><strong>${topPayout===null?'—':yen(topPayout)}</strong><span>本日の確定分</span></div>
+      </div>
+      <h4 class="trend-subtitle">枠番別の着順 <span>1着率と1〜3着回数</span></h4>
+      <div class="trend-lanes">${laneGrid}</div>
+      <h4 class="trend-subtitle">決まり手 <span>レース数・構成比</span></h4>
+      <div class="trend-methods">${methodGrid}</div>
+      <h4 class="trend-subtitle">配当・水面 <span>確定結果の平均</span></h4>
+      <div class="trend-extra"><div><small>平均3連単払戻</small><b>${payValues.length?yen(Math.round(payValues.reduce((a,b)=>a+b,0)/payValues.length)):'—'}</b></div><div><small>平均波高</small><b>${mean(localWaves)}cm</b></div><div><small>平均風速</small><b>${mean(localWinds)}m/s</b></div></div>
+      <p class="trend-frequent">よく出た3連単：${common.length?common.map(([combo,count])=>esc(combo)+'（'+count+'回）').join('、'):'—'}</p>
+      <p class="trend-muted">当日の確定結果のみ集計。レース数が少ない場合は割合が大きく変動します。将来の的中・利益を保証するものではありません。</p>
+    </div></section>`;
   if(venues.length)html+=`<div class="section-head"><h2>競艇場を選択</h2><span class="time">${venues.length}場</span></div>
     <div class="venue-list">${venues.map(code=>`<button data-venue="${esc(code)}" class="venue ${code===v?'active':''}">${esc(venueName(code))}<small>${options.filter(x=>x.venue===code&&rmap.has(x.id)).length}R確定</small></button>`).join('')}</div>`;
   if(venues.length){
