@@ -209,7 +209,7 @@ async function getHistory(){
   render();
 }
 async function applyRaceFilter(mode){const rows=[...document.querySelectorAll('.concept-races .concept-race')];const buttons=[...document.querySelectorAll('[data-race-filter]')];if(!rows.length)return;const limit=mode==='attention'?3:mode==='recommended'?8:Infinity;for(const row of rows){const rank=Number(row.dataset.rank);row.hidden=rank>=limit;}if(mode!=='deadline'){rows.sort((a,b)=>Number(a.dataset.rank)-Number(b.dataset.rank)).forEach(row=>row.parentNode.appendChild(row));}else{rows.sort((a,b)=>Number(a.querySelector('.concept-time b')?.textContent.replace(':',''))-Number(b.querySelector('.concept-time b')?.textContent.replace(':',''))).forEach(row=>row.parentNode.appendChild(row));}for(const btn of buttons){const active=btn.dataset.raceFilter===mode;btn.classList.toggle('concept-filter-active',active);btn.setAttribute('aria-pressed',String(active));}}
-function handleClick(event){
+async function handleClick(event){
  const raceFilter=event.target.closest('[data-race-filter]');if(raceFilter){applyRaceFilter(raceFilter.dataset.raceFilter);return;}
  if(event.target.closest('#custom-save')){try{saveModel($('custom-model-name')?.value,customWeights);render();}catch(e){alert(e.message);}return;}
  if(event.target.closest('#custom-reset')){customWeights={...DEFAULT_WEIGHTS};render();return;}
