@@ -87,3 +87,38 @@
 .trend-extra>div:first-child{grid-column:1/-1}
 .trend-subtitle{font-size:15px}
 }
+
+
+/* Official-inspired race deadline schedule */
+.deadline-event{margin:23px 0 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;background:linear-gradient(110deg,#153f4c,#14263e);border:1px solid #2f7783;border-radius:13px}
+.deadline-event-eyebrow{font-size:10px;letter-spacing:.14em;color:#61dfd1;font-weight:800}
+.deadline-event h2{font-size:20px;margin:4px 0 7px;color:#f3fbff}
+.deadline-event p{font-size:12px;color:#b6d0df;margin:0;line-height:1.6}
+.deadline-event-date{border-radius:9px;background:#236069;color:#e5fffc;padding:10px 12px;font-size:17px;font-weight:900;white-space:nowrap}
+.deadline-race-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.deadline-race-card{display:flex;flex-direction:column;align-items:stretch;gap:9px;text-align:left;min-width:0;background:#132b42;color:#f1f8ff;border:1px solid #34536c;border-radius:12px;padding:13px;cursor:pointer;transition:background .15s,border-color .15s}
+.deadline-race-card.active{border:2px solid #4ee6cc;background:#173d49;padding:12px}
+.deadline-race-top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.deadline-race-top>b{font-size:25px;line-height:1;color:#fff}
+.deadline-race-top>b small{font-size:12px;margin-left:2px}
+.deadline-status{font-size:10px;color:#b6d0e2;font-weight:800;white-space:nowrap}
+.deadline-race-name{font-size:11px;color:#9ebacf;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.deadline-race-time{display:flex;align-items:baseline;justify-content:space-between;gap:5px;border-top:1px solid #34536c;padding-top:8px}
+.deadline-race-time small{font-size:10px;color:#abc2d4}
+.deadline-race-time strong{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums;color:#e8fff9}
+.deadline-race-card.deadline-urgent{border:2px solid #ff6875;background:linear-gradient(135deg,#72212c,#3c2335);box-shadow:0 0 0 1px #ff596633}
+.deadline-race-card.deadline-urgent .deadline-status{background:#ff4e5c;color:white;border-radius:5px;padding:4px 6px}
+.deadline-race-card.deadline-urgent .deadline-race-time strong{color:#ffde88}
+.deadline-race-card.deadline-closed{opacity:.64}
+.deadline-race-card.deadline-closed .deadline-status{color:#a2aebd}
+.deadline-race-card.deadline-future .deadline-status{color:#83c8ff}
+.deadline-note{font-size:11px;line-height:1.7;color:#94afc0;margin:12px 0 18px}
+@media(max-width:720px){
+.deadline-event{padding:12px}.deadline-event h2{font-size:17px}.deadline-event p{font-size:11px}
+.deadline-event-date{font-size:14px;padding:8px}
+.deadline-race-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.deadline-race-card{padding:11px;gap:8px}
+.deadline-race-card.active{padding:10px}
+.deadline-race-time strong{font-size:23px}
+.deadline-race-top>b{font-size:23px}
+}
