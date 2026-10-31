@@ -36,3 +36,12 @@ test('minimum sample guard blocks training-selected candidates',()=>{
  const r=summarizeMonths(sample(),{minTrain:100000});
  assert.equal(r.selected[0].selected,null);
 });
+
+test('zero-padded venue codes 01 through 09 are normalized and selected',()=>{
+ const a=sample();
+ for(const m of a)m.report.rows.push({...row(0,110000),segment:'venue:01'});
+ const r=summarizeMonths(a);
+ const v=r.selected.find(x=>x.segment==='venue:1');
+ assert.equal(v.selected.count,3);
+ assert.equal(v.selected.train.races,2400);
+});
