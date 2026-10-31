@@ -67,7 +67,7 @@ for(let i=0;i<candidates.length;i++){
   a.sort((p,q)=>q.sample.roi-p.sample.roi||q.sample.races-p.sample.races);
   if(a.length>80)a.length=80;
  }
- if((i+1)%5000===0)console.log('SEARCH_PROGRESS',i+1,'/',candidates.length,flush=true);
+ if((i+1)%5000===0)console.log('SEARCH_PROGRESS',i+1,'/',candidates.length);
 }
 const finalistKeys=new Map();
 for(const a of Object.values(shortlist))for(const x of a)finalistKeys.set(x.values.join(','),x.values);
