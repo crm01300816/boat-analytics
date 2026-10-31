@@ -426,3 +426,17 @@ body{font-size:14px}
 .concept-filter button.concept-filter-active{background:#0068d5!important;color:#fff!important;border-color:#0068d5!important}
 .concept-filter button:focus-visible{outline:3px solid #ffb42a;outline-offset:2px}
 .concept-race[hidden]{display:none!important}
+
+
+/* Relative standout indicators: stronger gap = stronger visual emphasis. */
+.standout-badge{display:inline-block!important;width:max-content;max-width:100%;margin-top:3px;padding:2px 5px;border-radius:5px;background:#e7f5ff;color:#0866a8!important;font-size:9px!important;font-weight:900;line-height:1.4;white-space:nowrap}
+.standout-badge.standout-strong{background:#fff0c2;color:#895000!important;box-shadow:0 0 0 1px #f0c459}
+.standout-number{color:#c27400!important;font-weight:950!important;text-shadow:0 0 10px #ffc94a88}
+.standout-row{border-radius:8px;padding:5px 6px;background:#eff8ff}
+.standout-row.standout-strong{background:#fff4d5;box-shadow:inset 3px 0 #efab22}
+.standout-row .standout-badge{display:block!important}
+.concept-motor-list>div.standout-motor{background:#eaf6ff;border:2px solid #66b5ec}
+.concept-motor-list>div.standout-motor.standout-strong{background:#fff4d7;border-color:#e9aa27;box-shadow:0 2px 9px #d49a2440}
+.concept-motor-list>div.standout-motor strong{color:#b77500;font-size:19px}
+.concept-racer .standout-badge{font-size:8px!important;white-space:normal}
+@media(max-width:720px){.concept-racer .standout-badge{font-size:7px!important;padding:2px 3px}.concept-motor-list>div.standout-motor{padding:6px 4px}.concept-motor-list>div.standout-motor strong{font-size:17px}}
