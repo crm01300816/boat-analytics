@@ -21,7 +21,8 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq 7zip
       - name: Acquire completed official B/K dates
-        run: mkdir -p .local
+        run: |
+          mkdir -p .local
           python3 scripts/official-month-collector.py --start 2026-08-01 --end 2026-08-31 --out .local/custom-aug.json
           python3 scripts/official-month-collector.py --start 2026-09-01 --end 2026-09-30 --out .local/custom-sep.json
           python3 scripts/official-month-collector.py --start 2026-10-01 --end 2026-10-28 --out .local/custom-oct.json
