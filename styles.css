@@ -442,9 +442,7 @@ body{font-size:14px}
 @media(max-width:720px){.concept-racer .standout-badge{font-size:7px!important;padding:2px 3px}.concept-motor-list>div.standout-motor{padding:6px 4px}.concept-motor-list>div.standout-motor strong{font-size:17px}}
 
 
-/* The six-row racer summary scrolls horizontally on its own; the rest of the page stays fixed. */
-.concept-racer-scroll{width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:thin;border-radius:12px}
-.concept-racer-scroll .concept-racer-list{min-width:680px;width:max-content;max-width:none;min-width:max(680px,100%);margin-bottom:0}
-.concept-racer-scroll .concept-racer{grid-template-columns:38px 38px 180px 110px 110px 80px;gap:10px;min-height:70px}
-.concept-racer-scroll .concept-racer-name b{white-space:normal;overflow:visible}
-@media(min-width:721px){.concept-racer-scroll .concept-racer-list{width:100%;min-width:780px}.concept-racer-scroll .concept-racer{grid-template-columns:40px 40px minmax(160px,1fr) 130px 130px 90px}}
+
+/* Only the analysis category tabs swipe sideways on narrow screens. */
+.concept-detail-tabs{display:flex!important;flex-wrap:nowrap!important;overflow-x:auto!important;overflow-y:hidden;max-width:100%;width:100%;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:thin;scroll-snap-type:x proximity;gap:8px;padding-bottom:5px}
+.concept-detail-tabs>span{flex:0 0 auto!important;white-space:nowrap;scroll-snap-align:start;min-width:max-content}
