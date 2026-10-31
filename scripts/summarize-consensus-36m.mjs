@@ -17,7 +17,7 @@ export function summarizeMonths(months,{minTrain=200,minValidation=50,minTest=50
   monthly.push({month,period,rows:report.rows.length,excluded:report.excluded||{}});
   const keys=new Set();
   for(const r of report.rows){
-   const count=Number(r.count),threshold=Number(r.threshold),segment=String(r.segment);
+   const count=Number(r.count),threshold=Number(r.threshold),segment=String(r.segment).replace(/^venue:0([1-9])$/,'venue:$1');
    if(!validSegment(segment))continue; // Ignore other exploratory segments; do not rank them post hoc.
    if(!COUNTS.includes(count)||!THRESHOLDS.includes(threshold))throw Error('Invalid candidate '+month);
    const key=[count,threshold,segment].join('|');
