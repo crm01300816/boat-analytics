@@ -1,0 +1,47 @@
+name: Audit 36-month archived consensus by venue and confidence
+on:
+  workflow_dispatch:
+  push:
+    branches: [experiment/value-ensemble-research-20261030]
+    paths:
+      - scripts/summarize-consensus-36m.mjs
+      - tests/summarize-consensus-36m.test.mjs
+      - .github/workflows/consensus-36m-audit.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Run regression tests
+        run: node --test tests/*.test.mjs
+      - name: Reuse 36 archived monthly B/K artifacts from the completed Oct 30 run
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 41054835106
+          github-token: ${{ github.token }}
+          pattern: consensus-*
+          path: .local/consensus-months
+      - name: Aggregate venue, confidence proxy and 3/5/7/10 point strategies
+        run: |
+          node scripts/summarize-consensus-36m.mjs .local/consensus-months consensus-36m-audit.json
+          cat consensus-36m-audit.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove source monthly aggregates
+        if: always()
+        run: rm -rf .local/consensus-months
+      - name: Upload audit report (aggregates only)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: consensus-36m-independent-period-audit
+          path: |
+            consensus-36m-audit.json
+            consensus-36m-audit.md
+          retention-days: 30
+          if-no-files-found: warn
