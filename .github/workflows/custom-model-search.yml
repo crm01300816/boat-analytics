@@ -21,12 +21,28 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq 7zip
       - name: Acquire completed official B/K dates
-        run: python3 scripts/official-month-collector.py --start 2026-08-01 --end 2026-10-28 --out .local/custom-search-input.json
+        run: mkdir -p .local
+          python3 scripts/official-month-collector.py --start 2026-08-01 --end 2026-08-31 --out .local/custom-aug.json
+          python3 scripts/official-month-collector.py --start 2026-09-01 --end 2026-09-30 --out .local/custom-sep.json
+          python3 scripts/official-month-collector.py --start 2026-10-01 --end 2026-10-28 --out .local/custom-oct.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          files=['.local/custom-aug.json','.local/custom-sep.json','.local/custom-oct.json']
+          batches=[json.loads(Path(p).read_text()) for p in files]
+          races=[r for b in batches for r in b['races']]
+          days=[d for b in batches for d in b['days']]
+          ids=[r['id'] for r in races]
+          if len(ids)!=len(set(ids)): raise ValueError('Duplicate races across batches')
+          if len(races)<100: raise ValueError('Insufficient historical races')
+          Path('.local/custom-search-input.json').write_text(json.dumps({'races':races,'days':days}))
+          print('MERGED_RACES',len(races),'DAYS',len(days))
+          PY
       - name: Enumerate all weights and evaluate holdout
         run: node --max-old-space-size=4096 scripts/search-custom-models.mjs .local/custom-search-input.json custom-search-report.json
       - name: Remove race-level data
         if: always()
-        run: rm -f .local/custom-search-input.json
+        run: rm -f .local/custom-search-input.json .local/custom-aug.json .local/custom-sep.json .local/custom-oct.json
       - name: Save aggregated top 3 research report
         if: always()
         uses: actions/upload-artifact@v4
