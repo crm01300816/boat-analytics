@@ -31,6 +31,7 @@ jobs:
       - name: Aggregate venue, confidence proxy and 3/5/7/10 point strategies
         run: |
           node scripts/summarize-consensus-36m.mjs .local/consensus-months consensus-36m-audit.json
+          cat consensus-36m-audit.md | head -n 38
           cat consensus-36m-audit.md >> "$GITHUB_STEP_SUMMARY"
       - name: Remove source monthly aggregates
         if: always()
