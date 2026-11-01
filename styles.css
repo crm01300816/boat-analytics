@@ -458,3 +458,24 @@ body{font-size:14px}
 .concept-detail-tabs{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:4px!important;overflow:visible!important;width:100%;max-width:100%;padding:0 0 7px!important;scroll-snap-type:none!important}
 .concept-detail-tabs>button{min-width:0!important;width:100%;padding:11px 2px!important;font-size:clamp(10px,2.7vw,13px)!important;line-height:1.3;letter-spacing:-.04em;white-space:nowrap;text-align:center;border-radius:7px}
 @media(max-width:380px){.concept-detail-tabs{gap:2px!important}.concept-detail-tabs>button{font-size:10px!important;padding:10px 1px!important}}
+
+/* 2026-11-02: High-contrast readable text across all light panels and race tables. */
+@media (prefers-color-scheme: light), (prefers-color-scheme: dark) {
+  .main-area .panel, .main-area .premium-section, .main-area .concept-racer-list { color:#142c46; }
+  .main-area .data-table td, .main-area .data-table td:not(.accent):not(.strong),
+  .main-area .data-table td small, .main-area .data-table tbody tr td,
+  .main-area .concept-racer small, .main-area .concept-motor-list small,
+  .main-area .premium-section p, .main-area .panel-header p,
+  .main-area .footnote, .main-area .model-note { color:#28445e!important; opacity:1!important; }
+  .main-area .data-table th {color:#163c62!important;font-weight:850!important;}
+  .main-area .data-table td {font-weight:650;}
+  .main-area .data-table td.strong {color:#102b48!important;font-weight:900;}
+  .main-area .data-table td.accent {color:#005b9d!important;font-weight:900;}
+  .main-area .data-table tbody tr {opacity:1!important;}
+  .main-area .data-table tbody tr:nth-child(even) {background:#f0f5fb;}
+  .main-area .data-table tbody tr:nth-child(odd) {background:#fff;}
+  .main-area .data-table td, .main-area .data-table th {font-size:max(13px,1em);}
+  .main-area .data-table td {border-color:#d8e2ed;}
+  .main-area .small-pill {color:#16476d!important;}
+}
+@media(max-width:720px){.main-area .data-table td{font-size:14px!important}.main-area .data-table th{font-size:12px!important}.main-area .data-table td,.main-area .data-table th{line-height:1.5}}
