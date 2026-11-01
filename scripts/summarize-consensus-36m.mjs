@@ -44,7 +44,7 @@ export function summarizeMonths(months,{minTrain=200,minValidation=50,minTest=50
   chronologicalPeriods:PERIODS,monthly,monthCount:months.length,candidateCount:candidates.length,
   sampleRules:{minTrain,minValidation,minTest,selection:'training ROI only, no validation/test ROI ranking'},
   confidence:'Thresholds 0/0.4/0.45 use uncalibrated pre-race lane-1 strength proxy, NOT probability confidence',
-  selected,byCountAndConfidence:candidates.filter(x=>x.segment==='all').sort((a,b)=>a.count-b.count||a.threshold-b.threshold),
+  selected,walkForward:walkForwardMonths(months),byCountAndConfidence:candidates.filter(x=>x.segment==='all').sort((a,b)=>a.count-b.count||a.threshold-b.threshold),
   byVenue:candidates.filter(x=>x.segment!=='all').sort((a,b)=>a.segment.localeCompare(b.segment)||a.count-b.count||a.threshold-b.threshold),
   warnings:['Historical B/K data lack captured pre-deadline odds; cannot compute verified value/edge.',
   'Refunds, cancellations and special settlements are not independently audited; ROI is provisional.',
@@ -52,6 +52,63 @@ export function summarizeMonths(months,{minTrain=200,minValidation=50,minTest=50
   'Selecting winning venues, confidence thresholds or bet counts after inspecting test ROI is prohibited.',
   'Multiple-comparison and sparse-sample risks remain; no ROI above 100% is declared proven.']};
 }
+
+/**
+ * Retrospective rolling-origin diagnostic, NOT prospective evidence.
+ * At the start of each month, choose using ONLY the preceding 12 months.
+ * The selected policy is then evaluated on the next month without re-ranking.
+ * Missing monthly candidate rows mean no recorded purchases, not zero-ROI bets.
+ */
+export function walkForwardMonths(months,{lookbackMonths=12,minHistoryRaces=100}={}){
+ if(!Number.isInteger(lookbackMonths)||lookbackMonths<1||!Number.isInteger(minHistoryRaces)||minHistoryRaces<1)throw Error('Invalid walk-forward configuration');
+ const ordered=[...months].sort((a,b)=>a.month.localeCompare(b.month));
+ const segmentNames=['all',...Array.from({length:24},(_,i)=>'venue:'+(i+1))];
+ const keyOf=r=>[Number(r.count),Number(r.threshold),String(r.segment).replace(/^venue:0([1-9])$/,'venue:$1')].join('|');
+ const index=ordered.map(({report})=>new Map(report.rows.filter(r=>validSegment(String(r.segment))).map(r=>[keyOf(r),r])));
+ const totals=()=>({races:0,hits:0,stakeYen:0,payoutYen:0,selectedMonths:0,monthsWithBets:0});
+ const accumulate=(target,r)=>{if(!r)return;target.races+=Number(r.purchased);target.hits+=Number(r.hits);target.stakeYen+=Number(r.stake);target.payoutYen+=Number(r.payout);target.monthsWithBets++};
+ const bySegment=segmentNames.map(segment=>({segment,rolling:totals(),fixedBaseline:totals(),latestSix:totals(),policies:[]}));
+ const byMonth=[];
+ for(let i=lookbackMonths;i<ordered.length;i++){
+  const month=ordered[i].month;
+  const monthTotals={month,global:totals(),venuePortfolio:totals()};
+  for(const target of bySegment){
+   const choices=[];
+   for(const count of COUNTS)for(const threshold of THRESHOLDS){
+    const key=[count,threshold,target.segment].join('|');
+    const history=totals();
+    for(let j=i-lookbackMonths;j<i;j++)accumulate(history,index[j].get(key));
+    if(history.races>=minHistoryRaces)choices.push({count,threshold,roi:history.payoutYen/history.stakeYen,historyRaces:history.races,key});
+   }
+   choices.sort((a,b)=>b.roi-a.roi||b.historyRaces-a.historyRaces||a.count-b.count||a.threshold-b.threshold);
+   const choice=choices[0];
+   if(choice){
+    target.rolling.selectedMonths++;
+    if(i>=ordered.length-6)target.latestSix.selectedMonths++;
+    const current=index[i].get(choice.key);
+    accumulate(target.rolling,current);
+    if(i>=ordered.length-6)accumulate(target.latestSix,current);
+    const group=target.segment==='all'?monthTotals.global:monthTotals.venuePortfolio;
+    group.selectedMonths++;
+    accumulate(group,current);
+    target.policies.push({month,count:choice.count,confidenceThreshold:choice.threshold,trainingRaces:choice.historyRaces,trainingROI:choice.roi,purchased:current?Number(current.purchased):0});
+   }
+   const baseline=index[i].get([3,0,target.segment].join('|'));
+   accumulate(target.fixedBaseline,baseline);
+  }
+  byMonth.push({month,global:finish(monthTotals.global),venuePortfolio:finish(monthTotals.venuePortfolio)});
+ }
+ for(const x of bySegment){finish(x.rolling);finish(x.fixedBaseline);finish(x.latestSix)}
+ const portfolio=totals(),latestSixPortfolio=totals();
+ for(const x of bySegment.filter(x=>x.segment!=='all')){
+  for(const k of ['races','hits','stakeYen','payoutYen','selectedMonths','monthsWithBets']){portfolio[k]+=x.rolling[k];latestSixPortfolio[k]+=x.latestSix[k]}
+ }
+ return {method:'Rolling-origin monthly selection: trailing 12 months, highest historical ROI among 3/5/7/10 bets and 0/.4/.45 proxy thresholds; no future month outcomes used for that month selection',
+  lookbackMonths,minHistoryRaces,evaluationMonths:byMonth.length,
+  bySegment,byMonth,venuePortfolio:finish(portfolio),latestSixVenuePortfolio:finish(latestSixPortfolio),
+  caveat:'Researcher selected the rolling method retrospectively; no pre-deadline odds, no refund audit, venue portfolio overlaps the global cohort. Not a prospective or statistically verified profit result.'};
+}
+
 async function findFiles(dir,found=[]){
  for(const e of await readdir(dir,{withFileTypes:true})){
   const p=join(dir,e.name);if(e.isDirectory())await findFiles(p,found);
@@ -73,6 +130,11 @@ export function markdownSummary(report){
   if(!s.selected){lines.push('| '+s.segment+' | — | — | insufficient sample | — | — |');continue}
   const x=s.selected;lines.push('| '+s.segment+' | '+x.count+' | '+x.confidenceThreshold+' | '+x.train.races+' / '+pct(x.train.provisionalROI)+' | '+x.validation.races+' / '+pct(x.validation.provisionalROI)+' | '+x.test.races+' / '+pct(x.test.provisionalROI)+' |');
  }
+ const w=report.walkForward;lines.push('','## Rolling 12-month walk-forward diagnostic','',
+  'At each month start, the preceding 12 months alone select a 3/5/7/10-point and confidence-proxy rule. This is a retrospective rolling-origin check, not prospective validation.','',
+  '| Rolling scope | Evaluation races | ROI | Latest 6 months races | Latest 6 months ROI |','|---|---:|---:|---:|---:|');
+ const glob=w.bySegment[0];lines.push('| All venues | '+glob.rolling.races+' | '+pct(glob.rolling.provisionalROI)+' | '+glob.latestSix.races+' | '+pct(glob.latestSix.provisionalROI)+' |');
+ lines.push('| 24-venue portfolio | '+w.venuePortfolio.races+' | '+pct(w.venuePortfolio.provisionalROI)+' | '+w.latestSixVenuePortfolio.races+' | '+pct(w.latestSixVenuePortfolio.provisionalROI)+' |');
  return lines.concat(['','**Limitations:** Historical pre-deadline odds missing; refund settlement unaudited; thresholds uncalibrated; retrospective model exploration and multiple comparisons prevent any claim of verified profit.','']).join('\n');
 }
 if(process.argv[1]?.endsWith('summarize-consensus-36m.mjs')){
