@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {sanitize} from '../scripts/sanitize-official-model-input.mjs';
 import {raceFeatures,trainLogit,modelScores,rankedCombos,picksFor,compareModels,PERIODS} from '../scripts/research-three-models.mjs';
 const entries=Array.from({length:6},(_,i)=>({lane:i+1,className:i===0?'A1':'B1',
  win:i===0?7:4.5,n2:i===0?65:40,localWin:i===0?6.5:4,l2:i===0?62:35,
@@ -49,4 +50,13 @@ test('common-race comparison reports provisional payouts and cohort counts',()=>
  assert.ok(out.warnings.some(x=>/odds/i.test(x)));
  for(const row of out.rows)assert.equal(row.stakeYen,row.races*1000);
  assert.ok(out.rows.every(r=>r.provisionalROI===null||r.provisionalROI>=0));
+});
+
+test('short-lived feature export excludes racer identity and motor/boat IDs',()=>{
+ const a=race();a.entries[0].name='PRIVATE';a.entries[0].id='1234';a.entries[0].motor=77;
+ const clean=sanitize({start:'2024-01-01',end:'2024-01-31',races:[a]});
+ assert.equal(clean.races[0].entries[0].name,undefined);
+ assert.equal(clean.races[0].entries[0].id,undefined);
+ assert.equal(clean.races[0].entries[0].motor,undefined);
+ assert.equal(clean.races[0].entries[0].win,7);
 });
