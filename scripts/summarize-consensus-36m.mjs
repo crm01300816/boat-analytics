@@ -67,7 +67,7 @@ export function walkForwardMonths(months,{lookbackMonths=12,minHistoryRaces=100}
  const index=ordered.map(({report})=>new Map(report.rows.filter(r=>validSegment(String(r.segment))).map(r=>[keyOf(r),r])));
  const totals=()=>({races:0,hits:0,stakeYen:0,payoutYen:0,selectedMonths:0,monthsWithBets:0});
  const accumulate=(target,r)=>{if(!r)return;target.races+=Number(r.purchased);target.hits+=Number(r.hits);target.stakeYen+=Number(r.stake);target.payoutYen+=Number(r.payout);target.monthsWithBets++};
- const bySegment=segmentNames.map(segment=>({segment,rolling:totals(),fixedBaseline:totals(),latestSix:totals(),policies:[]}));
+ const bySegment=segmentNames.map(segment=>({segment,rolling:totals(),fixedBaseline:totals(),latestSix:totals(),latestSixBaseline:totals(),policies:[]}));
  const byMonth=[];
  for(let i=lookbackMonths;i<ordered.length;i++){
   const month=ordered[i].month;
@@ -95,17 +95,19 @@ export function walkForwardMonths(months,{lookbackMonths=12,minHistoryRaces=100}
    }
    const baseline=index[i].get([3,0,target.segment].join('|'));
    accumulate(target.fixedBaseline,baseline);
+   if(i>=ordered.length-6)accumulate(target.latestSixBaseline,baseline);
   }
   byMonth.push({month,global:finish(monthTotals.global),venuePortfolio:finish(monthTotals.venuePortfolio)});
  }
- for(const x of bySegment){finish(x.rolling);finish(x.fixedBaseline);finish(x.latestSix)}
- const portfolio=totals(),latestSixPortfolio=totals();
+ for(const x of bySegment){finish(x.rolling);finish(x.fixedBaseline);finish(x.latestSix);finish(x.latestSixBaseline)}
+ const portfolio=totals(),latestSixPortfolio=totals(),baselinePortfolio=totals(),latestSixBaselinePortfolio=totals();
  for(const x of bySegment.filter(x=>x.segment!=='all')){
-  for(const k of ['races','hits','stakeYen','payoutYen','selectedMonths','monthsWithBets']){portfolio[k]+=x.rolling[k];latestSixPortfolio[k]+=x.latestSix[k]}
+  for(const k of ['races','hits','stakeYen','payoutYen','selectedMonths','monthsWithBets']){portfolio[k]+=x.rolling[k];latestSixPortfolio[k]+=x.latestSix[k];baselinePortfolio[k]+=x.fixedBaseline[k];latestSixBaselinePortfolio[k]+=x.latestSixBaseline[k]}
  }
  return {method:'Rolling-origin monthly selection: trailing 12 months, highest historical ROI among 3/5/7/10 bets and 0/.4/.45 proxy thresholds; no future month outcomes used for that month selection',
   lookbackMonths,minHistoryRaces,evaluationMonths:byMonth.length,
   bySegment,byMonth,venuePortfolio:finish(portfolio),latestSixVenuePortfolio:finish(latestSixPortfolio),
+  baselineVenuePortfolio:finish(baselinePortfolio),latestSixBaselineVenuePortfolio:finish(latestSixBaselinePortfolio),
   caveat:'Researcher selected the rolling method retrospectively; no pre-deadline odds, no refund audit, venue portfolio overlaps the global cohort. Not a prospective or statistically verified profit result.'};
 }
 
@@ -132,9 +134,12 @@ export function markdownSummary(report){
  }
  const w=report.walkForward;lines.push('','## Rolling 12-month walk-forward diagnostic','',
   'At each month start, the preceding 12 months alone select a 3/5/7/10-point and confidence-proxy rule. This is a retrospective rolling-origin check, not prospective validation.','',
-  '| Rolling scope | Evaluation races | ROI | Latest 6 months races | Latest 6 months ROI |','|---|---:|---:|---:|---:|');
+  '| Policy / scope | Evaluation races | ROI | Latest 6 months races | Latest 6 months ROI |','|---|---:|---:|---:|---:|');
  const glob=w.bySegment[0];lines.push('| All venues | '+glob.rolling.races+' | '+pct(glob.rolling.provisionalROI)+' | '+glob.latestSix.races+' | '+pct(glob.latestSix.provisionalROI)+' |');
  lines.push('| 24-venue portfolio | '+w.venuePortfolio.races+' | '+pct(w.venuePortfolio.provisionalROI)+' | '+w.latestSixVenuePortfolio.races+' | '+pct(w.latestSixVenuePortfolio.provisionalROI)+' |');
+ lines.push('| Fixed 3-point / threshold 0, all venues | '+glob.fixedBaseline.races+' | '+pct(glob.fixedBaseline.provisionalROI)+' | '+glob.latestSixBaseline.races+' | '+pct(glob.latestSixBaseline.provisionalROI)+' |');
+ lines.push('| Fixed 3-point / threshold 0, venue portfolio | '+w.baselineVenuePortfolio.races+' | '+pct(w.baselineVenuePortfolio.provisionalROI)+' | '+w.latestSixBaselineVenuePortfolio.races+' | '+pct(w.latestSixBaselineVenuePortfolio.provisionalROI)+' |');
+ lines.push('','Fixed baseline is a descriptive benchmark, not a separately trained or verified profit strategy. The rolling and fixed policies can purchase different numbers of races; compare ROI alongside race counts.');
  return lines.concat(['','**Limitations:** Historical pre-deadline odds missing; refund settlement unaudited; thresholds uncalibrated; retrospective model exploration and multiple comparisons prevent any claim of verified profit.','']).join('\n');
 }
 if(process.argv[1]?.endsWith('summarize-consensus-36m.mjs')){
