@@ -16,6 +16,9 @@ s = importlib.util.spec_from_file_location(
     "bk_pilot", Path(__file__).with_name("official-backtest-pilot.py"))
 pilot = importlib.util.module_from_spec(s)
 s.loader.exec_module(pilot)
+t = importlib.util.spec_from_file_location('k_techniques', Path(__file__).with_name('official-k-techniques.py'))
+techniques = importlib.util.module_from_spec(t)
+t.loader.exec_module(techniques)
 
 def collect(args):
     first, last = dt.date.fromisoformat(args.start), dt.date.fromisoformat(args.end)
@@ -64,6 +67,8 @@ def collect(args):
             cards, binfo=pilot.parse_b(archive_text["B"],iso)
             payouts=pilot.parse_k(archive_text["K"],iso)
             rows=[{**r, **payouts[r["id"]]} for r in cards if r["id"] in payouts]
+            if args.include_technique:
+                entry['techniqueAudit']=techniques.augment_races(rows,archive_text['K'],iso)
             for row in rows:
                 if row["id"] in seen:
                     raise ValueError("Duplicate race id: "+row["id"])
@@ -94,4 +99,5 @@ if __name__=="__main__":
     parser.add_argument("--start",required=True)
     parser.add_argument("--end",required=True)
     parser.add_argument("--out",required=True)
+    parser.add_argument("--include-technique",action="store_true",help="PRIVATE K method/course labels; never upload raw rows")
     raise SystemExit(collect(parser.parse_args()))
