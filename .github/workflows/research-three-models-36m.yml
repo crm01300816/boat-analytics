@@ -77,6 +77,11 @@ jobs:
           node scripts/research-three-models.mjs .local/features three-model-36m.json
           echo "### 36-month official B/K three-model research" >> "$GITHUB_STEP_SUMMARY"
           node -e "const r=require('./three-model-36m.json'); console.log('Training races:',r.trainedRaces);for(const x of r.rows.filter(x=>x.period==='test'&&x.segment==='all'&&x.count===3))console.log(x.model,x.races,x.provisionalROI)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Compare train-frozen purchase-selection policies
+        run: |
+          node scripts/research-race-selection.mjs .local/features race-selection-36m.json
+          echo '### Purchase-selection policies (validation nominated, test not optimized)' >> "$GITHUB_STEP_SUMMARY"
+          node -e "const r=require('./race-selection-36m.json');for(const c of r.counts){const p=c.selectedByValidation;console.log('count',c.count,'test all ROI',c.periods.test.escape.provisionalROI,'selected',p?JSON.stringify({ranker:p.ranker,fraction:p.fraction,validationROI:p.validation.provisionalROI,testROI:p.test.provisionalROI,testBets:p.test.races}):'none passed validation guards')}" >> "$GITHUB_STEP_SUMMARY"
       - name: Remove temporary per-race derived features
         if: always()
         run: rm -rf .local/features
@@ -85,5 +90,12 @@ jobs:
         with:
           name: official-bk-three-model-36m-aggregates
           path: three-model-36m.json
+          retention-days: 30
+          if-no-files-found: error
+      - name: Upload selective-purchase research report
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-bk-race-selection-36m-aggregates
+          path: race-selection-36m.json
           retention-days: 30
           if-no-files-found: error
