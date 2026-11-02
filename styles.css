@@ -479,3 +479,6 @@ body{font-size:14px}
   .main-area .small-pill {color:#16476d!important;}
 }
 @media(max-width:720px){.main-area .data-table td{font-size:14px!important}.main-area .data-table th{font-size:12px!important}.main-area .data-table td,.main-area .data-table th{line-height:1.5}}
+
+/* Exhibition grades: readable on both desktop and mobile. */
+.exhibition-grade{display:inline-block;min-width:27px;text-align:center;padding:3px 6px;border-radius:6px;font-size:15px;font-weight:900;background:#e8edf3;color:#263d54}.exhibition-grade.grade-S{background:#ffe5a1;color:#704500}.exhibition-grade.grade-A{background:#d6edff;color:#0055a2}.exhibition-grade.grade-B{background:#e4f4e9;color:#17623b}.exhibition-grade.grade-C{background:#e8edf3;color:#43566c}.exhibition-reason{display:block;color:#294560!important;font-size:11px!important;font-weight:700;margin-top:3px;white-space:normal;min-width:85px}
