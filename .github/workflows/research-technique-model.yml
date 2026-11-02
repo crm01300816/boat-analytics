@@ -58,6 +58,8 @@ jobs:
               --include-technique --out ".local/private/official-$MONTH.json"
           done
           test "$(find .local/private -maxdepth 1 -name 'official-20??-??.json' | wc -l)" -eq 36
+      - name: Recompute validation-selected purchase-selection baseline
+        run: node scripts/research-race-selection.mjs .local/private technique-selection-baseline.json
       - name: Export PRIVATE racer-level chronological features
         run: node scripts/export-technique-input.mjs .local/private .local/technique-input.jsonl
       - name: Train 3-stage LightGBM/XGBoost and compare 3/5/7/10 bets
@@ -84,6 +86,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: official-bk-technique-36m-aggregates
-          path: technique-36m-aggregate.json
+          path: |
+            technique-36m-aggregate.json
+            technique-selection-baseline.json
           retention-days: 30
           if-no-files-found: warn
