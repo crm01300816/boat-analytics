@@ -4,7 +4,6 @@
 import {readFile,readdir,writeFile,mkdir} from 'node:fs/promises';
 import {dirname,join} from 'node:path';
 import {consensusPicks} from './historical-consensus-scan.mjs';
-import {indexPicks} from './historical-index-grid.mjs';
 
 export const COUNTS=[3,5,7,10];
 export const PERIODS={train:['2023-11','2025-10'],validation:['2025-11','2026-04'],test:['2026-05','2026-10']};
@@ -94,8 +93,8 @@ export function rankedCombos(scores){
 export function picksFor(race,model,count,fit){
  if(!COUNTS.includes(count))throw Error('Invalid bet count');
  if(model==='fixed3'){
-  // The historical baseline is fixed three-point strategy, evaluated at three points only.
-  return count===3?indexPicks(race,'balanced','strong',3):null;
+  // Exact 36-month fixed baseline: three consensus picks, threshold zero.
+  return count===3?consensusPicks(race,3):null;
  }
  if(model==='consensus')return consensusPicks(race,count);
  const ranked=rankedCombos(modelScores(race,model,fit));
