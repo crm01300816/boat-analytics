@@ -81,12 +81,12 @@ export function modelScores(race,model,fit){
 }
 export function rankedCombos(scores){
  if(!scores||scores.length!==6||scores.some(x=>!Number.isFinite(x)))return null;
- const out=[];
+ const out=[];const weights=scores.map(v=>Math.exp(clamp(v-Math.max(...scores),-40,0))),total=weights.reduce((a,b)=>a+b,0);
  for(let a=0;a<6;a++)for(let b=0;b<6;b++)for(let c=0;c<6;c++){
   if(a===b||a===c||b===c)continue;
-  const p1=softmax(scores,[0,1,2,3,4,5]).find(x=>x.i===a).p;
-  const p2=softmax(scores,[0,1,2,3,4,5].filter(i=>i!==a)).find(x=>x.i===b).p;
-  const p3=softmax(scores,[0,1,2,3,4,5].filter(i=>i!==a&&i!==b)).find(x=>x.i===c).p;
+  const p1=weights[a]/total;
+  const p2=weights[b]/(total-weights[a]);
+  const p3=weights[c]/(total-weights[a]-weights[b]);
   out.push({combo:[a+1,b+1,c+1].join('-'),p:p1*p2*p3});
  }
  return out.sort((a,b)=>b.p-a.p||a.combo.localeCompare(b.combo));
@@ -119,11 +119,11 @@ export function compareModels(races,fit){
  const groups=new Map(),excluded={invalidSettlement:0,missingPreRaceFeatures:0,consensusUnavailable:0},cohorts={};
  const sorted=[...races].sort((a,b)=>String(a.id).localeCompare(String(b.id)));
  for(const race of sorted){
-  const date=String(race.id||'').slice(0,6),period=periodOf(date);
+  const rawDate=String(race.id||'').slice(0,6),date=rawDate.slice(0,4)+'-'+rawDate.slice(4),period=periodOf(date);
   if(!period)continue;
   if(!isCombo(race.winningCombo)||!Number.isSafeInteger(Number(race.payoutPer100Yen))||Number(race.payoutPer100Yen)<=0){excluded.invalidSettlement++;continue}
   if(!raceFeatures(race)){excluded.missingPreRaceFeatures++;continue}
-  const month=date.slice(0,4)+'-'+date.slice(4),venue='venue:'+Number(race.venue);
+  const month=date,venue='venue:'+Number(race.venue);
   const scores=Object.fromEntries(['logit','escape','attack'].map(m=>[m,modelScores(race,m,fit)]));
   for(const count of COUNTS){
    const consensus=picksFor(race,'consensus',count,fit);
