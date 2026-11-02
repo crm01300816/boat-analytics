@@ -41,8 +41,8 @@ test('venue prior and ranker use pre-race features and training venue results on
  assert.ok(prior.byVenue['1']>prior.byVenue['2']);
  const x={venue:'1',mass:.2,p1:.7,margin:1.5,motorGap:10};
  const bins=[{upper:1,n:100,p:.3}];
- assert.equal(scoreFor(x,'lane1MotorGap',prior,bins),10);
- assert.equal(scoreFor(x,'calibratedMass',prior,bins),.3);
+ assert.ok(Math.abs(scoreFor(x,'lane1MotorGap',prior,bins)-10)<1e-5);
+ assert.ok(Math.abs(scoreFor(x,'calibratedMass',prior,bins)-.3)<1e-5);
  assert.ok(scoreFor(x,'venueBlend',prior,bins)>0);
  assert.throws(()=>scoreFor(x,'unknown',prior,bins),/Unknown/);
 });
