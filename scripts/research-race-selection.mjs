@@ -57,7 +57,9 @@ export function venuePriors(rows){
 export function scoreFor(r,ranker,priors,bins){
  const v=priors.byVenue[r.venue]??priors.overall;
  const c=calibratedProbability(r.mass,bins),m=clamp(.5+r.motorGap/100,0,1);
- // Break discrete calibration and rounded motor ties with continuous pre-race mass.\n // This keeps a nominal 10/20/30% training filter from accidentally buying 40%+.\n const scores={
+ // Break discrete calibration and rounded motor ties with continuous pre-race mass.
+ // This keeps a nominal 10/20/30% training filter from accidentally buying 40%+.
+ const scores={
   topComboMass:r.mass,calibratedMass:c+1e-6*r.mass,lane1Probability:r.p1,
   lane1Margin:r.margin,lane1MotorGap:r.motorGap+1e-6*r.mass,
   venueBlend:.7*r.p1+.3*v,
