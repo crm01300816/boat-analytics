@@ -1,0 +1,74 @@
+name: Research LightGBM and XGBoost on 36-month official B/K
+on:
+  push:
+    branches: [experiment/value-ensemble-research-20261030]
+    paths:
+      - scripts/export-gbm-features.mjs
+      - scripts/research-boosted-models.py
+      - tests/export-gbm-features.test.mjs
+      - tests/test_boosted_models.py
+      - .github/workflows/research-boosted-models.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  boosted-36m:
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free open-source ML libraries
+        run: python -m pip install --disable-pip-version-check 'numpy>=1.26,<3' 'lightgbm>=4.5,<5' 'xgboost>=3,<4'
+      - name: Regression tests for baseline and both real AI libraries
+        run: |
+          node --test tests/*.test.mjs
+          python -m unittest discover -s tests -p 'test_boosted_models.py' -v
+      - name: Retrieve 36 anonymous B/K feature months from original successful run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p .local/raw .local/features
+          gh run download 41372002521 --repo crm01300816/boat-analytics --pattern 'official-feature-36m-*' --dir .local/raw
+          find .local/raw -type f -name 'official-20??-??.json' -exec cp {} .local/features/ \;
+          test "$(find .local/features -maxdepth 1 -name 'official-20??-??.json' | wc -l)" -eq 36
+      - name: Run original purchase-selection benchmark
+        run: node scripts/research-race-selection.mjs .local/features boosted-selection-baseline.json
+      - name: Prepare temporary anonymized per-race ML features
+        run: node scripts/export-gbm-features.mjs .local/features .local/boosted-input.jsonl
+      - name: Train and evaluate LightGBM and XGBoost with frozen time splits
+        run: |
+          python scripts/research-boosted-models.py --input .local/boosted-input.jsonl --out boosted-36m-aggregate.json
+          python - <<'PY'
+          import json,os
+          r=json.load(open('boosted-36m-aggregate.json'))
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+              f.write('## LightGBM / XGBoost: 36-month B/K research\n\n')
+              f.write('| Model | Test 5-point races | Hit rate | Provisional ROI | Selected races | Selected ROI |\n|---|---:|---:|---:|---:|---:|\n')
+              for m in r['models']:
+                  c=next(c for c in m['counts'] if c['count']==5)
+                  a=c['periods']['test']['ai']
+                  s=c['selectedByValidation']
+                  n=s['test']['races'] if s else 'none qualified'
+                  roi=format(s['test']['provisionalROI'],'.2%') if s and s['test']['provisionalROI'] is not None else '—'
+                  f.write(f"| {m['model']} | {a['races']} | {a['hitRate']:.2%} | {a['provisionalROI']:.2%} | {n} | {roi} |\n")
+              f.write('\nRetrospective diagnostic only. No verified pre-deadline odds or audited settlements.\n')
+          PY
+      - name: Delete temporary per-race features
+        if: always()
+        run: rm -rf .local
+      - name: Upload aggregate-only research outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-bk-boosted-36m-aggregates
+          path: |
+            boosted-36m-aggregate.json
+            boosted-selection-baseline.json
+          retention-days: 30
+          if-no-files-found: error
