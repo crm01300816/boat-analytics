@@ -151,7 +151,7 @@ export function compareModels(races,fit){
   'Model development has seen historical outcomes; test split is chronologically separated but not pristine prospective evidence.',
   'Do not choose venues, models, thresholds or counts by inspecting test-period ROI.']};
 }
-export async function loadMonths(dir){
+export async function loadMonths(dir,{expectedMonths=null}={}){
  const names=(await readdir(dir)).filter(x=>/^official-20\d{2}-\d{2}\.json$/.test(x)).sort();
  const races=[],months=[];
  for(const name of names){
@@ -159,12 +159,13 @@ export async function loadMonths(dir){
   if(!Array.isArray(data.races))throw Error('Invalid monthly data '+name);
   races.push(...data.races);months.push({month:name.slice(9,16),races:data.races.length});
  }
- if(months.length!==36||months[0].month!=='2023-11'||months.at(-1).month!=='2026-10')throw Error('Expected 36 B/K monthly files');
+ const expected=expectedMonths||Array.from({length:36},(_,i)=>{const n=2023*12+10+i;return Math.floor(n/12)+'-'+String(n%12+1).padStart(2,'0')});
+ if(months.length!==expected.length||months.some((x,i)=>x.month!==expected[i]))throw Error('Missing or unexpected B/K monthly files');
  if(new Set(races.map(r=>r.id)).size!==races.length)throw Error('Duplicate race id');
  return {races,months};
 }
-export async function run(dir,out){
- const {races,months}=await loadMonths(dir);
+export async function run(dir,out,{expectedMonths=null}={}){
+ const {races,months}=await loadMonths(dir,{expectedMonths});
  const train=races.filter(r=>periodOf(String(r.id).slice(0,4)+'-'+String(r.id).slice(4,6))==='train');
  const fit=trainLogit(train),result={...compareModels(races,fit),months,fit:{...fit,weights:'omitted from aggregate report'}};
  await mkdir(dirname(out),{recursive:true});await writeFile(out,JSON.stringify(result,null,2)+'\n');
@@ -172,6 +173,7 @@ export async function run(dir,out){
 }
 if(process.argv[1]?.endsWith('research-three-models.mjs')){
  const [dir,out]=process.argv.slice(2);if(!dir||!out)throw Error('usage: node research-three-models.mjs INPUT_DIR OUTPUT_JSON');
- const report=await run(dir,out);console.log(JSON.stringify({trainedRaces:report.trainedRaces,cohorts:report.cohorts,excluded:report.excluded,
+ const expectedMonths=process.env.MODEL_RESEARCH_MONTHS?.split(',').filter(Boolean)||null;
+ const report=await run(dir,out,{expectedMonths});console.log(JSON.stringify({trainedRaces:report.trainedRaces,cohorts:report.cohorts,excluded:report.excluded,
   testAll:report.rows.filter(r=>r.period==='test'&&r.segment==='all'&&r.count===3).map(r=>({model:r.model,races:r.races,hitRate:r.hitRate,roi:r.provisionalROI}))},null,2));
 }
