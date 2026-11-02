@@ -4,6 +4,13 @@ on:
     branches: [experiment/value-ensemble-research-20261030]
     paths:
       - .github/workflows/research-technique-model.yml
+      - scripts/official-k-techniques.py
+      - scripts/official-month-collector.py
+      - scripts/export-technique-input.mjs
+      - scripts/research-technique-model.py
+      - tests/test_official_k_techniques.py
+      - tests/test_technique_model.py
+      - tests/export-technique-input.test.mjs
   workflow_dispatch:
 permissions:
   contents: read
