@@ -77,3 +77,21 @@ test('rolling-origin returns no bets when a selected monthly candidate is absent
 test('rolling-origin rejects invalid lookback configuration',()=>{
  assert.throws(()=>walkForwardMonths(sample(),{lookbackMonths:0}),/Invalid walk-forward/);
 });
+
+test('rolling evaluation reports a fixed 3-point benchmark without selecting on test results',()=>{
+ const w=walkForwardMonths(sample());
+ const g=w.bySegment[0];
+ assert.equal(g.fixedBaseline.races,2400);
+ assert.equal(g.fixedBaseline.provisionalROI,.975);
+ assert.equal(g.latestSixBaseline.races,600);
+ assert.equal(g.latestSixBaseline.provisionalROI,.2);
+ const md=markdownSummary(summarizeMonths(sample()));
+ assert.match(md,/Fixed 3-point \/ threshold 0, all venues/);
+ assert.match(md,/Fixed baseline is a descriptive benchmark/);
+});
+test('fixed baseline and venue portfolio never invent bets for missing venue rows',()=>{
+ const w=walkForwardMonths(sample());
+ assert.equal(w.baselineVenuePortfolio.races,0);
+ assert.equal(w.baselineVenuePortfolio.provisionalROI,null);
+ assert.equal(w.latestSixBaselineVenuePortfolio.provisionalROI,null);
+});
