@@ -1,4 +1,5 @@
 name: Research B/K selective purchase policies
+# Research-only workflow: no live app changes
 on:
   push:
     branches: [experiment/value-ensemble-research-20261030]
