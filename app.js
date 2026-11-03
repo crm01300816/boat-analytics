@@ -1,5 +1,6 @@
 import { fetchCsv, shiftDate, jstToday, venueName } from './csv.js';
-import { createRaceList, aggregateLocal, rateRacers, rate, makePicks, racerForm } from './analytics.js';
+import { createRaceList, aggregateLocal, rateRacers, rate, makePicks } from './analytics.js';
+import { racerForm } from './racer-form.js';
 import { backtestPage, loadBacktest, setBacktestCount } from './backtest-view.js';
 import { resultsPage } from './race-results.js';
 import {dashboardPage,snapshotOdds,saveForecast,removeForecast} from './smart-navi.js';
