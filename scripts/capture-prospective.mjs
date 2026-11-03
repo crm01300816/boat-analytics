@@ -18,6 +18,14 @@ const [cards,titles,wakus]=await Promise.all([
   fetchCsv('programs/waku10',date).catch(()=>[])
 ]);
 const races=createRaceList(cards,titles,wakus,{});
+// Match the strict selective-five page's pre-deadline confidence rule.
+function selectiveConfidence(r){
+ const es=[...r.entries].sort((a,b)=>Number(a.lane)-Number(b.lane));
+ if(es.length!==6||es.some((e,i)=>Number(e.lane)!==i+1||['win','n2','localWin','l2','m2'].some(k=>!Number.isFinite(Number(e[k])))))return null;
+ const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),priors=[2.05,1.02,.94,.87,.81,.75];
+ const strengths=es.map((e,i)=>{const score=.28*clamp(Number(e.win)/10,0,1)+.23*clamp(Number(e.n2)/100,0,1)+.18*clamp(Number(e.localWin)/10,0,1)+.15*clamp(Number(e.l2)/100,0,1)+.16*clamp(Number(e.m2)/100,0,1);return Math.exp((score-.5)*3.5)*priors[i]});
+ return strengths[0]/strengths.reduce((a,b)=>a+b,0);
+}
 const created=[];
 for(const race of races) {
   if(seen.has(race.id)||race.canceled)continue;
@@ -33,7 +41,7 @@ for(const race of races) {
     picks[count]=result.picks.map(p=>({combo:p.combo,stake:p.stake}));
   }
   if(!eligible)continue;
-  created.push({raceId:race.id,recordedAt:now,deadline,modelId,picks});
+  created.push({raceId:race.id,recordedAt:now,deadline,modelId,picks,selectiveFiveConfidence:selectiveConfidence(race)});
 }
 if(created.length){
   original.records.push(...created);
