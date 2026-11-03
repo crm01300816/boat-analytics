@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 import time
 import urllib.error
+import socket
 
 s = importlib.util.spec_from_file_location(
     "bk_pilot", Path(__file__).with_name("official-backtest-pilot.py"))
@@ -19,6 +20,21 @@ s.loader.exec_module(pilot)
 t = importlib.util.spec_from_file_location('k_techniques', Path(__file__).with_name('official-k-techniques.py'))
 techniques = importlib.util.module_from_spec(t)
 t.loader.exec_module(techniques)
+
+def fetch_with_retry(url, attempts=4):
+    """Retry transient transport failures, never access restrictions or missing archives."""
+    for attempt in range(attempts):
+        try:
+            return pilot.fetch(url)
+        except urllib.error.HTTPError:
+            raise
+        except (urllib.error.URLError, ConnectionError, TimeoutError, socket.timeout):
+            if attempt == attempts - 1:
+                raise
+            delay = min(20, 2 ** attempt * 3)
+            print(f'TRANSIENT_DOWNLOAD_RETRY attempt={attempt + 1} delaySeconds={delay}', flush=True)
+            time.sleep(delay)
+
 
 def collect(args):
     first, last = dt.date.fromisoformat(args.start), dt.date.fromisoformat(args.end)
@@ -42,7 +58,7 @@ def collect(args):
             url="https://www1.mbrace.or.jp/od2/{}/{}/{}{}.lzh".format(
                 kind, stamp[:6], kind.lower(), stamp[2:])
             try:
-                raw = pilot.fetch(url)
+                raw = fetch_with_retry(url)
                 temp = Path("/tmp") / ("bkm-"+kind.lower()+stamp+".lzh")
                 temp.write_bytes(raw)
                 try:
