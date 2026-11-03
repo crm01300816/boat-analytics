@@ -139,14 +139,14 @@ function motorHistoryPanel(r){
    const winner=Number(result['1着_艇番']),second=Number(result['2着_艇番']),third=Number(result['3着_艇番']);
    const finish=winner===lane?1:second===lane?2:third===lane?3:null;
    // Full finishing order is not always provided; do not invent 4th-6th.
-   target.rows.push({date,name:card['艇'+lane+'_選手名']||'不明',className:card['艇'+lane+'_級別']||'—',win:card['艇'+lane+'_全国勝率']||'—',lane,finish});
+   target.rows.push({date,raceNo:Number(String(card['レースコード']||'').slice(10,12)),name:card['艇'+lane+'_選手名']||'不明',className:card['艇'+lane+'_級別']||'—',win:card['艇'+lane+'_全国勝率']||'—',lane,finish,top3:[winner,second,third].every(n=>Number.isInteger(n)&&n>=1&&n<=6)&&new Set([winner,second,third]).size===3?[winner,second,third].join('-'):null,method:result['決まり手']||''});
   }
  }
  const panels=[...byMotor.values()].map(({entry,rows})=>{
   rows.sort((a,b)=>b.date.localeCompare(a.date));
   const known=rows.filter(x=>x.finish!=null),last=rows.slice(0,10),first=known.filter(x=>x.finish===1).length,top2=known.filter(x=>x.finish<=2).length,top3=known.length;
   const ratio=(n,d)=>d?(n/d*100).toFixed(1)+'%':'—';
-  return '<details style="margin:10px 0;border:1px solid #31506c;border-radius:12px;padding:12px"><summary style="cursor:pointer;font-weight:750">'+entry.lane+'号艇 / モーターNo.'+esc(entry.motor)+'　使用 '+rows.length+'走</summary><p class="tag">取得 '+history.loaded+'/'+history.days+'日。1〜3着は確認可能。4〜6着は着順未確認と表示。</p><p>確認済み1着 '+first+'件 ／ 2着以内 '+top2+'件 ／ 3着以内 '+top3+'件（分母は全'+rows.length+'走）</p><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>日付</th><th>選手</th><th>級別</th><th>全国勝率</th><th>枠</th><th>着順</th></tr></thead><tbody>'+last.map(x=>'<tr><td>'+esc(x.date.slice(0,4)+'/'+x.date.slice(4,6)+'/'+x.date.slice(6,8))+'</td><td>'+esc(x.name)+'</td><td>'+esc(x.className)+'</td><td>'+esc(x.win)+'</td><td>'+x.lane+'</td><td>'+(x.finish?x.finish+'着':'4着以下・未確認')+'</td></tr>').join('')+'</tbody></table></div></details>';
+  return '<details style="margin:10px 0;border:1px solid #31506c;border-radius:12px;padding:12px"><summary style="cursor:pointer;font-weight:750">'+entry.lane+'号艇 / モーターNo.'+esc(entry.motor)+'　使用 '+rows.length+'走</summary><p class="tag">取得 '+history.loaded+'/'+history.days+'日。1〜3着は確認可能。4〜6着は着順未確認と表示。</p><p>確認済み1着 '+first+'件 ／ 2着以内 '+top2+'件 ／ 3着以内 '+top3+'件（分母は全'+rows.length+'走）</p><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>日付</th><th>選手</th><th>級別</th><th>全国勝率</th><th>枠</th><th>着順</th><th>レース結果（3連単）</th><th>決まり手</th></tr></thead><tbody>'+last.map(x=>'<tr><td>'+esc(x.date.slice(0,4)+'/'+x.date.slice(4,6)+'/'+x.date.slice(6,8))+'</td><td>'+esc(x.name)+'</td><td>'+esc(x.className)+'</td><td>'+esc(x.win)+'</td><td>'+x.lane+'</td><td>'+(x.finish?x.finish+'着':'4着以下・未確認')+'</td><td>'+esc(x.raceNo||'—')+'R / '+esc(x.top3||'未確認')+'</td><td>'+esc(x.method||'—')+'</td></tr>').join('')+'</tbody></table></div></details>';
  }).join('');
  return intro+'<div class="panel-body"><p class="tag">過去'+history.days+'日中、取得成功'+history.loaded+'日。各モーターの直近最大10走を表示。モーター交換・番号再利用は別途確認が必要です。</p>'+panels+'</div></div>';
 }
