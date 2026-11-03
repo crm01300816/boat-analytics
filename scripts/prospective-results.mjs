@@ -6,6 +6,9 @@ export function summarizeProspective(date, records, results, payouts) {
   const metrics=Object.fromEntries([3,5,7,10].map(n=>[n,{
     predictions:0,settled:0,hits:0,stakeYen:0,payoutYen:0,hitRate:null,provisionalRoi:null
   }]));
+  // Strict five-point statistics require confidence captured before the deadline.
+  // Legacy snapshots without confidence are unknown, never assumed eligible.
+  const selective={eligible:0,pending:0,excluded:0,settled:0,hits:0,stakeYen:0,payoutYen:0,hitRate:null,provisionalRoi:null,missingConfidence:0};
   const seen=new Set();
   const venueMetrics={};
   const blank=()=>Object.fromEntries([3,5,7,10].map(n=>[n,{settled:0,hits:0,stakeYen:0,payoutYen:0,hitRate:null,provisionalRoi:null}]));
@@ -19,8 +22,11 @@ export function summarizeProspective(date, records, results, payouts) {
       rec.picks[count].length===count &&
       rec.picks[count].reduce((sum,x)=>sum+x.stake,0)===1000)){stats.excluded++;continue;}
     stats.captured++;
+    const strict=typeof rec.selectiveFiveConfidence==='number' && Number.isFinite(rec.selectiveFiveConfidence) && rec.selectiveFiveConfidence>=0.40;
+    if(!Number.isFinite(rec.selectiveFiveConfidence))selective.missingConfidence++;
+    if(strict)selective.eligible++;
     const row=rm.get(rec.raceId),pay=pm.get(rec.raceId);
-    if(!row||!pay){stats.pending++;continue;}
+    if(!row||!pay){stats.pending++;if(strict)selective.pending++;continue;}
     const finish=[1,2,3].map(n=>Number(row[n+'着_艇番']));
     const hasF=[1,2,3,4,5,6].some(n=>
       String(row[n+'コース_F']||'').trim() &&
@@ -31,8 +37,13 @@ export function summarizeProspective(date, records, results, payouts) {
     const payout100=numeric(String(pay['3連単_払戻金']||'').replace(/,/g,''));
     if(hasF||!finish.every(n=>Number.isInteger(n)&&n>=1&&n<=6)||
       new Set(finish).size!==3||winner!==payoutCombo||
-      payout100===null||payout100<100){stats.excluded++;continue;}
+      payout100===null||payout100<100){stats.excluded++;if(strict)selective.excluded++;continue;}
     stats.settled++;
+    if(strict){
+      selective.settled++;selective.stakeYen+=1000;
+      const matched=rec.picks[5].find(p=>p.combo===winner);
+      if(matched){selective.hits++;selective.payoutYen+=matched.stake/100*payout100;}
+    }
     const venue=rec.raceId.slice(8,10);
     if(!venueMetrics[venue])venueMetrics[venue]=blank();
     for(const count of [3,5,7,10]){
@@ -50,6 +61,9 @@ export function summarizeProspective(date, records, results, payouts) {
   for(const group of Object.values(venueMetrics))for(const count of [3,5,7,10]){
     const v=group[count];v.hitRate=v.settled?v.hits/v.settled:null;v.provisionalRoi=v.stakeYen?v.payoutYen/v.stakeYen:null;
   }
+  selective.hitRate=selective.settled?selective.hits/selective.settled:null;
+  selective.provisionalRoi=selective.stakeYen?selective.payoutYen/selective.stakeYen:null;
+  stats.selectiveFive=selective;
   stats.byVenue=venueMetrics;
   return stats;
 }
