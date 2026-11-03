@@ -230,6 +230,33 @@
         "抜き": 12,
         "恵まれ": 1
       }
+    },
+    {
+      "date": "2026-11-03",
+      "results": 155,
+      "payoutRows": 156,
+      "joined": 155,
+      "waveObservations": 155,
+      "averageWaveCm": 2.12,
+      "maxWaveCm": 5,
+      "wave10CmOrMore": 0,
+      "windObservations": 155,
+      "averageWindMps": 2.5,
+      "winnerOneRate": 59.35,
+      "winnerValid": 155,
+      "averageTrifectaPayoutYen": 7057.29,
+      "trifectaPayoutObservations": 155,
+      "weatherCounts": {
+        "1": 102,
+        "2": 53
+      },
+      "winningMethodCounts": {
+        "逃げ": 87,
+        "差し": 17,
+        "まくり差し": 16,
+        "まくり": 22,
+        "抜き": 13
+      }
     }
   ]
 }
