@@ -82,6 +82,22 @@ def collect(args):
         days.append(entry)
         print("PERIOD_DAY "+json.dumps(entry,ensure_ascii=False),flush=True)
         day += dt.timedelta(days=1)
+    if not records:
+        print("PERIOD_SUMMARY "+json.dumps({
+            "start":first.isoformat(),"end":last.isoformat(),
+            "days":len(days),"races":0,
+            "missingDays":sum(x["joined"]==0 for x in days),
+            "error":"No valid B/K race joins"
+        }),flush=True)
+        raise RuntimeError("No official B/K races joined in this month; stop rather than treating an empty month as verified data")
+    if args.include_technique:
+        print("TECHNIQUE_MONTH_AUDIT "+json.dumps({
+            "start":first.isoformat(),"end":last.isoformat(),
+            "races":len(records),
+            "kJoined":sum(d.get("techniqueAudit",{}).get("joined",0) for d in days),
+            "methodKnown":sum(d.get("techniqueAudit",{}).get("methodKnown",0) for d in days),
+            "kMismatch":sum(d.get("techniqueAudit",{}).get("mismatch",0) for d in days)
+        }),flush=True)
     output=Path(args.out)
     output.parent.mkdir(parents=True,exist_ok=True)
     output.write_text(json.dumps({
