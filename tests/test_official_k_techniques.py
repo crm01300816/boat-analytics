@@ -19,6 +19,10 @@ class KTechniques(unittest.TestCase):
         self.assertEqual(r['202601010301']['technique'],'まくり差し')
         self.assertEqual(r['202601010301']['winnerLane'],3)
         self.assertEqual(r['202601010301']['entrants'][1]['actualCourse'],2)
+    def test_standalone_winning_method_is_recognized(self):
+        raw=example('まくり差し').replace('決まり手 まくり差し', 'まくり差し')
+        r=k.parse_k_techniques(raw,'2026-01-01')
+        self.assertEqual(r['202601010301']['technique'],'まくり差し')
     def test_no_method_is_not_guessed(self):
         r=k.parse_k_techniques(example('未知の決まり手'),'2026-01-01')
         self.assertIsNone(r['202601010301']['technique'])
