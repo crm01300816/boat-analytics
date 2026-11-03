@@ -26,7 +26,7 @@ def _block(rid, lines):
     winner = None
     for raw in lines:
         line = norm(raw)
-        m = METHOD.search(line)
+        m = METHOD.search(line) or STANDALONE.match(line)
         if m:
             candidate = re.sub(r'\s+', '', m.group(1))
             if candidate in KNOWN:
