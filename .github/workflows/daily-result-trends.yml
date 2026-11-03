@@ -1,8 +1,8 @@
 name: Update daily BOATRACE result and wave trends
 on:
   schedule:
-    # 02:15 JST, after the completed day's final night races
-    - cron: '15 17 * * *'
+    # Every 3 hours: refresh settled strict-five records and publish updated totals
+    - cron: '15 */3 * * *'
   workflow_dispatch:
   push:
     paths:
@@ -19,7 +19,7 @@ concurrency:
 jobs:
   collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
