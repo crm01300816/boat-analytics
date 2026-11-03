@@ -4,7 +4,9 @@ import {createRaceList,makePicks} from '../analytics.js';
 import {summarizeProspective} from './prospective-results.mjs';
 
 const source=JSON.parse(await readFile('public/prospective-summary.json','utf8'));
-const days=(source.days||[]).filter(x=>x.date>='2026-10-29');
+const previous=JSON.parse(await readFile('public/selective-five-backfill.json','utf8').catch(()=>'{"days":[]}'));
+const stored=new Map((previous.days||[]).map(x=>[x.date,x]));
+const days=(source.days||[]).filter(x=>x.date>='2026-10-29' && (!stored.has(x.date)||x.date>=new Date(Date.now()-4*86400000).toISOString().slice(0,10)));
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 function confidence(r){
  const es=[...r.entries].sort((a,b)=>Number(a.lane)-Number(b.lane));
@@ -13,7 +15,7 @@ function confidence(r){
  const strengths=es.map((e,i)=>{const score=.28*clamp(Number(e.win)/10,0,1)+.23*clamp(Number(e.n2)/100,0,1)+.18*clamp(Number(e.localWin)/10,0,1)+.15*clamp(Number(e.l2)/100,0,1)+.16*clamp(Number(e.m2)/100,0,1);return Math.exp((score-.5)*3.5)*priors[i]});
  return strengths[0]/strengths.reduce((a,b)=>a+b,0);
 }
-const out={schemaVersion:1,method:'RETROSPECTIVE_RECONSTRUCTION_NOT_FROZEN',description:'Historical race-card confidence reconstructed after races. Include only races whose reconstructed five picks exactly match predeadline frozen picks. Not prospective proof.',days:[]};
+const out={schemaVersion:1,method:'RETROSPECTIVE_RECONSTRUCTION_NOT_FROZEN',description:'Historical race-card confidence reconstructed after races. Include only races whose reconstructed five picks exactly match predeadline frozen picks. Not prospective proof.',days:[...stored.values()]};
 for(const {date} of days){
  let archived;
  try{archived=JSON.parse(await readFile('data/prospective/'+date+'.json','utf8'));}
@@ -37,7 +39,8 @@ for(const {date} of days){
   verified.push({...rec,selectiveFiveConfidence:c});
  }
  const scored=summarizeProspective(date,verified,results,payouts).selectiveFive;
- out.days.push({date,matched,eligible,notEligible,unverifiable,settled:scored.settled,hits:scored.hits,stakeYen:scored.stakeYen,payoutYen:scored.payoutYen,pending:scored.pending,excluded:scored.excluded});
+ stored.set(date,{date,matched,eligible,notEligible,unverifiable,settled:scored.settled,hits:scored.hits,stakeYen:scored.stakeYen,payoutYen:scored.payoutYen,pending:scored.pending,excluded:scored.excluded});
+ out.days=[...stored.values()].sort((a,b)=>a.date.localeCompare(b.date));
  console.log('SELECTIVE_BACKFILL '+JSON.stringify(out.days.at(-1)));
 }
 await writeFile('public/selective-five-backfill.json',JSON.stringify(out,null,2)+'\n');
