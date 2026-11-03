@@ -8,7 +8,7 @@ async function loadFivePointTrack(){
   const response=await fetch('./public/prospective-summary.json?ts='+Date.now(),{cache:'no-store'});
   if(!response.ok)throw Error('集計ファイルを取得できません');
   const data=await response.json();
-  const days=(Array.isArray(data.days)?data.days:[]).filter(d=>/^\\d{4}-\\d{2}-\\d{2}$/.test(d.date)).sort((a,b)=>a.date.localeCompare(b.date));
+  const days=(Array.isArray(data.days)?data.days:[]).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d.date)).sort((a,b)=>a.date.localeCompare(b.date));
   const rows=days.filter(d=>d.selectiveFive).map(d=>({date:d.date,pending:Number(d.selectiveFive.pending)||0,excluded:Number(d.selectiveFive.excluded)||0,settled:Number(d.selectiveFive.settled)||0,hits:Number(d.selectiveFive.hits)||0,stake:Number(d.selectiveFive.stakeYen)||0,payout:Number(d.selectiveFive.payoutYen)||0}));
   if(!rows.length){status.textContent='厳選条件を締切前に保存したレースの確定データはまだありません。従来の5点予想全体の数字は混ぜず、今後の記録分から表示します。';return;}
   const sum=k=>rows.reduce((a,d)=>a+d[k],0),n=sum('settled'),hit=sum('hits'),stake=sum('stake'),payout=sum('payout');
