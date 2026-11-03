@@ -1,0 +1,257 @@
+name: Official B-K six-strategy comparison
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/strategy-comparison-20261029]
+    paths:
+      - .github/workflows/strategy-comparison.yml
+      - scripts/strategy-*
+      - tests/strategy*
+permissions:
+  contents: read
+concurrency:
+  group: official-strategy-comparison
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      calibration: ${{ steps.matrix.outputs.calibration }}
+      final: ${{ steps.matrix.outputs.final }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Existing app and comparison regression tests
+        run: |
+          node --test tests/*.test.mjs
+          python3 -m unittest discover -s tests -p 'strategy_*_test.py' -v
+      - name: Freeze specification before collecting outcomes
+        id: matrix
+        run: |
+          node scripts/strategy-comparison.mjs prepare --out strategy-control/frozen-spec.json > matrices.json
+          python3 - <<'PY'
+          import json,os
+          data=json.load(open('matrices.json'))
+          with open(os.environ['GITHUB_OUTPUT'],'a') as out:
+              for key in ['calibration','final']:
+                  out.write(key+'='+json.dumps({'include':data[key]},separators=(',',':'))+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: strategy-frozen-spec
+          path: strategy-control/frozen-spec.json
+          retention-days: 30
+
+  smoke:
+    name: Audit first three training days before full acquisition
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install LZH extractor if needed
+        run: |
+          if ! command -v 7z >/dev/null 2>&1 && ! command -v 7zz >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq 7zip
+          fi
+      - name: Reuse official parser and audit ordinary K settlements
+        run: |
+          python3 scripts/strategy-collector.py --start 2023-10-29 --end 2023-10-31 \
+            --out .local/strategy-job/input.json --audit .local/strategy-job/audit.json
+      - name: Score first training batch (or preserve failure reason)
+        if: always()
+        run: |
+          node scripts/strategy-comparison.mjs month --period train --month 2023-10 \
+            --start 2023-10-29 --end 2023-10-31 --input .local/strategy-job/input.json \
+            --audit .local/strategy-job/audit.json --out strategy-reports/strategy-train-2023-10.json
+      - name: Delete private archives and race-level input
+        if: always()
+        run: rm -rf .local/strategy-job
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: strategy-calibration-train-2023-10
+          path: strategy-reports/strategy-train-2023-10.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  calibration:
+    name: Calibration ${{ matrix.period }} ${{ matrix.month }}
+    needs: [prepare, smoke]
+    strategy:
+      fail-fast: true
+      max-parallel: 1
+      matrix: ${{ fromJSON(needs.prepare.outputs.calibration) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install LZH extractor if needed
+        run: |
+          if ! command -v 7z >/dev/null 2>&1 && ! command -v 7zz >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq 7zip
+          fi
+      - name: Sequential rate-limited monthly collection (403/429 halts matrix)
+        run: |
+          python3 scripts/strategy-collector.py --start '${{ matrix.start }}' --end '${{ matrix.end }}' \
+            --out .local/strategy-job/input.json --audit .local/strategy-job/audit.json
+      - name: Score fixed models and predefined abstention grid
+        if: always()
+        run: |
+          node scripts/strategy-comparison.mjs month --period '${{ matrix.period }}' --month '${{ matrix.month }}' \
+            --start '${{ matrix.start }}' --end '${{ matrix.end }}' --input .local/strategy-job/input.json \
+            --audit .local/strategy-job/audit.json --out 'strategy-reports/strategy-${{ matrix.period }}-${{ matrix.month }}.json'
+      - name: Delete private input
+        if: always()
+        run: rm -rf .local/strategy-job
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: strategy-calibration-${{ matrix.period }}-${{ matrix.month }}
+          path: strategy-reports/strategy-${{ matrix.period }}-${{ matrix.month }}.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  select:
+    name: Freeze abstention rule using train and validation only
+    needs: [prepare, smoke, calibration]
+    if: always() && needs.prepare.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      ready: ${{ steps.ready.outputs.ready }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: strategy-calibration-*
+          path: strategy-months
+          merge-multiple: true
+      - name: Select from complete calibration batches; never read final data
+        run: node scripts/strategy-comparison.mjs select --reports strategy-months --out strategy-control/selection.json
+      - name: Expose frozen-selection readiness
+        id: ready
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json,os,pathlib
+          p=pathlib.Path('strategy-control/selection.json')
+          ready=p.exists() and json.loads(p.read_text()).get('status') in ['complete','incomplete']
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f: f.write('ready='+str(ready).lower()+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: strategy-frozen-selection
+          path: strategy-control/selection.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  final:
+    name: Frozen final test ${{ matrix.month }}
+    needs: [prepare, select]
+    if: needs.select.outputs.ready == 'true'
+    strategy:
+      fail-fast: true
+      max-parallel: 1
+      matrix: ${{ fromJSON(needs.prepare.outputs.final) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          name: strategy-frozen-selection
+          path: strategy-control
+      - name: Install LZH extractor if needed
+        run: |
+          if ! command -v 7z >/dev/null 2>&1 && ! command -v 7zz >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq 7zip
+          fi
+      - name: Acquire final-period B/K only after rule is frozen
+        run: |
+          python3 scripts/strategy-collector.py --start '${{ matrix.start }}' --end '${{ matrix.end }}' \
+            --out .local/strategy-job/input.json --audit .local/strategy-job/audit.json
+      - name: Score six frozen variants
+        if: always()
+        run: |
+          node scripts/strategy-comparison.mjs month --period final --month '${{ matrix.month }}' \
+            --start '${{ matrix.start }}' --end '${{ matrix.end }}' --input .local/strategy-job/input.json \
+            --audit .local/strategy-job/audit.json --selection strategy-control/selection.json \
+            --out 'strategy-reports/strategy-final-${{ matrix.month }}.json'
+      - name: Delete private input
+        if: always()
+        run: rm -rf .local/strategy-job
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: strategy-final-${{ matrix.month }}
+          path: strategy-reports/strategy-final-${{ matrix.month }}.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  summarize:
+    name: Comparison artifact, missing months and day-block uncertainty
+    needs: [prepare, select, final]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: strategy-calibration-*
+          path: strategy-months
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: strategy-final-*
+          path: strategy-months
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: strategy-frozen-selection
+          path: strategy-control
+      - name: Write 6 x 4 rows, including clear not-run/failed states
+        run: |
+          node scripts/strategy-comparison.mjs summarize --reports strategy-months \
+            --selection strategy-control/selection.json --out strategy-summary/strategy-comparison.json
+      - name: Job summary
+        if: always()
+        run: |
+          if test -f strategy-summary/strategy-comparison.md; then
+            cat strategy-summary/strategy-comparison.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: strategy-comparison-summary
+          path: strategy-summary/
+          if-no-files-found: error
+          retention-days: 30
