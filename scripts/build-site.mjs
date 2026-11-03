@@ -12,3 +12,4 @@ await mkdir('_site/public');
 await copyFile('public/backtest.json','_site/public/backtest.json');
 await copyFile('public/daily-trends.json','_site/public/daily-trends.json');
 await copyFile('public/prospective-summary.json','_site/public/prospective-summary.json');
+await copyFile('public/selective-five-backfill.json','_site/public/selective-five-backfill.json');
