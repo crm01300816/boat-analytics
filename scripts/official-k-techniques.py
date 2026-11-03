@@ -13,6 +13,7 @@ RESULT = re.compile(
 )
 METHOD = re.compile(r'決まり手\s*[:：]?\s*(まくり\s*差し|まくり|逃\s*げ|差\s*し|抜\s*き|恵まれ)')
 STANDALONE = re.compile(r'^\s*(まくり\s*差し|まくり|逃\s*げ|差\s*し|抜\s*き|恵まれ)\s*$')
+INLINE_METHOD = re.compile(r'(?<![ぁ-んァ-ヶ一-龯])(まくり\s*差し|まくり|逃\s*げ|差\s*し|抜\s*き|恵まれ)(?![ぁ-んァ-ヶ一-龯])')
 KNOWN = frozenset(('逃げ','差し','まくり','まくり差し','抜き','恵まれ'))
 
 def norm(text):
@@ -21,16 +22,18 @@ def norm(text):
 def _block(rid, lines):
     if not rid:
         return None
-    method = None
+    methods = set()
     entrants = {}
     winner = None
     for raw in lines:
         line = norm(raw)
-        m = METHOD.search(line) or STANDALONE.match(line)
+        # K archives can print the winning method within a formatted row,
+        # without a '決まり手' label. Accept only one unambiguous method per race.
+        m = METHOD.search(line) or STANDALONE.match(line) or INLINE_METHOD.search(line)
         if m:
             candidate = re.sub(r'\s+', '', m.group(1))
             if candidate in KNOWN:
-                method = candidate
+                methods.add(candidate)
         m = RESULT.match(line)
         if m:
             position, boat, racer, _, _, _, _, course = m.groups()
@@ -42,6 +45,7 @@ def _block(rid, lines):
                 winner = (boat, racer, int(course))
     if not winner or len(entrants) != 6 or len({e['actualCourse'] for e in entrants.values()}) != 6:
         return None
+    method = next(iter(methods)) if len(methods) == 1 else None
     return {'winnerLane': winner[0], 'winnerRacerId': winner[1],
             'winnerCourse': winner[2], 'technique': method, 'entrants': entrants}
 
