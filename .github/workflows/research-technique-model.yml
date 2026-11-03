@@ -5,6 +5,7 @@ on:
     branches: [experiment/value-ensemble-research-20261030]
     paths:
       - .github/workflows/research-technique-model.yml
+      - scripts/research-technique-model.py
 permissions:
   contents: read
 concurrency:
