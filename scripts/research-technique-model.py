@@ -142,6 +142,7 @@ def run(src,out,strict=True,estimators=None,audit_only=False):
                         'Historical B-file predeadline timestamp unverified; no audited historical odds/exhibition/refunds/dead-heats.',
                         '2026-05..10 previously seen in other research; diagnostic only, not pristine prospective test.',
                         'No post-test selection of models, counts, venues, or confidence thresholds.',
+                        'Ensemble uses fixed 50/50 weights; race selection policy is validation-only, not tuned on test.',
                         'Live app remains unchanged.']}
     if not audit_only and audit['techniqueCoverage']<.7:
         report['status']='blocked_insufficient_technique_coverage'
@@ -155,6 +156,7 @@ def run(src,out,strict=True,estimators=None,audit_only=False):
         stage_mask[1][np.arange(n),ranks[:,0]]=False
         stage_mask[2][np.arange(n),ranks[:,0]]=False
         stage_mask[2][np.arange(n),ranks[:,1]]=False
+        model_predictions={}
         for name in ('lightgbm','xgboost'):
             start=time.monotonic();probs=[];importance=[]
             for stage in range(3):
@@ -177,10 +179,19 @@ def run(src,out,strict=True,estimators=None,audit_only=False):
                 if stage==0:
                     importance=[{'feature':k,'importance':float(v)} for k,v in sorted(
                         zip(report['featureNames'],model.feature_importances_),key=lambda a:-a[1])[:10]]
+            model_predictions[name]=probs
             result=evaluate(name,rows,*probs,time.monotonic()-start,importance)
             report['models'].append(result)
             five=next(x for x in result['counts'] if x['count']==5)
             print('TECHNIQUE_MODEL '+json.dumps({'model':name,'test5':five['periods']['test']['ai']}),flush=True)
+        # Prespecified equal-weight ensemble: no test-period fitting or weight tuning.
+        # Existing validation-only selection policy also applies to the ensemble.
+        if len(model_predictions)==2:
+            blend=[(a+c)/2 for a,c in zip(model_predictions['lightgbm'],model_predictions['xgboost'])]
+            ensemble=evaluate('lightgbm_xgboost_equal_blend',rows,*blend,0.0,[])
+            report['models'].append(ensemble)
+            five=next(x for x in ensemble['counts'] if x['count']==5)
+            print('TECHNIQUE_MODEL '+json.dumps({'model':'lightgbm_xgboost_equal_blend','test5':five['periods']['test']['ai'],'validationSelected':five.get('selectedByValidation')}),flush=True)
         report['status']='completed'
     Path(out).parent.mkdir(parents=True,exist_ok=True)
     Path(out).write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
