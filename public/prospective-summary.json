@@ -786,6 +786,18 @@
           "provisionalRoi": 0.7318918918918919
         }
       },
+      "selectiveFive": {
+        "eligible": 0,
+        "pending": 0,
+        "excluded": 0,
+        "settled": 0,
+        "hits": 0,
+        "stakeYen": 0,
+        "payoutYen": 0,
+        "hitRate": null,
+        "provisionalRoi": null,
+        "missingConfidence": 150
+      },
       "byVenue": {
         "13": {
           "3": {
@@ -1274,6 +1286,18 @@
           "hitRate": 0.5,
           "provisionalRoi": 0.9361392405063291
         }
+      },
+      "selectiveFive": {
+        "eligible": 0,
+        "pending": 0,
+        "excluded": 0,
+        "settled": 0,
+        "hits": 0,
+        "stakeYen": 0,
+        "payoutYen": 0,
+        "hitRate": null,
+        "provisionalRoi": null,
+        "missingConfidence": 162
       },
       "byVenue": {
         "13": {
@@ -1797,6 +1821,18 @@
           "hitRate": 0.41216216216216217,
           "provisionalRoi": 0.5862837837837838
         }
+      },
+      "selectiveFive": {
+        "eligible": 0,
+        "pending": 0,
+        "excluded": 0,
+        "settled": 0,
+        "hits": 0,
+        "stakeYen": 0,
+        "payoutYen": 0,
+        "hitRate": null,
+        "provisionalRoi": null,
+        "missingConfidence": 150
       },
       "byVenue": {
         "14": {

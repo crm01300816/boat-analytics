@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "method": "RETROSPECTIVE_RECONSTRUCTION_NOT_FROZEN",
+  "description": "Historical race-card confidence reconstructed after races. Include only races whose reconstructed five picks exactly match predeadline frozen picks. Not prospective proof.",
+  "days": [
+    {
+      "date": "2026-10-29",
+      "matched": 45,
+      "eligible": 10,
+      "notEligible": 35,
+      "unverifiable": 0,
+      "settled": 10,
+      "hits": 5,
+      "stakeYen": 10000,
+      "payoutYen": 6780,
+      "pending": 0,
+      "excluded": 0
+    },
+    {
+      "date": "2026-10-30",
+      "matched": 136,
+      "eligible": 31,
+      "notEligible": 105,
+      "unverifiable": 0,
+      "settled": 31,
+      "hits": 13,
+      "stakeYen": 31000,
+      "payoutYen": 31330,
+      "pending": 0,
+      "excluded": 0
+    },
+    {
+      "date": "2026-10-31",
+      "matched": 150,
+      "eligible": 36,
+      "notEligible": 114,
+      "unverifiable": 0,
+      "settled": 36,
+      "hits": 14,
+      "stakeYen": 36000,
+      "payoutYen": 30120,
+      "pending": 0,
+      "excluded": 0
+    },
+    {
+      "date": "2026-11-01",
+      "matched": 162,
+      "eligible": 42,
+      "notEligible": 120,
+      "unverifiable": 0,
+      "settled": 42,
+      "hits": 15,
+      "stakeYen": 42000,
+      "payoutYen": 31090,
+      "pending": 0,
+      "excluded": 0
+    },
+    {
+      "date": "2026-11-02",
+      "matched": 150,
+      "eligible": 36,
+      "notEligible": 114,
+      "unverifiable": 0,
+      "settled": 34,
+      "hits": 12,
+      "stakeYen": 34000,
+      "payoutYen": 22280,
+      "pending": 1,
+      "excluded": 1
+    }
+  ]
+}
