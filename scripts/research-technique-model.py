@@ -123,7 +123,7 @@ def training_order_priors(rows):
         a,bb,c=(int(x)-1 for x in r['winner'].split('-'))
         pair[a,bb]+=1
         triple[a,bb,c]+=1
-    return pair/pair.sum(axis=1,keepdims=True),triple/triple.sum(axis=2,keepdims=True)
+    return pair/pair.sum(axis=1,keepdims=True),triple/np.maximum(1e-12,triple.sum(axis=2,keepdims=True))
 
 def combo_probabilities(p1,p2,p3,priors=None):
     a,bb,c=b.COMBO_IDX.T
