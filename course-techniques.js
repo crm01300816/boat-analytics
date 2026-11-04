@@ -59,7 +59,7 @@ export function renderCourseTechniques(race,history,{scope='all',days=60}={}){
     const attack=c.byMove['まくり']+c.byMove['まくり差し'];
     const header='<div class="technique-card-head"><span class="lane lane-'+e.lane+'">'+e.lane+'</span><div><b>'+esc(e.name)+'</b><small>'+course+'コース'+(confirmed?'（展示進入）':'（枠なり想定）')+'</small></div><span class="technique-sample">'+c.starts+'走'+(c.starts>0&&c.starts<10?'・少数':'')+'</span></div>';
     const statCard=(label,n)=>'<div><small>'+label+'</small><strong>'+pct(n,c.starts)+'</strong><small>'+n+'/'+c.starts+'走</small></div>';
-    const summary='<div class="technique-main">'+statCard('1着率',c.wins)+statCard('2連対率（1・2着）',c.wins+c.second)+statCard('3連対率（1〜3着）',c.wins+c.second+c.third)+statCard('まくり系勝率',attack)+'</div>';
+    const summary='<div class="technique-main">'+statCard('1着率',c.wins)+statCard('複勝率（2連対）',c.wins+c.second)+statCard('3連対率（1〜3着）',c.wins+c.second+c.third)+statCard('まくり系勝率',attack)+'</div>';
     const methods='<div class="technique-methods">'+['逃げ','差し','まくり','まくり差し'].map(k=>'<div><span>'+k+'</span>'+format(c.byMove[k],c.starts)+'</div>').join('')+'</div>';
     const defense=course===1?'<p class="technique-defense">インの被まくり系率：<strong>'+pct(c.beatenByAttack,c.starts)+'</strong> <small>('+c.beatenByAttack+'/'+c.starts+'走) ／ 攻撃耐性指標：'+pct(c.starts-c.beatenByAttack,c.starts)+'</small></p>':'';
     const allow=course===2?'<p class="technique-defense">2コース時の逃がし率：<strong>'+pct(c.allowedEscape,c.starts)+'</strong></p>':'';
