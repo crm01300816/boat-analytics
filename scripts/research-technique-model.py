@@ -15,6 +15,8 @@ _spec=importlib.util.spec_from_file_location('boosted',Path(__file__).with_name(
 b=importlib.util.module_from_spec(_spec);_spec.loader.exec_module(b)
 _conf_spec=importlib.util.spec_from_file_location('confidence',Path(__file__).with_name('research-confidence.py'))
 confidence=importlib.util.module_from_spec(_conf_spec);_conf_spec.loader.exec_module(confidence)
+_stake_spec=importlib.util.spec_from_file_location('stake_allocation',Path(__file__).with_name('research-stake-allocation.py'))
+stake_allocation=importlib.util.module_from_spec(_stake_spec);_stake_spec.loader.exec_module(stake_allocation)
 METHODS=('逃げ','差し','まくり','まくり差し','抜き','恵まれ')
 EXTRA_NAMES=(['venueCourseWin','racerCourseWin','racerVenueCourseWin','venueEscape','venueAttack',
               'racerCourseStartsLog','racerVenueCourseStartsLog','motorGapToLane1',
@@ -140,20 +142,27 @@ def combo_probabilities(p1,p2,p3,priors=None):
 
 def settle(rows,p1,p2,p3,priors=None):
     n=len(rows);hits=np.zeros((n,4),dtype=np.int8);pays=np.zeros((n,4));mass=np.zeros((n,4),dtype=np.float32)
+    ranked_probs=np.zeros((n,10),dtype=np.float32)
+    winning_rank=np.full(n,-1,dtype=np.int8)
     for i,r in enumerate(rows):
-        cp=combo_probabilities(p1[i],p2[i],p3[i],priors);order=np.argsort(-cp,kind='stable')[:10]
+        cp=combo_probabilities(p1[i],p2[i],p3[i],priors)
+        order=np.argsort(-cp,kind='stable')[:10]
+        ranked_probs[i,:]=cp[order]
+        match=np.flatnonzero(order==r['winner_idx'])
+        if match.size:winning_rank[i]=int(match[0])
         for j,count in enumerate(b.COUNTS):
-            mass[i,j]=float(cp[order[:count]].sum())
-            match=np.flatnonzero(order[:count]==r['winner_idx'])
-            if match.size:
-                hits[i,j]=1;pays[i,j]=r['payoutPer100Yen']*b.STAKES[count][int(match[0])]/100
-    return hits,pays,mass
+            mass[i,j]=float(ranked_probs[i,:count].sum())
+            if 0<=winning_rank[i]<count:
+                hits[i,j]=1
+                pays[i,j]=r['payoutPer100Yen']*b.STAKES[count][int(winning_rank[i])]/100
+    return hits,pays,mass,ranked_probs,winning_rank
 
 def evaluate(name,rows,p1,p2,p3,seconds,importance,priors=None):
     per=np.asarray([b.period(r['month']) for r in rows])
     months=np.asarray([r['month'] for r in rows]);venues=np.asarray([r['venue'] for r in rows])
     winners=np.asarray([int(r['winner'][0])-1 for r in rows])
-    hit,pay,mass=settle(rows,p1,p2,p3,priors)
+    hit,pay,mass,ranked_probs,winning_rank=settle(rows,p1,p2,p3,priors)
+    payout_per_100=np.asarray([r['payoutPer100Yen'] for r in rows],dtype=np.float64)
     out={'model':name,'fitSeconds':round(seconds,2),'featureImportanceTop10':importance,
          'top1':{k:b.probability_metrics(p1[per==k],winners[per==k]) for k in ('validation','test')},'counts':[]}
     for j,count in enumerate(b.COUNTS):
@@ -172,8 +181,12 @@ def evaluate(name,rows,p1,p2,p3,seconds,importance,priors=None):
             nominated['testConsensusOnSameRaces']=b.baseline(rows,ix,count,'consensus',len(test))
             nominated['testMonths']=b.segments(ix,h,paid,months)
             nominated['testVenues']=b.segments(ix,h,paid,venues)
+        conf=confidence.evaluate_count(months,eligible,h,paid,mass[:,j])
+        allocation=stake_allocation.evaluate(months,eligible,ranked_probs,winning_rank,
+                                             payout_per_100,count,conf)
         out['counts'].append({'count':count,'periods':periods,
-                              'confidence':confidence.evaluate_count(months,eligible,h,paid,mass[:,j]),
+                              'confidence':conf,
+                              'stakeAllocation':allocation,
                               'testMonths':b.segments(test,h,paid,months),
                               'testVenues':b.segments(test,h,paid,venues),**selection})
     return out
@@ -195,6 +208,9 @@ def run(src,out,strict=True,estimators=None,audit_only=False):
                         'Confidence calibration is isotonic, fitted only on 2025-11..2026-01 and evaluated on later months.',
                         'Conditional-order prior ablation uses train-only first-second-third frequencies and prespecified sqrt weights.',
                         'Attack features measure historical wins by method, NOT attack attempts.',
+                        'Allocation strategies use pre-race ranking probabilities only and fixed ¥1,000 total per race.',
+                        'Only the realized winner payout is known; no verified pre-deadline odds for losing tickets.',
+                        'Stake allocation comparisons and any selected validation policy are exploratory; test previously inspected.',
                         'Live app remains unchanged.']}
     if not audit_only and audit['techniqueCoverage']<.7:
         report['status']='blocked_insufficient_technique_coverage'
