@@ -26,8 +26,12 @@ def fetch_with_retry(url, attempts=4):
     for attempt in range(attempts):
         try:
             return pilot.fetch(url)
-        except urllib.error.HTTPError:
-            raise
+        except urllib.error.HTTPError as exc:
+            if exc.code not in (500, 502, 503, 504) or attempt == attempts - 1:
+                raise
+            delay = min(45, 3 * 2 ** attempt)
+            print(f"TRANSIENT_HTTP_RETRY status={exc.code} attempt={attempt + 1} delaySeconds={delay}", flush=True)
+            time.sleep(delay)
         except (urllib.error.URLError, ConnectionError, TimeoutError, socket.timeout):
             if attempt == attempts - 1:
                 raise
