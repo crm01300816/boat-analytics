@@ -1,4 +1,5 @@
 import { fetchCsv, shiftDate, jstToday, venueName } from './csv.js';
+import { parseDeadlineTime, fetchDeadlineMap, applyDeadlineMap } from './race-deadlines.js';
 import { createRaceList, aggregateLocal, rateRacers, rate, makePicks } from './analytics.js';
 import { racerForm } from './racer-form.js';
 import { renderCourseTechniques } from './course-techniques.js?v=20261104-compact';
@@ -16,7 +17,7 @@ const s={date:jstToday(),detailTab:'entries',tab:'dashboard',venue:'',raceId:'',
 let customWeights={...DEFAULT_WEIGHTS},customController=null;
 const LIVE_INTERVAL_MS=60000;
 let liveBusy=false,liveTimer=null;
-let historyTicket=0,publishedTicket=0;
+let historyTicket=0,publishedTicket=0,deadlineTicket=0;
 function exhibitionSignature(races){return JSON.stringify(races.map(r=>[r.id,r.previews?.tkz||null,r.previews?.stt||null]));}
 function liveStatus(){return s.date===jstToday()?`<div class="live-exhibition"><span class="live-dot"></span><div><b>展示情報の自動更新</b><small>${s.liveBusy?'更新確認中…':s.liveAt?'最終確認 '+esc(s.liveAt)+' JST':'初回データ確認待ち'} ／ 60秒間隔</small></div><button type="button" id="live-refresh" ${s.liveBusy?'disabled':''}>今すぐ更新</button></div>`:'';}
 async function refreshExhibition(){
@@ -62,7 +63,7 @@ function deadlineMinutes(value){
 }
 function deadlineState(r,now=new Date()){
   const minutes=deadlineMinutes(r.deadline);
-  if(minutes===null)return {cls:'unknown',label:'締切未取得',time:'—'};
+  if(minutes===null)return {cls:'unknown',label:'時刻未確認',time:'—'};
   const jst=new Date(now.toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
   const selectedDay=s.date;
   const currentDay=jst.getFullYear()+'-'+String(jst.getMonth()+1).padStart(2,'0')+'-'+String(jst.getDate()).padStart(2,'0');
@@ -90,7 +91,7 @@ function selectors(){
     <div class="venue-list">${venueButtons}</div>
     <div class="deadline-event"><div><span class="deadline-event-eyebrow">RACE SCHEDULE</span><h2>${esc(venueName(s.venue))}・開催レース</h2><p>${esc(event||'開催情報')} ／ 開催日 ${esc(s.date.replaceAll('-','/'))}</p></div><span class="deadline-event-date">${esc(s.date.slice(5).replace('-','/'))}</span></div>
     <div class="deadline-race-grid">${raceCards}</div>
-    <p class="deadline-note">締切は取得データの予定時刻（日本時間）。5分前から赤く表示。時刻変更・中止などは公式発表を優先してください。カードを押すとレース分析へ移動します。</p>`;
+    <p class="deadline-note">締切はBoatcast開催情報にある予定時刻（日本時間）です。5分前から赤く表示。未取得の場合は「時刻未確認」のままにし、推測しません。変更・中止などは<a href="https://www.boatrace.jp/owpc/pc/race/index" target="_blank" rel="noopener noreferrer">BOAT RACE公式</a>を確認してください。</p>`;
 }
 function refreshDeadlineCards(){
   if(s.tab!=='races')return;
@@ -102,7 +103,7 @@ function refreshDeadlineCards(){
     const label=node.querySelector('[data-deadline-status]');if(label)label.textContent=d.label;
   }
 }
-function intro(r){return `<div class="panel"><div class="panel-header"><div><div class="page-eyebrow">VENUE ${r.venue} / RACE ${r.number}</div><h2>${esc(r.venueName)} ${r.number}R <span class="small-pill">${esc(r.name)}</span></h2><p>${esc(r.event||'本日のレース')} / 締切表示：${esc(r.deadline)}${r.canceled?' / 中止・順延情報あり':''}</p></div><button class="button outline" id="copy-race">情報をコピー</button></div></div>`;}
+function intro(r){return `<div class="panel"><div class="panel-header"><div><div class="page-eyebrow">VENUE ${r.venue} / RACE ${r.number}</div><h2>${esc(r.venueName)} ${r.number}R <span class="small-pill">${esc(r.name)}</span></h2><p>${esc(r.event||'本日のレース')} / 締切予定：${esc(parseDeadlineTime(r.deadline)||'時刻未確認')}${r.canceled?' / 中止・順延情報あり':''}</p></div><button class="button outline" id="copy-race">情報をコピー</button></div></div>`;}
 function metrics(){return `<div class="metrics"><div class="metric"><span class="metric-label">開催場</span><b class="metric-number">${new Set(s.races.map(r=>r.venue)).size}<small>/24</small></b></div><div class="metric"><span class="metric-label">本日のレース</span><b class="metric-number">${s.races.length}<small>R</small></b></div><div class="metric"><span class="metric-label">出走選手</span><b class="metric-number">${new Set(s.races.flatMap(r=>r.entries.map(e=>e.id)).filter(Boolean)).size}<small>名</small></b></div><div class="metric"><span class="metric-label">3連単オッズ収録</span><b class="metric-number">${s.races.filter(r=>r.previews?.od3).length}<small>R</small></b></div></div>`;}
 function formPanel(r){
  const items=r.entries.map(e=>({...e,form:racerForm(e)}));
@@ -169,7 +170,7 @@ function selectedRaceResult(r){
  return '<div class="panel" style="border:2px solid #1682ce"><div class="panel-header"><div><h3>🏁 確定レース結果</h3><p>'+esc(s.date)+' / '+esc(r.venueName)+' '+r.number+'R　公式結果データ由来</p></div><span class="small-pill">確定</span></div><div class="panel-body"><div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">'+order.map((lane,i)=>'<div style="flex:1;min-width:80px;padding:12px;border-radius:10px;background:#eaf3fb;color:#173e61;text-align:center"><small>'+(i+1)+'着</small><div style="font-size:26px;font-weight:850">'+lane+'号艇</div><small>'+esc(r.entries.find(e=>e.lane===lane)?.name||'')+'</small></div>').join('')+'</div><div style="padding:12px;border-radius:10px;background:#eaf3fb;color:#123c62"><strong>3連単　'+order.join('-')+'</strong><span style="float:right;font-weight:800">払戻 '+esc(number)+'</span></div><div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px">'+details.map(([k,v])=>'<span><small>'+esc(k)+'：</small><b>'+esc(v)+'</b></span>').join('')+'</div></div></div>';
 }
 function courseTabPanel(r){const ready=s.publishedCourse?.raceId===r.id;return (ready?'':historyControls())+renderCourseTechniques(r,s.history,{scope:s.techniqueScope,days:s.historyDays,published:ready?s.publishedCourse:null,selectedDate:s.date,view:s.techniqueView,selectedLane:s.techniqueRacer})+(s.publishedError?'<div class="notification warning">3年統計を取得できません：'+esc(s.publishedError)+'。保存済みの端末データも使用できます。</div>':s.publishedBusy&&!ready?'<div class="notification">公開3年統計を確認中…</div>':'');}
-function overview(){const r=current();const racersData=r?rateRacers(r,currentLocal()):[];const motorHighlights=standoutMap(r?.entries||[],'m2',{minGap:3,moderate:.08,strong:.2});const winHighlights=standoutMap(racersData,'win',{minGap:.4,moderate:.08,strong:.2});const localHighlights=standoutMap(racersData,'localWin',{minGap:.4,moderate:.08,strong:.2});const stHighlights=standoutMap(racersData,'st',{lower:true,minGap:.015,moderate:.08,strong:.2});const raceHeader=r?'<div class="concept-race-hero"><div class="concept-race-hero-info"><span class="concept-race-badge">RACE ANALYSIS</span><h2>'+esc(venueName(r.venue))+' '+r.number+'R</h2><p>'+esc(r.name||'レース詳細')+'</p><span>締切予定 '+esc(r.deadline||'未取得')+'</span></div></div>':'';const tabs='<div class="concept-detail-tabs" role="tablist" aria-label="レース分析の項目">'+[['entries','出走表'],['racers','選手比較'],['motor','モーター'],['exhibition','展示'],['course','決まり手']].map(([id,label])=>'<button type="button" role="tab" aria-selected="'+(s.detailTab===id)+'" class="'+(s.detailTab===id?'selected':'')+'" data-detail-tab="'+id+'">'+label+'</button>').join('')+'</div>';const racers=r?'<div class="concept-racer-list">'+racersData.map(e=>'<div class="concept-racer"><span class="premium-lane lane-'+e.lane+'">'+e.lane+'</span><span class="concept-racer-avatar" aria-hidden="true">♙</span><span class="concept-racer-name"><b>'+esc(e.name)+'</b><small>'+esc(e.className)+'</small></span><span><small>全国勝率</small><b class="'+(winHighlights.has(e.lane)?'standout-number':'')+'">'+fmt(e.win,2)+'</b>'+standoutBadge(winHighlights.get(e.lane))+'</span><span><small>当地勝率</small><b class="'+(localHighlights.has(e.lane)?'standout-number':'')+'">'+fmt(e.localWin,2)+'</b>'+standoutBadge(localHighlights.get(e.lane))+'</span><span><small>ST</small><b class="'+(stHighlights.has(e.lane)?'standout-number':'')+'">'+fmt(e.st,2)+'</b>'+standoutBadge(stHighlights.get(e.lane))+'</span></div>').join('')+'</div>':'';const motor=r?'<div class="concept-motor"><div><b>モーター情報</b><small>6艇のモーター成績を比較</small></div><div class="concept-motor-list">'+r.entries.map(e=>'<div class="'+(motorHighlights.has(e.lane)?'standout-motor standout-'+motorHighlights.get(e.lane).level:'')+'"><span class="premium-lane lane-'+e.lane+'">'+e.lane+'</span><b>No.'+esc(e.motor||'—')+'</b><small>2連対率</small><strong>'+pct(e.m2)+'</strong></div>').join('')+'</div></div>':'';const selectedContent=s.detailTab==='entries'?racers:s.detailTab==='motor'?motor+motorHistoryPanel(r):s.detailTab==='racers'?racerTable(r):s.detailTab==='course'?courseTabPanel(r):performance(r);return raceHeader+selectors()+(r?selectedRaceResult(r)+tabs+'<div class="concept-detail-panel" role="tabpanel">'+selectedContent+'</div>':'');}
+function overview(){const r=current();const racersData=r?rateRacers(r,currentLocal()):[];const motorHighlights=standoutMap(r?.entries||[],'m2',{minGap:3,moderate:.08,strong:.2});const winHighlights=standoutMap(racersData,'win',{minGap:.4,moderate:.08,strong:.2});const localHighlights=standoutMap(racersData,'localWin',{minGap:.4,moderate:.08,strong:.2});const stHighlights=standoutMap(racersData,'st',{lower:true,minGap:.015,moderate:.08,strong:.2});const raceHeader=r?'<div class="concept-race-hero"><div class="concept-race-hero-info"><span class="concept-race-badge">RACE ANALYSIS</span><h2>'+esc(venueName(r.venue))+' '+r.number+'R</h2><p>'+esc(r.name||'レース詳細')+'</p><span>締切予定 '+esc(parseDeadlineTime(r.deadline)||'時刻未確認')+'</span></div></div>':'';const tabs='<div class="concept-detail-tabs" role="tablist" aria-label="レース分析の項目">'+[['entries','出走表'],['racers','選手比較'],['motor','モーター'],['exhibition','展示'],['course','決まり手']].map(([id,label])=>'<button type="button" role="tab" aria-selected="'+(s.detailTab===id)+'" class="'+(s.detailTab===id?'selected':'')+'" data-detail-tab="'+id+'">'+label+'</button>').join('')+'</div>';const racers=r?'<div class="concept-racer-list">'+racersData.map(e=>'<div class="concept-racer"><span class="premium-lane lane-'+e.lane+'">'+e.lane+'</span><span class="concept-racer-avatar" aria-hidden="true">♙</span><span class="concept-racer-name"><b>'+esc(e.name)+'</b><small>'+esc(e.className)+'</small></span><span><small>全国勝率</small><b class="'+(winHighlights.has(e.lane)?'standout-number':'')+'">'+fmt(e.win,2)+'</b>'+standoutBadge(winHighlights.get(e.lane))+'</span><span><small>当地勝率</small><b class="'+(localHighlights.has(e.lane)?'standout-number':'')+'">'+fmt(e.localWin,2)+'</b>'+standoutBadge(localHighlights.get(e.lane))+'</span><span><small>ST</small><b class="'+(stHighlights.has(e.lane)?'standout-number':'')+'">'+fmt(e.st,2)+'</b>'+standoutBadge(stHighlights.get(e.lane))+'</span></div>').join('')+'</div>':'';const motor=r?'<div class="concept-motor"><div><b>モーター情報</b><small>6艇のモーター成績を比較</small></div><div class="concept-motor-list">'+r.entries.map(e=>'<div class="'+(motorHighlights.has(e.lane)?'standout-motor standout-'+motorHighlights.get(e.lane).level:'')+'"><span class="premium-lane lane-'+e.lane+'">'+e.lane+'</span><b>No.'+esc(e.motor||'—')+'</b><small>2連対率</small><strong>'+pct(e.m2)+'</strong></div>').join('')+'</div></div>':'';const selectedContent=s.detailTab==='entries'?racers:s.detailTab==='motor'?motor+motorHistoryPanel(r):s.detailTab==='racers'?racerTable(r):s.detailTab==='course'?courseTabPanel(r):performance(r);return raceHeader+selectors()+(r?selectedRaceResult(r)+tabs+'<div class="concept-detail-panel" role="tabpanel">'+selectedContent+'</div>':'');}
 function historyControls(){return `<div class="panel"><div class="panel-header"><div><h3>過去レースから集計</h3><p>当地の枠番別実績と、この6選手の全国・実進入コース別決まり手を集計します。</p></div></div><div class="panel-body"><div class="tools"><label>対象期間 <select class="select" id="history-days"><option value="30" ${s.historyDays===30?'selected':''}>30日</option><option value="60" ${s.historyDays===60?'selected':''}>60日</option><option value="90" ${s.historyDays===90?'selected':''}>90日</option><option value="180" ${s.historyDays===180?'selected':''}>180日</option></select></label><button class="button" id="load-history" ${s.historyBusy?'disabled':''}>${s.historyBusy?'集計中…':s.history?.loaded===s.historyDays?'保存済みデータを確認':'不足分を取得する'}</button>${s.historyBusy?'<button class="button ghost" id="stop-history">中止</button>':''}</div>${s.historyBusy?`<div class="progress"><span id="hist-progress-bar" style="width:${Math.round((s.histDone||0)/s.historyDays*100)}%"></span></div><p class="time" id="hist-progress-label">${esc(s.histProgress)}</p>`:''}${s.histError?`<div class="notification error">${esc(s.histError)}</div>`:''}${s.history?.venue===s.venue&&s.history?.date===s.date?`<div class="notification success">保存済みデータを自動表示中。取得済み ${s.history.loaded}/${s.history.days} 日（今回の表示に再利用した保存データ ${s.history.fromCache||0}日）。当地レース ${s.history.records.length}件。期間：${shiftDate(s.date,-s.history.days)}〜${shiftDate(s.date,-1)}。不足日があれば「不足分を取得する」で補えます。</div>`:'<div class="notification">この端末に保存した過去データは次回から自動で再利用します。初回だけ「不足分を取得する」を押してください。ブラウザのデータ削除・端末変更時は再取得が必要です。</div>'}</div></div>`;}
 function localPage(){const r=current(), local=currentLocal();return headline('過去データ・コース別成績','競艇場と枠番を指定して過去の実績を確認')+selectors()+(r?intro(r)+historyControls()+`<div class="panel"><div class="panel-header"><div><h3>当地の同枠成績</h3><p>過去${s.historyDays}日間 / 同じ会場 / 同じ枠番での実走結果</p></div></div><div class="table-wrap"><table class="data-table hist-table"><thead><tr><th>枠・選手</th><th>出走数</th><th>1着回数</th><th>1着率</th><th>2連対率</th><th>3連対率</th><th>逃げ率（実1コース）</th><th>逃がし率（実2コース）</th></tr></thead><tbody>${r.entries.map(e=>{const st=local?.[e.id],f=st?.frames[e.lane-1],x=st?.escape;return `<tr><td><div class="racer-cell"><span class="lane lane-${e.lane}">${e.lane}</span><b>${esc(e.name)}</b></div></td><td>${f?.starts??'—'}</td><td>${f?.starts?f.first:'—'}</td><td class="accent">${f?.starts?pct(rate(f.first,f.starts)):'—'}</td><td>${f?.starts?pct(rate(f.first+f.second,f.starts)):'—'}</td><td>${f?.starts?pct(rate(f.first+f.second+f.third,f.starts)):'—'}</td><td>${x?.course1Starts?pct(rate(x.escape,x.course1Starts)):'—'} <small>${x?.course1Starts?`(${x.course1Starts}走)`:''}</small></td><td>${x?.course2Starts?pct(rate(x.allowEscape,x.course2Starts)):'—'} <small>${x?.course2Starts?`(${x.course2Starts}走)`:''}</small></td></tr>`}).join('')}</tbody></table></div><div class="footnote">逃げ率＝その選手が実際に1コースから進入した時に「逃げ」で1着になった割合。逃がし率＝2コースから進入した時に1コース艇の「逃げ」が成立した割合。場・期間で絞った参考値です。サンプル数が小さい場合は不安定です。</div></div>`:'');}
 function getForecastSelection(r,local){
@@ -250,8 +251,19 @@ async function loadDailyTrends(){
   }catch(e){s.dailyError=e.message||String(e);}
   finally{s.dailyLoading=false;if(s.tab==='results')render();}
 }
+async function refreshRaceDeadlines(date=s.date,signal=s.controller?.signal){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!s.races.length)return;
+ const ticket=++deadlineTicket;
+ try{
+  const map=await fetchDeadlineMap(date,{signal});
+  if(signal?.aborted||ticket!==deadlineTicket||date!==s.date)return;
+  if(applyDeadlineMap(s.races,map)){
+   render();
+  }
+ }catch(error){if(signal?.aborted)return;}
+}
 async function loadDay(){
-  s.controller?.abort();
+  s.controller?.abort();deadlineTicket++;
   const ctrl=new AbortController();s.controller=ctrl;
   invalidateHistory();s.predictionVariant='base';s.loading=true;s.error='';s.races=[];s.resultRows=[];s.payoutRows=[];s.availability={};s.histError='';render();
   const paths={title:'programs/title',cards:'programs/race_cards',waku:'programs/waku10',tkz:'previews/tkz',stt:'previews/stt',sui:'previews/sui',od3:'previews/od3',results:'results/realtime',payouts:'results/payouts'};
@@ -265,13 +277,15 @@ async function loadDay(){
     const data=Object.fromEntries(entries);
     s.resultRows=data.results;s.payoutRows=data.payouts;
     s.races=createRaceList(data.cards,data.title,data.waku,{tkz:data.tkz,stt:data.stt,sui:data.sui,od3:data.od3});
+    // The title CSV can replace its cutoff time with '確定'; never treat status as a clock.
+    applyDeadlineMap(s.races,{});
     snapshotOdds(s.races,s.date);
     if(!s.races.length&&s.tab!=='results')throw new Error('指定日の出走表がありません。');
     const possibleVenues=[...new Set([...s.races.map(r=>r.venue),...s.resultRows.map(r=>String(r['レースコード']||'').slice(8,10)).filter(v=>/^\d{2}$/.test(v))])].sort();
     s.venue=possibleVenues.includes(s.venue)?s.venue:(possibleVenues[0]||'');
     s.raceId=s.races.find(r=>r.venue===s.venue)?.id||s.resultRows.find(r=>String(r['レースコード']||'').slice(8,10)===s.venue)?.['レースコード']||'';
     s.at=new Date().toLocaleTimeString('ja-JP',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit'});
-  }catch(err){if(!ctrl.signal.aborted)s.error=err?.message||String(err);}finally{if(!ctrl.signal.aborted){s.loading=false;render();if(s.races.length){void restoreCachedHistory();if(s.detailTab==='course'||s.tab==='predict')void loadPublishedForCurrent();}}}
+  }catch(err){if(!ctrl.signal.aborted)s.error=err?.message||String(err);}finally{if(!ctrl.signal.aborted){s.loading=false;render();if(s.races.length){void refreshRaceDeadlines(s.date,ctrl.signal);void restoreCachedHistory();if(s.detailTab==='course'||s.tab==='predict')void loadPublishedForCurrent();}}}
 }
 async function loadPublishedForCurrent(){
  const r=current();if(!r||s.loading||s.publishedBusy||s.publishedCourse?.raceId===r.id)return;
@@ -430,4 +444,5 @@ render();loadDay();if(s.tab==='backtest')loadBacktest(render);if(s.tab==='result
 
 setInterval(refreshDeadlineCards,15000);
 setInterval(refreshExhibition,LIVE_INTERVAL_MS);
+setInterval(()=>{if(s.date===jstToday()&&!s.loading)void refreshRaceDeadlines(s.date,s.controller?.signal);},5*60*1000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshExhibition();});
