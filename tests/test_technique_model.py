@@ -63,4 +63,20 @@ class TechniqueTests(unittest.TestCase):
         a=[race('20240101')]
         m.rolling_features(a)
         self.assertEqual(a[0]['tech_x'].shape[1],len(m.b.FEATURE_NAMES)+len(m.EXTRA_NAMES))
+    def test_current_allocation_reconciles_with_legacy_payouts(self):
+        rows=[race('20240101','逃げ','1-2-3'),
+              race('20240102','まくり','3-2-1')]
+        for row in rows:
+            row['winner_idx']=m.b.COMBO_MAP[row['winner']]
+            row['payoutPer100Yen']=1500
+        p1=np.tile(np.array([.5,.18,.12,.10,.06,.04]),(2,1))
+        p2=np.tile(np.array([.14,.36,.20,.14,.10,.06]),(2,1))
+        p3=np.tile(np.array([.1,.1,.4,.2,.1,.1]),(2,1))
+        hits,pays,masses,ranked,winning_pos=m.settle(rows,p1,p2,p3)
+        for j,count in enumerate(m.b.COUNTS):
+            allocations=m.stake_allocation.unit_stakes(ranked,count,'current')
+            actual=m.stake_allocation.settle(winning_pos,[1500,1500],allocations,
+                                             np.array([0,1]),2)
+            self.assertEqual(actual['payoutYen'],int(pays[:,j].sum()))
+            self.assertEqual(actual['hits'],int(hits[:,j].sum()))
 if __name__=='__main__':unittest.main()
