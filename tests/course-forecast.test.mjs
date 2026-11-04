@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {makePicks} from '../analytics.js';
+import {makeCoursePicks} from '../course-forecast-picks.js';
 import {planCourseForecast} from '../course-forecast.js';
 
 const starters=()=>Array.from({length:6},(_,i)=>({
@@ -76,9 +77,11 @@ test('limit adjustments; shrink weak samples; preserve 120 normalized trifectas 
  assert.ok(plan.adjustments.every(d=>Math.abs(d)<=4.5));
  assert.ok(plan.adjustments.some(x=>x!==0));
  const current=makePicks(x.race,null,{mode:'balance',count:5});
- const again=makePicks(x.race,null,{mode:'balance',count:5,scoreAdjustments:null});
- assert.deepEqual(current,again);
- const pilot=makePicks(x.race,null,{mode:'balance',count:5,scoreAdjustments:plan.adjustments});
+ const unchanged=makePicks(x.race,null,{mode:'balance',count:5});
+ assert.deepEqual(current,unchanged);
+ const zero=makeCoursePicks(x.race,null,{mode:'balance',count:5,scoreAdjustments:[0,0,0,0,0,0]});
+ assert.deepEqual(zero.picks,current.picks);
+ const pilot=makeCoursePicks(x.race,null,{mode:'balance',count:5,scoreAdjustments:plan.adjustments});
  assert.equal(pilot.picks.length,5);
  assert.equal(pilot.total,1000);
  assert.equal(pilot.picks.reduce((s,x)=>s+x.stake,0),1000);
@@ -95,7 +98,7 @@ test('small-sample and absent racer rows never produce extreme fabricated streng
 });
 test('invalid adjustments do not silently distort the original forecast',()=>{
  const x=fixture();
- const bad=makePicks(x.race,null,{scoreAdjustments:[1,2,100,0,0,0]});
+ const bad=makeCoursePicks(x.race,null,{scoreAdjustments:[1,2,100,0,0,0]});
  assert.equal(bad.picks.length,0);
  assert.match(bad.reason,/不正/);
 });
