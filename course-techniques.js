@@ -1,4 +1,5 @@
 // 結果CSVの「実進入コース」と「決まり手」からのみ算出。握りの試行回数は推定しない。
+import {publishedRaceCourseStats} from './published-course-stats.js';
 const MOVES=['逃げ','差し','まくり','まくり差し','抜き','恵まれ'];
 const blank=()=>({starts:0,wins:0,second:0,third:0,byMove:Object.fromEntries(MOVES.map(k=>[k,0])),otherWins:0,beatenByAttack:0,allowedEscape:0});
 const clean=x=>String(x??'').trim();
@@ -48,12 +49,13 @@ export function determineExpectedCourses(race){
 const pct=(a,b)=>b>0?(a/b*100).toFixed(1)+'%':'—';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const format=(num,total)=>'<b>'+pct(num,total)+'</b><small>'+num+'/'+total+'走</small>';
-export function renderCourseTechniques(race,history,{scope='all',days=60}={}){
+export function renderCourseTechniques(race,history,{scope='all',days=60,published=null,selectedDate=''}={}){
   if(!race)return '';
-  if(!history||history.raceId!==race.id||!Array.isArray(history.techniqueRecords))
-    return '<section class="panel"><div class="panel-header"><div><h3>決まり手・攻撃力・インの攻撃耐性</h3><p>今回の6選手を、進入コース別に比較します。</p></div></div><div class="panel-body"><p>上の「過去成績から集計する」を押すと全国の実レース結果から集計します。レースを変更した場合も再集計が必要です。</p><p class="footnote">実際に握って回った試行回数は公開の結果CSVだけでは分かりません。「まくり系勝率」を代替指標として表示します。</p></div></section>';
+  const hasPublished=published?.raceId===race.id&&published?.index;
+  if(!hasPublished&&(!history||history.raceId!==race.id||!Array.isArray(history.techniqueRecords)))
+    return '<section class="panel"><div class="panel-header"><div><h3>決まり手・攻撃力・インの攻撃耐性</h3><p>今回の6選手を、進入コース別に比較します。</p></div></div><div class="panel-body"><p>公開3年統計を自動確認中です。まだ配信されていない場合は「過去成績から集計する」で端末保存データを利用できます。</p><p class="footnote">握って攻めた試行回数は公開結果だけでは分かりません。「まくり系勝率」を参考指標として表示します。</p></div></section>';
   const {confirmed,courses}=determineExpectedCourses(race);
-  const stats=aggregateCourseTechniques(history.techniqueRecords,race.entries,scope==='venue'?race.venue:null);
+  const stats=hasPublished?publishedRaceCourseStats(published,scope,race.venue):aggregateCourseTechniques(history.techniqueRecords,race.entries,scope==='venue'?race.venue:null);
   const cards=race.entries.map((e,i)=>{
     const course=courses[i],c=stats[clean(e.id)]?.courses[course-1]||blank();
     const attack=c.byMove['まくり']+c.byMove['まくり差し'];
@@ -65,9 +67,10 @@ export function renderCourseTechniques(race,history,{scope='all',days=60}={}){
     const allow=course===2?'<p class="technique-defense">2コース時の逃がし率：<strong>'+pct(c.allowedEscape,c.starts)+'</strong></p>':'';
     return '<article class="technique-card">'+header+summary+methods+defense+allow+'</article>';
   }).join('');
-  return '<section class="panel technique-panel"><div class="panel-header"><div><h3>決まり手・攻撃力・インの攻撃耐性</h3><p>この6選手を今回の進入コース別に比較</p></div></div><div class="panel-body">'+
-    '<div class="technique-toolbar"><span>過去'+esc(history.days||days)+'日・取得成功'+history.loaded+'日</span><div class="technique-scope"><button type="button" class="'+(scope==='all'?'active':'')+'" data-technique-scope="all">全国</button><button type="button" class="'+(scope==='venue'?'active':'')+'" data-technique-scope="venue">当地</button></div></div>'+
+  return '<section class="panel technique-panel"><div class="panel-header"><div><h3>決まり手・攻撃力・インの攻撃耐性</h3><p>この6選手を今回の進入コース別に比較</p></div>'+(hasPublished?'<span class="small-pill">公式過去36か月</span>':'')+'</div><div class="panel-body">'+
+    '<div class="technique-toolbar"><span>'+(hasPublished?'公式B/K集計 '+esc(published.index.start)+'〜'+esc(published.index.end)+' ・ '+Number(published.index.validRaces).toLocaleString('ja-JP')+'レース':'過去'+esc(history.days||days)+'日・取得成功'+history.loaded+'日')+'</span><div class="technique-scope"><button type="button" class="'+(scope==='all'?'active':'')+'" data-technique-scope="all">全国</button><button type="button" class="'+(scope==='venue'?'active':'')+'" data-technique-scope="venue">当地</button></div></div>'+ 
+    (hasPublished&&selectedDate<=published.index.end?'<div class="notification warning">選択した開催日以降の成績を含む3年集計です。当時の事前予想に使える数値ではありません。</div>':'')+
     (!confirmed?'<div class="notification warning">展示進入が6艇すべて確定していないため、枠なり進入で表示しています。進入が変われば対象コースも変わります。</div>':'')+
     '<div class="technique-grid">'+cards+'</div>'+
-    '<p class="footnote">分母は該当選手の該当実進入コースでの有効出走数。2連対率＝1着＋2着÷出走数、3連対率＝1〜3着÷出走数（いずれも該当コース、着順確定分のみ）。まくり系勝率＝まくり＋まくり差しで勝った回数÷出走数。イン被まくり系率＝1コース時に他艇のまくり・まくり差しで敗れた回数÷出走数。攻撃耐性指標＝100%−被まくり系率で、仕掛けられた時の防御成功率ではありません。着順・進入不明レースは除外。未取得日や少数標本に注意。予測モデルには未反映です。</p></div></section>';
+    '<p class="footnote">'+(hasPublished?'公式B/Kの公開原票から集計された参考値。全レース完全収録を保証しません。対象期間と除外レースに注意。':'')+'分母は該当選手の該当実進入コースでの有効出走数.2連対率＝1着＋2着÷出走数、3連対率＝1〜3着÷出走数（いずれも該当コース、着順確定分のみ）。まくり系勝率＝まくり＋まくり差しで勝った回数÷出走数。イン被まくり系率＝1コース時に他艇のまくり・まくり差しで敗れた回数÷出走数。攻撃耐性指標＝100%−被まくり系率で、仕掛けられた時の防御成功率ではありません。着順・進入不明レースは除外。未取得日や少数標本に注意。予測モデルには未反映です。</p></div></section>';
 }
