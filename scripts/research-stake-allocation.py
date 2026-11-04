@@ -53,7 +53,7 @@ def unit_stakes(sorted_combo_probabilities, count, policy):
         stakes += base
         missing = 10 - stakes.sum(axis=1)
         ranks = np.argsort(-(spread - base), axis=1, kind="stable")
-        for offset in range(remaining):
+        for offset in range(min(remaining, count)):
             rows = np.flatnonzero(missing > offset)
             stakes[rows, ranks[rows, offset]] += 1
     if not (stakes.shape == (n, count) and np.all(stakes >= 1) and
