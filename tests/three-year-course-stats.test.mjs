@@ -8,7 +8,7 @@ import {decodeCourseCell,publishedRaceCourseStats} from '../published-course-sta
 
 const race=(month,first=4,move='まくり')=>({
  id:month.replace('-','')+'011901',venue:19,
- winningCombo:first+'-'+(first===1?2:1)+'-'+(first===2?3:2),
+ winningCombo:[first,...[1,2,3,4,5,6].filter(n=>n!==first).slice(0,2)].join('-'),
  technique:move,
  entries:Array.from({length:6},(_,i)=>({lane:i+1,id:String(5101+i),actualCourse:i+1}))
 });
