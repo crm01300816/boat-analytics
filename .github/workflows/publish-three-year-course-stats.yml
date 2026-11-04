@@ -1,0 +1,65 @@
+name: Publish 36-month official racer course aggregates
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-three-year-course-stats.yml
+      - scripts/build-three-year-course-stats.mjs
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: publish-three-year-course-stats
+  cancel-in-progress: false
+jobs:
+  aggregate-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Restore 36 verified official B/K monthly research artifacts
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 41781164669
+          github-token: ${{ github.token }}
+          pattern: private-technique-chunk-*
+          merge-multiple: true
+          path: .local/private
+      - name: Verify and aggregate only historical athlete/course counters
+        run: |
+          node scripts/build-three-year-course-stats.mjs .local/private public/course-stats
+          node --test tests/*.test.mjs
+          node scripts/build-site.mjs
+          test -s _site/public/course-stats/index.json
+      - name: Erase ephemeral per-race B/K archive payloads
+        if: always()
+        run: rm -rf .local/private
+      - name: Commit only compact PUBLIC aggregated racer statistics
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/course-stats/
+          if git diff --cached --quiet; then
+            echo 'No aggregate change'
+          else
+            git commit -m "data: publish aggregated 2023-11 to 2026-10 racer course history"
+            git push origin HEAD:main
+          fi
+      - name: Publish latest aggregated data to Pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --ref main
+      - name: Explain the historical snapshot
+        run: |
+          echo '### BOATRACE three-year historical course statistics' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Official B/K sample: 2023-11-01 to 2026-10-28.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Results are derived-only counts. No raw B/K races were committed.' >> "$GITHUB_STEP_SUMMARY"
+          echo '3-year statistics are for display; not added to the predictive model.' >> "$GITHUB_STEP_SUMMARY"
