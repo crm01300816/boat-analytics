@@ -5,7 +5,7 @@ const existing = await lstat('_site').catch(error => { if (error.code !== 'ENOEN
 if (existing?.isSymbolicLink()) throw new Error('Refusing symlink output directory');
 await rm('_site', { recursive: true, force: true });
 await mkdir('_site');
-for (const file of ['index.html', 'selective-five.html', 'venue-stats.html', 'styles.css', 'course-techniques.css', 'app.js', 'racer-form.js', 'course-techniques.js', 'published-course-stats.js', 'course-forecast.js', 'course-forecast-picks.js', 'history-cache.js', 'csv.js', 'analytics.js', 'backtest-view.js', 'race-results.js', 'smart-navi.js', 'custom-model.js', 'backtest.js', 'model-lab.js']) {
+for (const file of ['index.html', 'selective-five.html', 'venue-stats.html', 'styles.css', 'course-techniques.css', 'app.js', 'racer-form.js', 'course-techniques.js', 'published-course-stats.js', 'course-forecast.js', 'course-forecast-picks.js', 'history-cache.js', 'race-deadlines.js', 'csv.js', 'analytics.js', 'backtest-view.js', 'race-results.js', 'smart-navi.js', 'custom-model.js', 'backtest.js', 'model-lab.js']) {
   await copyFile(file, `_site/${file}`);
 }
 await mkdir('_site/public');
@@ -16,4 +16,8 @@ await copyFile('public/selective-five-backfill.json','_site/public/selective-fiv
 
 // Optional 36-month derived counts: built and committed by the dedicated aggregate workflow.
 try { if((await lstat('public/course-stats/index.json')).isFile()) await cp('public/course-stats','_site/public/course-stats',{recursive:true}); }
+catch(error){if(error.code!=='ENOENT')throw error;}
+
+// Optional date-scoped cutoff snapshots. No private/API credentials or raw archives.
+try { if((await lstat('public/deadlines')).isDirectory()) await cp('public/deadlines','_site/public/deadlines',{recursive:true}); }
 catch(error){if(error.code!=='ENOENT')throw error;}
