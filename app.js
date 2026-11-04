@@ -1,7 +1,7 @@
 import { fetchCsv, shiftDate, jstToday, venueName } from './csv.js';
 import { createRaceList, aggregateLocal, rateRacers, rate, makePicks } from './analytics.js';
 import { racerForm } from './racer-form.js';
-import { renderCourseTechniques } from './course-techniques.js';
+import { renderCourseTechniques } from './course-techniques.js?v=20261104-published-36m';
 import { loadPublishedCourseStats } from './published-course-stats.js';
 import { compactHistoryDay, historyForRace, historyCacheFresh, readHistoryDays, saveHistoryDay } from './history-cache.js';
 import { backtestPage, loadBacktest, setBacktestCount } from './backtest-view.js';
