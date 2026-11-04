@@ -1,27 +1,67 @@
 
-/* 選択したレースの実進入コース別決まり手（スマホ優先） */
-.technique-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 16px;color:#aac8dd;font-size:13px}
-.technique-scope{display:flex;gap:6px;padding:4px;border-radius:12px;background:#102c44;border:1px solid #3f617b}
-.technique-scope button{background:transparent;color:#b9d2e6;border:0;border-radius:8px;padding:9px 17px;font-weight:700;font-size:13px;cursor:pointer}
+/* Course/technique comparison: six compact rows, no horizontal swipe required. */
+.technique-toolbar{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;color:#a9c7db}
+.technique-scope{display:flex;gap:3px;padding:3px;border:1px solid #3f617b;background:#102c44;border-radius:11px;flex-shrink:0}
+.technique-scope button{font:inherit;cursor:pointer;border:0;padding:8px 15px;border-radius:8px;background:transparent;color:#b9d2e6;font-weight:700}
 .technique-scope button.active{background:#16a3b1;color:#fff}
-.technique-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
-.technique-card{min-width:0;padding:14px;border-radius:15px;background:linear-gradient(150deg,#183954,#102b42);border:1px solid #3a6480}
-.technique-card-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.technique-card-head>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-.technique-card-head b{font-size:15px;color:#f4fbff;overflow-wrap:anywhere}
-.technique-card-head small{color:#a3c7dd;font-size:11px}
-.technique-sample{color:#c4deeb;font-size:11px;white-space:nowrap}
-.technique-main{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:13px}
-.technique-main>div{display:flex;flex-direction:column;gap:5px;background:#0b273b;padding:12px;border-radius:10px}
-.technique-main small{font-size:11px;color:#adcee3}
-.technique-main strong{font-size:22px;color:#f6fdff;font-variant-numeric:tabular-nums}
-.technique-main>div:nth-child(2) strong{color:#84ebde}
-.technique-methods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:#31566e;border-radius:10px;overflow:hidden}
-.technique-methods>div{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px;background:#163751;min-width:0}
-.technique-methods span{font-size:12px;color:#c5dceb}
-.technique-methods b{display:block;text-align:right;font-size:14px;color:#fff;font-variant-numeric:tabular-nums}
-.technique-methods small{display:block;text-align:right;font-size:10px;color:#98bbd0}
-.technique-defense{margin:11px 0 0;padding:9px 10px;border-radius:9px;background:#0e3146;color:#c5e2f4;font-size:12px}
-.technique-defense strong{color:#fff;font-size:15px}
-.technique-defense small{display:block;color:#94bfdb;line-height:1.6}
-@media(max-width:740px){.technique-grid{grid-template-columns:minmax(0,1fr)}.technique-card{padding:12px}.technique-main strong{font-size:20px}.technique-toolbar{align-items:flex-start}}
+.tech-view-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-bottom:13px;padding:4px;border-radius:12px;background:#102b43;border:1px solid #345872}
+.tech-view-switch button{font:inherit;font-size:12px;font-weight:750;cursor:pointer;padding:10px 4px;border:0;border-radius:9px;color:#b2d0df;background:transparent}
+.tech-view-switch button.active{background:#285b76;color:#fff;box-shadow:inset 0 0 0 1px #5c9ba8}
+.tech-compare-wrap{width:100%;border:1px solid #345a75;border-radius:12px;overflow:hidden}
+.tech-compare-table{width:100%;table-layout:fixed;border-spacing:0;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.tech-compare-table th:first-child{width:35%}
+.tech-compare-table thead{background:#0d304a}
+.tech-compare-table thead th{padding:11px 4px;text-align:center;color:#b6d6e7;font-size:11px;font-weight:750;line-height:1.35;overflow-wrap:anywhere}
+.tech-compare-table thead th:first-child{text-align:left;padding-left:12px}
+.tech-compare-table tbody tr{background:#173953;border-top:1px solid #355671}
+.tech-compare-table tbody tr:nth-child(even){background:#13324a}
+.tech-compare-table tbody tr.tech-row-selected{background:#1b5167}
+.tech-compare-table tbody td{padding:10px 3px;text-align:center;font-size:12px;line-height:1.4;color:#f0fbff}
+.tech-compare-table tbody td strong{font-size:13px;font-weight:750;white-space:nowrap}
+.tech-compare-table tbody td:nth-child(3) strong{color:#a6f0e3}
+.tech-compare-table tbody th{padding:0;text-align:left;font-weight:normal}
+.tech-entrant{cursor:pointer;width:100%;min-width:0;display:flex;align-items:center;gap:6px;padding:9px 3px 9px 8px;border:0;background:transparent;color:#fff;text-align:left;font:inherit}
+.tech-entrant>.lane{width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px}
+.tech-entrant-meta{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
+.tech-entrant-meta b{font-size:12px;line-height:1.35;overflow-wrap:anywhere}
+.tech-entrant-meta small{font-size:10px;color:#accde1;white-space:normal;line-height:1.25}
+.tech-open-icon{font-size:13px;line-height:1;color:#a2ccd5;min-width:9px;flex-shrink:0}
+.tech-empty{color:#83a0b4}
+.tech-compare-hint,.tech-course-note{font-size:11px;color:#abcce0;margin:10px 0 12px;line-height:1.55}
+.tech-selected-detail{border:1px solid #41738d;border-radius:12px;padding:12px;margin:12px 0;background:#102d44}
+.tech-selected-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;color:#eafaff}
+.tech-selected-head b{font-size:14px}
+.tech-selected-head span{font-size:11px;color:#b5d5e8}
+.tech-selected-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.tech-selected-summary>div{background:#1b3f58;border-radius:9px;display:flex;flex-direction:column;gap:3px;align-items:center;padding:9px 3px;text-align:center;min-width:0}
+.tech-selected-summary small{font-size:10px;color:#a8cbdc}
+.tech-selected-summary strong{font-size:16px;color:#eaffff;font-variant-numeric:tabular-nums}
+.tech-selected-moves{margin-top:10px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.tech-selected-moves>div{padding:9px 5px;border-radius:8px;background:#183c54;text-align:center;min-width:0}
+.tech-selected-moves span{display:block;font-size:11px;color:#bfdbeb;margin-bottom:3px}
+.tech-selected-moves b{display:block;color:#fff;font-size:14px}
+.tech-selected-moves small{display:block;color:#9ac0d6;font-size:10px}
+.tech-selected-note{font-size:12px;color:#d2e9f3;margin:10px 0 0;padding:9px 10px;background:#163c53;border-radius:9px}
+.tech-selected-note b{color:#fff}
+@media(max-width:580px){
+  .technique-panel>.panel-body{padding:11px}
+  .technique-toolbar{font-size:11px}
+  .tech-compare-table th:first-child{width:38%}
+  .tech-compare-table thead th{font-size:10px;padding:10px 2px}
+  .tech-compare-table thead th:first-child{padding-left:7px}
+  .tech-compare-table tbody td{padding:8px 1px}
+  .tech-compare-table tbody td strong{font-size:11px}
+  .tech-entrant{gap:5px;padding:8px 2px 8px 5px}
+  .tech-entrant>.lane{width:21px;height:21px;font-size:11px}
+  .tech-entrant-meta b{font-size:11px}
+  .tech-entrant-meta small{font-size:9px}
+  .tech-selected-summary strong{font-size:13px}
+  .tech-selected-summary small{font-size:9px}
+}
+@media(max-width:360px){
+  .tech-compare-table th:first-child{width:40%}
+  .tech-compare-table tbody td strong{font-size:10px}
+  .tech-open-icon{display:none}
+  .tech-entrant-meta b{font-size:10px}
+  .tech-selected-moves{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
