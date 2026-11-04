@@ -1,0 +1,27 @@
+
+/* 選択したレースの実進入コース別決まり手（スマホ優先） */
+.technique-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 16px;color:#aac8dd;font-size:13px}
+.technique-scope{display:flex;gap:6px;padding:4px;border-radius:12px;background:#102c44;border:1px solid #3f617b}
+.technique-scope button{background:transparent;color:#b9d2e6;border:0;border-radius:8px;padding:9px 17px;font-weight:700;font-size:13px;cursor:pointer}
+.technique-scope button.active{background:#16a3b1;color:#fff}
+.technique-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.technique-card{min-width:0;padding:14px;border-radius:15px;background:linear-gradient(150deg,#183954,#102b42);border:1px solid #3a6480}
+.technique-card-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.technique-card-head>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.technique-card-head b{font-size:15px;color:#f4fbff;overflow-wrap:anywhere}
+.technique-card-head small{color:#a3c7dd;font-size:11px}
+.technique-sample{color:#c4deeb;font-size:11px;white-space:nowrap}
+.technique-main{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:13px}
+.technique-main>div{display:flex;flex-direction:column;gap:5px;background:#0b273b;padding:12px;border-radius:10px}
+.technique-main small{font-size:11px;color:#adcee3}
+.technique-main strong{font-size:22px;color:#f6fdff;font-variant-numeric:tabular-nums}
+.technique-main>div:nth-child(2) strong{color:#84ebde}
+.technique-methods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:#31566e;border-radius:10px;overflow:hidden}
+.technique-methods>div{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px;background:#163751;min-width:0}
+.technique-methods span{font-size:12px;color:#c5dceb}
+.technique-methods b{display:block;text-align:right;font-size:14px;color:#fff;font-variant-numeric:tabular-nums}
+.technique-methods small{display:block;text-align:right;font-size:10px;color:#98bbd0}
+.technique-defense{margin:11px 0 0;padding:9px 10px;border-radius:9px;background:#0e3146;color:#c5e2f4;font-size:12px}
+.technique-defense strong{color:#fff;font-size:15px}
+.technique-defense small{display:block;color:#94bfdb;line-height:1.6}
+@media(max-width:740px){.technique-grid{grid-template-columns:minmax(0,1fr)}.technique-card{padding:12px}.technique-main strong{font-size:20px}.technique-toolbar{align-items:flex-start}}
