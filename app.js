@@ -1,9 +1,10 @@
 import { fetchCsv, shiftDate, jstToday, venueName } from './csv.js';
-import { createRaceList, aggregateLocal, rateRacers, rate, makePicks } from './analytics.js?v=20261104-course-pilot';
+import { createRaceList, aggregateLocal, rateRacers, rate, makePicks } from './analytics.js';
 import { racerForm } from './racer-form.js';
 import { renderCourseTechniques } from './course-techniques.js?v=20261104-compact';
 import { loadPublishedCourseStats } from './published-course-stats.js';
 import { planCourseForecast } from './course-forecast.js';
+import { makeCoursePicks } from './course-forecast-picks.js';
 import { compactHistoryDay, historyForRace, historyCacheFresh, readHistoryDays, saveHistoryDay } from './history-cache.js';
 import { backtestPage, loadBacktest, setBacktestCount } from './backtest-view.js';
 import { resultsPage } from './race-results.js';
@@ -175,7 +176,7 @@ function getForecastSelection(r,local){
   const base=makePicks(r,local,{mode:s.mode,count:s.count});
   const published=s.publishedCourse?.raceId===r.id?s.publishedCourse:null;
   const plan=planCourseForecast(r,published,s.date);
-  const pilot=plan.usable?makePicks(r,local,{mode:s.mode,count:s.count,scoreAdjustments:plan.adjustments}):null;
+  const pilot=plan.usable?makeCoursePicks(r,local,{mode:s.mode,count:s.count,scoreAdjustments:plan.adjustments}):null;
   const pilotReady=!!(plan.usable&&pilot?.picks?.length===s.count&&pilot.total===1000);
   const selected=pilotReady&&s.predictionVariant==='course'?'course':'base';
   return {base,pilot,plan,pilotReady,selected,chosen:selected==='course'?pilot:base};
