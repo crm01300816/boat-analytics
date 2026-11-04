@@ -179,17 +179,8 @@ export function readOdds(race) {
   return Object.keys(values).length ? values : null;
 }
 
-export function makePicks(race, localStats = null, { mode = 'balance', count = 7, scoreAdjustments = null } = {}) {
-  const original = rateRacers(race, localStats);
-  // Experimental only. The default (null) path must be bit-identical to the frozen baseline.
-  const validAdjustments = Array.isArray(scoreAdjustments) && scoreAdjustments.length === 6
-    && scoreAdjustments.every(x => typeof x === 'number' && Number.isFinite(x) && Math.abs(x) <= 4.5);
-  if (scoreAdjustments !== null && !validAdjustments)
-    return { picks: [], racers: original, reason: '3年コース補正値が不正です。従来モデルをご利用ください。' };
-  const racers = validAdjustments ? original.map((r,i) => ({
-    ...r, score: r.score === null ? null : clamp(r.score + scoreAdjustments[i]),
-    courseAdjustment: scoreAdjustments[i]
-  })) : original;
+export function makePicks(race, localStats = null, { mode = 'balance', count = 7 } = {}) {
+  const racers = rateRacers(race, localStats);
   const probabilities = trifectaProbabilities(racers);
   if (!probabilities) return { picks: [], racers, reason: '必要な選手・枠番別成績が不足しています。データを確認してください。' };
   const odds = readOdds(race);
@@ -216,5 +207,5 @@ export function makePicks(race, localStats = null, { mode = 'balance', count = 7
     units[best]++;
   }
   const picks = winners.map((x,i) => ({ ...x, stake: 100*units[i], estimatedPayout: x.odds ? Math.round(x.odds*x.stake) : null }));
-  return { racers, picks, oddsAvailable: !!odds, reason: null, mass: picks.reduce((v,x)=>v+x.p,0), total: picks.reduce((v,x)=>v+x.stake,0), method: validAdjustments ? '独自スコア＋過去3年コース補正＋Plackett–Luce（試験・未校正）' : '独自スコア＋Plackett–Luce（未校正）' };
+  return { racers, picks, oddsAvailable: !!odds, reason: null, mass: picks.reduce((v,x)=>v+x.p,0), total: picks.reduce((v,x)=>v+x.stake,0), method: '独自スコア＋Plackett–Luce（未校正）' };
 }
