@@ -65,3 +65,34 @@
   .tech-entrant-meta b{font-size:10px}
   .tech-selected-moves{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* Experimental forecast comparison, without changing saved/frozen production picks. */
+.forecast-variant-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#0e2b42;border:1px solid #37627f;border-radius:11px;padding:5px;margin-bottom:13px}
+.forecast-variant-tabs button{font:inherit;font-size:13px;color:#bcd9e8;background:transparent;border:0;border-radius:9px;padding:11px 7px;font-weight:700;cursor:pointer;min-width:0}
+.forecast-variant-tabs button.active{background:#1b7f89;color:#fff}
+.forecast-variant-tabs button:disabled{opacity:.45;cursor:not-allowed}
+.forecast-comparison-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.forecast-comparison-grid>div{background:#0c2d44;border:1px solid #315774;border-radius:11px;padding:12px;min-width:0}
+.forecast-comparison-grid>div.chosen{border-color:#32bbb2;background:#133c53}
+.forecast-comparison-grid>div>b{display:block;font-size:13px;color:#d7f5ff;margin-bottom:9px}
+.forecast-compare-combos{display:flex;flex-direction:column;gap:7px}
+.forecast-compare-combo{display:flex;gap:5px;justify-content:space-between;align-items:baseline;color:#fff;font-size:14px;font-weight:750;font-variant-numeric:tabular-nums}
+.forecast-compare-combo small{font-size:11px;color:#b9d7e8;font-weight:500;white-space:nowrap}
+.forecast-adjustments{margin-top:12px;border:1px solid #39627c;border-radius:11px;padding:10px 12px}
+.forecast-adjustments summary{cursor:pointer;color:#d3f3ff;font-size:13px;font-weight:750}
+.forecast-adjustment-list{display:grid;gap:1px;border-radius:8px;overflow:hidden;background:#355d76;margin-top:11px}
+.forecast-adjustment-list>div{display:flex;align-items:center;gap:9px;padding:9px;background:#15384f}
+.forecast-adjustment-list>div .lane{flex-shrink:0}
+.forecast-adjustment-list b{font-size:12px;flex:1;min-width:0}
+.forecast-adjustment-list small{font-size:11px;color:#b4d5e6}
+.forecast-adjustment-list strong{font-size:13px;color:#dcecf7;min-width:58px;text-align:right}
+.forecast-adjustment-list strong.plus{color:#7ef1cd}
+.forecast-adjustment-list strong.minus{color:#f8c9ab}
+@media(max-width:500px){
+ .forecast-variant-tabs button{font-size:12px}
+ .forecast-comparison-grid{grid-template-columns:1fr}
+ .forecast-comparison-grid>div{padding:10px 12px}
+ .forecast-compare-combos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:14px}
+ .forecast-compare-combo{font-size:12px}
+}
