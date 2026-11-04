@@ -3,6 +3,7 @@ import { createRaceList, aggregateLocal, rateRacers, rate, makePicks } from './a
 import { racerForm } from './racer-form.js';
 import { renderCourseTechniques } from './course-techniques.js?v=20261104-compact';
 import { loadPublishedCourseStats } from './published-course-stats.js';
+import { planCourseForecast } from './course-forecast.js';
 import { compactHistoryDay, historyForRace, historyCacheFresh, readHistoryDays, saveHistoryDay } from './history-cache.js';
 import { backtestPage, loadBacktest, setBacktestCount } from './backtest-view.js';
 import { resultsPage } from './race-results.js';
@@ -10,7 +11,7 @@ import {dashboardPage,snapshotOdds,saveForecast,removeForecast} from './smart-na
 import {DEFAULT_WEIGHTS,modelPage,loadModels,saveModel,deleteModel,verifyCustom} from './custom-model.js?v=20261030-custom3';
 
 const MENU=[['dashboard','◉','今日のナビ'],['races','▦','レース分析'],['results','≋','結果・水面'],['local','◎','当地・枠別'],['predict','✧','3連単1,000円'],['custom','⚙','マイモデル'],['backtest','◷','過去検証'],['sources','▤','データ・算出法']];
-const s={date:jstToday(),detailTab:'entries',tab:'dashboard',venue:'',raceId:'',races:[],loading:true,error:'',availability:{},at:'',history:null,historyBusy:false,histProgress:'',histError:'',historyDays:60,techniqueScope:'all',techniqueView:'basic',techniqueRacer:0,publishedCourse:null,publishedBusy:false,publishedError:'',mode:'balance',count:7,controller:null,resultRows:[],payoutRows:[],daily:null,prospective:null,dailyLoading:false,dailyLoaded:false,dailyError:''};
+const s={date:jstToday(),detailTab:'entries',tab:'dashboard',venue:'',raceId:'',races:[],loading:true,error:'',availability:{},at:'',history:null,historyBusy:false,histProgress:'',histError:'',historyDays:60,techniqueScope:'all',techniqueView:'basic',techniqueRacer:0,publishedCourse:null,publishedBusy:false,publishedError:'',mode:'balance',count:7,predictionVariant:'base',controller:null,resultRows:[],payoutRows:[],daily:null,prospective:null,dailyLoading:false,dailyLoaded:false,dailyError:''};
 let customWeights={...DEFAULT_WEIGHTS},customController=null;
 const LIVE_INTERVAL_MS=60000;
 let liveBusy=false,liveTimer=null;
@@ -44,7 +45,7 @@ const pct=v=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':fmt(v)+'
 const yen=v=>v==null?'—':new Intl.NumberFormat('ja-JP').format(v)+'円';
 const current=()=>s.races.find(r=>r.id===s.raceId)||s.races.find(r=>r.venue===s.venue)||null;
 const currentLocal=()=>{const r=current();return r&&s.history?.venue===r.venue&&s.history?.date===s.date?aggregateLocal(s.history.records,r.entries,r.venue):null;};
-function goto(tab){s.tab=tab;location.hash=tab;render();if(tab==='backtest')loadBacktest(render);if(tab==='results')loadDailyTrends();if(['races','local','predict'].includes(tab)&&!s.historyBusy&&!s.history)void restoreCachedHistory();if(tab==='races'&&s.detailTab==='course')void loadPublishedForCurrent();window.scrollTo(0,0);}
+function goto(tab){s.tab=tab;location.hash=tab;render();if(tab==='backtest')loadBacktest(render);if(tab==='results')loadDailyTrends();if(['races','local','predict'].includes(tab)&&!s.historyBusy&&!s.history)void restoreCachedHistory();if((tab==='races'&&s.detailTab==='course')||tab==='predict')void loadPublishedForCurrent();window.scrollTo(0,0);}
 function nav(){return MENU.map(([id,icon,name])=>`<button class="nav-link ${id===s.tab?'active':''}" data-nav="${id}"><span class="nav-icon">${icon}</span>${name}</button>`).join('');}
 const MOBILE_MENU=[['dashboard','⌂','ホーム'],['races','▦','レース'],['predict','✧','AI予想'],['backtest','◷','過去検証'],['menu','☰','メニュー']];
 function mobileNav(){return MOBILE_MENU.map(([id,icon,name])=>`<button class="nav-link ${id===s.tab||(id==='menu'&&['results','local','custom','sources'].includes(s.tab))?'active':''}" data-nav="${id}"><span class="nav-icon">${icon}</span><span>${name}</span></button>`).join('');}
@@ -244,10 +245,10 @@ async function loadDay(){
     s.venue=possibleVenues.includes(s.venue)?s.venue:(possibleVenues[0]||'');
     s.raceId=s.races.find(r=>r.venue===s.venue)?.id||s.resultRows.find(r=>String(r['レースコード']||'').slice(8,10)===s.venue)?.['レースコード']||'';
     s.at=new Date().toLocaleTimeString('ja-JP',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit'});
-  }catch(err){if(!ctrl.signal.aborted)s.error=err?.message||String(err);}finally{if(!ctrl.signal.aborted){s.loading=false;render();if(s.races.length){void restoreCachedHistory();if(s.detailTab==='course')void loadPublishedForCurrent();}}}
+  }catch(err){if(!ctrl.signal.aborted)s.error=err?.message||String(err);}finally{if(!ctrl.signal.aborted){s.loading=false;render();if(s.races.length){void restoreCachedHistory();if(s.detailTab==='course'||s.tab==='predict')void loadPublishedForCurrent();}}}
 }
 async function loadPublishedForCurrent(){
- const r=current();if(!r||s.loading)return;
+ const r=current();if(!r||s.loading||s.publishedBusy||s.publishedCourse?.raceId===r.id)return;
  const ticket=++publishedTicket;
  s.publishedBusy=true;s.publishedError='';
  try{
@@ -352,6 +353,7 @@ async function handleClick(event){
 
   if(event.target.closest('#load-previous-day')){s.date=shiftDate(s.date,-1);loadDay();return;}
   if(event.target.closest('#retry-backtest')){loadBacktest(render,true);return;}
+  const predictionType=event.target.closest('[data-forecast-variant]');if(predictionType){s.predictionVariant=predictionType.dataset.forecastVariant==='course'?'course':'base';render();return;}
   const comparison=event.target.closest('[data-technique-view]');if(comparison){s.techniqueView=['basic','moves','tactics'].includes(comparison.dataset.techniqueView)?comparison.dataset.techniqueView:'basic';render();return;}
   const racer=event.target.closest('[data-technique-racer]');if(racer){const lane=Number(racer.dataset.techniqueRacer);s.techniqueRacer=s.techniqueRacer===lane?0:lane;render();return;}
   const scope=event.target.closest('[data-technique-scope]');if(scope){s.techniqueScope=scope.dataset.techniqueScope==='venue'?'venue':'all';render();return;}
@@ -364,8 +366,8 @@ async function handleClick(event){
   if(node.dataset.recentDate&&/^\d{4}-\d{2}-\d{2}$/.test(node.dataset.recentDate)&&node.dataset.recentDate<=jstToday()){s.date=node.dataset.recentDate;loadDay();return;}
   if(node.dataset.historyDate&&/^\d{4}-\d{2}-\d{2}$/.test(node.dataset.historyDate)&&node.dataset.historyDate<=jstToday()){s.date=node.dataset.historyDate;loadDay();return;}
   if(node.dataset.nav){if(node.dataset.selectVenue){invalidateHistory();s.venue=node.dataset.selectVenue;s.raceId=s.races.find(r=>r.venue===s.venue)?.id||'';}goto(node.dataset.nav);return;}
-  if(node.dataset.venue){invalidateHistory();s.techniqueRacer=0;s.venue=node.dataset.venue;s.raceId=s.races.find(r=>r.venue===s.venue)?.id||s.resultRows.find(r=>String(r['レースコード']||'').slice(8,10)===s.venue)?.['レースコード']||'';render();void restoreCachedHistory();if(s.detailTab==='course')void loadPublishedForCurrent();return;}
-  if(node.dataset.race){invalidateHistory();s.techniqueRacer=0;s.raceId=node.dataset.race;render();void restoreCachedHistory();if(s.detailTab==='course')void loadPublishedForCurrent();return;}
+  if(node.dataset.venue){invalidateHistory();s.techniqueRacer=0;s.venue=node.dataset.venue;s.raceId=s.races.find(r=>r.venue===s.venue)?.id||s.resultRows.find(r=>String(r['レースコード']||'').slice(8,10)===s.venue)?.['レースコード']||'';render();void restoreCachedHistory();if(s.detailTab==='course'||s.tab==='predict')void loadPublishedForCurrent();return;}
+  if(node.dataset.race){invalidateHistory();s.techniqueRacer=0;s.raceId=node.dataset.race;render();void restoreCachedHistory();if(s.detailTab==='course'||s.tab==='predict')void loadPublishedForCurrent();return;}
   if(node.dataset.mode){s.mode=node.dataset.mode;render();return;}
   if(node.id==='live-refresh'){refreshExhibition();return;}
   if(node.id==='refresh-btn'||node.id==='retry-load'){loadDay();return;}
