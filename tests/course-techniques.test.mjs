@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {aggregateCourseTechniques,determineExpectedCourses,normalizeMove} from '../course-techniques.js';
+import {aggregateCourseTechniques,determineExpectedCourses,normalizeMove,renderCourseTechniques} from '../course-techniques.js';
 
 const entrants=[1,2,3,4,5,6].map(lane=>({lane,id:String(5100+lane),name:'選手'+lane}));
 function race({venue='19',first=4,second=1,third=2,move='まくり',courses=[1,2,3,4,5,6]}={}){
@@ -45,4 +45,18 @@ test('登録番号がない場合は他人の結果で補わない',()=>{
  const data=aggregateCourseTechniques([race()], [{lane:1,id:''}]);
  assert.deepEqual(data,{});
  assert.equal(normalizeMove('捲り 差し'),'まくり差し');
+});
+
+test('複勝率は実進入コースの1・2着、3連対率は1〜3着から表示する',()=>{
+ const history={raceId:'r1',date:'2026-11-04',days:30,loaded:2,techniqueRecords:[
+   race({first:4,second:1,third:2,move:'まくり'}),
+   race({first:1,second:2,third:3,move:'逃げ'})
+ ]};
+ const output=renderCourseTechniques({id:'r1',venue:'19',entries:entrants,previews:{}},history);
+ assert.match(output,/複勝率（2連対）/);
+ assert.match(output,/3連対率（1〜3着）/);
+ const lane2=output.split('<article class="technique-card">')[2];
+ assert.match(lane2,/複勝率（2連対）<\/small><strong>50\.0%<\/strong>/);
+ assert.match(lane2,/3連対率（1〜3着）<\/small><strong>100\.0%<\/strong>/);
+ assert.match(lane2,/1\/2走/);
 });
