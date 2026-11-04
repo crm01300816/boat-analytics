@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {aggregateCourseTechniques,determineExpectedCourses,normalizeMove,renderCourseTechniques} from '../course-techniques.js';
+import {aggregateCourseTechniques,determineExpectedCourses,normalizeMove,renderCourseTechniques,techniqueMetric} from '../course-techniques.js';
 
 const entrants=[1,2,3,4,5,6].map(lane=>({lane,id:String(5100+lane),name:'選手'+lane}));
 function race({venue='19',first=4,second=1,third=2,move='まくり',courses=[1,2,3,4,5,6]}={}){
@@ -47,16 +47,57 @@ test('登録番号がない場合は他人の結果で補わない',()=>{
  assert.equal(normalizeMove('捲り 差し'),'まくり差し');
 });
 
-test('複勝率は実進入コースの1・2着、3連対率は1〜3着から表示する',()=>{
+
+test('6艇を1画面で比較でき、複勝率・3連対率・決まり手を正しく切り替える',()=>{
  const history={raceId:'r1',date:'2026-11-04',days:30,loaded:2,techniqueRecords:[
    race({first:4,second:1,third:2,move:'まくり'}),
    race({first:1,second:2,third:3,move:'逃げ'})
  ]};
- const output=renderCourseTechniques({id:'r1',venue:'19',entries:entrants,previews:{}},history);
- assert.match(output,/複勝率（2連対）/);
- assert.match(output,/3連対率（1〜3着）/);
- const lane2=output.split('<article class="technique-card">')[2];
- assert.match(lane2,/複勝率（2連対）<\/small><strong>50\.0%<\/strong>/);
- assert.match(lane2,/3連対率（1〜3着）<\/small><strong>100\.0%<\/strong>/);
- assert.match(lane2,/1\/2走/);
+ const selected={id:'r1',venue:'19',entries:entrants,previews:{}};
+ const basic=renderCourseTechniques(selected,history);
+ assert.equal((basic.match(/<tr class="/g)||[]).length,6);
+ assert.match(basic,/6艇のコース別成績一覧/);
+ assert.match(basic,/2連対/);
+ assert.match(basic,/3連対/);
+ assert.match(basic,/まくり系/);
+ const row2=basic.split('<tr class="')[2];
+ assert.match(row2,/50\.0%/);
+ assert.match(row2,/100\.0%/);
+ assert.doesNotMatch(basic,/tech-selected-detail/);
+ const moves=renderCourseTechniques(selected,history,{view:'moves'});
+ assert.match(moves,/<th scope="col">まくり差し<\/th>/);
+ assert.match(moves,/<th scope="col">差し<\/th>/);
+ assert.doesNotMatch(moves,/<th scope="col">2連対<\/th>/);
+ const details=renderCourseTechniques(selected,history,{selectedLane:2});
+ assert.match(details,/tech-selected-detail/);
+ assert.match(details,/複勝率/);
+ assert.match(details,/3連対率/);
+ assert.match(details,/1\/2走/);
+ const defense=renderCourseTechniques(selected,history,{view:'tactics'});
+ assert.match(defense,/被まくり系/);
+ assert.match(defense,/逃がし/);
+});
+test('コースに適用不能な逃げ・被まくり系・逃がしは正しく空欄にする',()=>{
+ const data=aggregateCourseTechniques([race({first:1,second:2,third:3,move:'逃げ'})],entrants);
+ const course1=data['5101'].courses[0],course2=data['5102'].courses[1];
+ assert.equal(techniqueMetric(course1,1,'escape'),1);
+ assert.equal(techniqueMetric(course2,2,'escape'),null);
+ assert.equal(techniqueMetric(course1,1,'allow'),null);
+ assert.equal(techniqueMetric(course2,2,'allow'),1);
+ assert.equal(techniqueMetric(course1,1,'top3'),1);
+});
+test('公開3年統計も同じ6艇一覧で表示し、対象期間を明示',()=>{
+ const races={id:'r1',venue:'19',entries:entrants,previews:{}};
+ const values=Array.from({length:6},()=>Array(13).fill(0));
+ values[0]=[20,10,5,2,10,0,0,0,0,0,0,3,0];
+ const published={raceId:'r1',index:{start:'2023-11-01',end:'2026-10-28',validRaces:152795},racers:{
+ '5101':{all:values,venues:{'19':values}}
+ }};
+ const html=renderCourseTechniques(races,null,{published});
+ assert.match(html,/3年実績/);
+ assert.match(html,/50\.0%/);
+ assert.match(html,/75\.0%/);
+ assert.match(html,/85\.0%/);
+ assert.equal((html.match(/<tr class="/g)||[]).length,6);
+ assert.match(html,/2023-11-01/);
 });
