@@ -38,4 +38,29 @@ class TechniqueTests(unittest.TestCase):
     def test_shrinkage_uses_prior_for_zero_samples(self):
         self.assertEqual(m.shrink(0,0,.37,20),.37)
         self.assertLess(m.shrink(1,1,.37,20),.5)
+    def test_conditional_probabilities_are_normalized(self):
+        a=[race('20240101'),race('20240102','まくり','3-1-4')]
+        priors=m.training_order_priors(a)
+        p=np.array([.45,.2,.15,.1,.06,.04])
+        q=np.array([.1,.3,.25,.15,.1,.1])
+        z=np.array([.1,.1,.1,.3,.2,.2])
+        cp=m.combo_probabilities(p,q,z,priors)
+        self.assertTrue(np.isfinite(cp).all())
+        self.assertTrue((cp>=0).all())
+        self.assertAlmostEqual(float(cp.sum()),1,places=8)
+    def test_conditional_priors_never_use_test_outcomes(self):
+        a=[race('20240101','逃げ','1-2-3'),race('20260501','逃げ','1-2-3')]
+        b=[race('20240101','逃げ','1-2-3'),race('20260501','差し','3-4-5')]
+        for left,right in zip(m.training_order_priors(a),m.training_order_priors(b)):
+            np.testing.assert_array_equal(left,right)
+    def test_attack_strength_uses_only_previous_days(self):
+        before=[race('20240101','逃げ'),race('20240102','逃げ')]
+        after=[race('20240101','まくり'),race('20240102','逃げ')]
+        m.rolling_features(before);m.rolling_features(after)
+        np.testing.assert_array_equal(before[0]['tech_x'],after[0]['tech_x'])
+        self.assertFalse(np.array_equal(before[1]['tech_x'],after[1]['tech_x']))
+    def test_feature_count_matches_feature_names(self):
+        a=[race('20240101')]
+        m.rolling_features(a)
+        self.assertEqual(a[0]['tech_x'].shape[1],len(m.b.FEATURE_NAMES)+len(m.EXTRA_NAMES))
 if __name__=='__main__':unittest.main()
