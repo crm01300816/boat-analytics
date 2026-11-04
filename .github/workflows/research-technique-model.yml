@@ -7,8 +7,10 @@ on:
       - .github/workflows/research-technique-model.yml
       - scripts/research-technique-model.py
       - scripts/research-confidence.py
+      - scripts/research-stake-allocation.py
       - tests/test_technique_model.py
       - tests/test_confidence_calibration.py
+      - tests/test_stake_allocation.py
 permissions:
   contents: read
 concurrency:
@@ -35,6 +37,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_official_k_techniques.py' -v
           python -m unittest discover -s tests -p 'test_technique_model.py' -v
           python -m unittest discover -s tests -p 'test_confidence_calibration.py' -v
+          python -m unittest discover -s tests -p 'test_stake_allocation.py' -v
           python -m unittest discover -s tests -p 'test_boosted_models.py' -v
   collect-six-month-chunks:
     needs: regression-tests
@@ -143,6 +146,16 @@ jobs:
                   raw=c['diagnosticTest']['raw']; calibrated=c['diagnosticTest']['calibrated']
                   fmt=lambda value: f'{value:.4f}' if value is not None else 'N/A'
                   f.write(f"| {model['model']} | {fmt(raw['brier'])} | {fmt(calibrated['brier'] if calibrated else None)} | {fmt(raw['expectedCalibrationError'])} | {fmt(calibrated['expectedCalibrationError'] if calibrated else None)} |\n")
+              f.write('\n### Three-pick fixed ¥1,000 stake allocation (retrospective diagnostic)\n\n')
+              f.write('| Model | Selected on validation | Test ROI | Current on same races | Test races |\n')
+              f.write('|---|---|---:|---:|---:|\n')
+              for model in r['models']:
+                  allocation=next(x for x in model['counts'] if x['count']==3)['stakeAllocation']
+                  cohort=next(x for x in allocation['cohorts'] if x['cohort']=='all')
+                  chosen=cohort['validationNominated'] or 'current'
+                  cand=next(p for p in cohort['policies'] if p['name']==chosen)
+                  base=next(p for p in cohort['policies'] if p['name']=='current')
+                  f.write(f"| {model['model']} | {chosen} | {cand['test']['provisionalROI']:.2%} | {base['test']['provisionalROI']:.2%} | {cand['test']['races']} |\n")
               f.write('\nRetrospective diagnostic only; historical odds and special settlements unaudited.\n')
           PY
       - name: Erase all PRIVATE racer IDs and race-level data
