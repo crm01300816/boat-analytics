@@ -89,6 +89,21 @@ export async function buildThreeYearStats(inputDir,outDir,{minRaces=100000}={}){
     if(!groups.has(prefix))groups.set(prefix,{});
     groups.get(prefix)[id]=value;
   }
+  // Same-course priors prevent double-counting lane advantage in the forecast.
+  const globalCourses=makeCourseArray(),venueCourses={};
+  const accumulate=(target,source)=>{
+    for(let c=0;c<6;c++)for(let j=0;j<13;j++)target[c][j]+=source[c][j];
+  };
+  for(const [,value] of stats){
+    accumulate(globalCourses,value.all);
+    for(const [venue,courses] of Object.entries(value.venues)){
+      venueCourses[venue]??=makeCourseArray();
+      accumulate(venueCourses[venue],courses);
+    }
+  }
+  if(globalCourses.some(c=>c[0]!==validRaces)||
+     globalCourses.reduce((n,c)=>n+c[1],0)!==validRaces)
+    throw Error('Inconsistent course totals; publication blocked');
   const shards=[];
   for(const [prefix,racers] of [...groups].sort(([a],[b])=>a.localeCompare(b))){
     const filename='racers-'+prefix+'.json';
@@ -100,6 +115,7 @@ export async function buildThreeYearStats(inputDir,outDir,{minRaces=100000}={}){
     start:START,end:END,months:36,sourceDays,races,validRaces,knownMethodRaces,
     recognizedTechniqueCoverage:validRaces?knownMethodRaces/validRaces:null,
     missingDays,monthly:months,racers:stats.size,shards,
+    courseTotals:{all:globalCourses,venues:venueCourses},
     limitations:[
       'Excludes races missing six verified actual courses, distinct 1st/2nd/3rd lanes, or valid racer IDs.',
       'Excludes refunds, missing joins and irregular settlements. No estimates for excluded races.',
