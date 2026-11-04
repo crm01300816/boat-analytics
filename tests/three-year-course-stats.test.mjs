@@ -48,6 +48,10 @@ test('static published index and racer shard combine 36 months without private r
   const index=JSON.parse(await readFile(join(output,'index.json'),'utf8'));
   const shard=JSON.parse(await readFile(join(output,'racers-51.json'),'utf8'));
   assert.equal(index.sourceDays,36);
+  assert.equal(index.courseTotals.all.length,6);
+  for(let course=0;course<6;course++)assert.equal(index.courseTotals.all[course][0],36);
+  assert.equal(index.courseTotals.all[3][1],36);
+  assert.equal(index.courseTotals.venues['19'][3][0],36);
   assert.equal(shard.racers['5104'].all[3][0],36);
   assert.equal(shard.racers['5104'].all[3][1],36);
   assert.equal(shard.racers['5104'].all[3][6],36);
