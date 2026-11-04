@@ -97,7 +97,7 @@ export function renderCourseTechniques(race,history,{scope='all',days=60,publish
     const {entry,course,stat}=detailRow;
     const top2=stat.wins+stat.second,top3=top2+stat.third;
     const attack=stat.byMove['まくり']+stat.byMove['まくり差し'];
-    const nums=[['1着率',stat.wins],['2連対率',top2],['3連対率',top3],['まくり系勝率',attack]];
+    const nums=[['1着率',stat.wins],['複勝率（2連対）',top2],['3連対率',top3],['まくり系勝率',attack]];
     details='<div class="tech-selected-detail" id="technique-racer-detail"><div class="tech-selected-head"><b>'+esc(entry.name)+'｜'+course+'コース詳細</b><span>'+stat.starts+'走の実績</span></div>'+
       '<div class="tech-selected-summary">'+nums.map(([name,n])=>'<div><small>'+name+'</small><strong>'+pct(n,stat.starts)+'</strong><small>'+n+'/'+stat.starts+'走</small></div>').join('')+'</div>'+
       '<div class="tech-selected-moves">'+['逃げ','差し','まくり','まくり差し','抜き','恵まれ'].map(m=>'<div><span>'+m+'</span>'+format(stat.byMove[m],stat.starts)+'</div>').join('')+'</div>'+
