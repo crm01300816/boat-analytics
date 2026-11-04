@@ -135,14 +135,14 @@ jobs:
               for model in r['models']:
                   m=next(x for x in model['counts'] if x['count']==5)['periods']['test']['ai']
                   f.write(f"| {model['model']} | {m['races']} | {m['hitRate']:.2%} | {m['provisionalROI']:.2%} | {m['profitYen']:,} JPY |\n")
-              f.write('\\n### Three-pick confidence reliability (diagnostic test)\\n\\n')
-              f.write('| Model | Raw Brier | Calibrated Brier | Raw ECE | Calibrated ECE |\\n')
-              f.write('|---|---:|---:|---:|---:|\\n')
+              f.write('\n### Three-pick confidence reliability (diagnostic test)\n\n')
+              f.write('| Model | Raw Brier | Calibrated Brier | Raw ECE | Calibrated ECE |\n')
+              f.write('|---|---:|---:|---:|---:|\n')
               for model in r['models']:
                   c=next(x for x in model['counts'] if x['count']==3)['confidence']
                   raw=c['diagnosticTest']['raw']; calibrated=c['diagnosticTest']['calibrated']
                   fmt=lambda value: f'{value:.4f}' if value is not None else 'N/A'
-                  f.write(f"| {model['model']} | {fmt(raw['brier'])} | {fmt(calibrated['brier'] if calibrated else None)} | {fmt(raw['expectedCalibrationError'])} | {fmt(calibrated['expectedCalibrationError'] if calibrated else None)} |\\n")
+                  f.write(f"| {model['model']} | {fmt(raw['brier'])} | {fmt(calibrated['brier'] if calibrated else None)} | {fmt(raw['expectedCalibrationError'])} | {fmt(calibrated['expectedCalibrationError'] if calibrated else None)} |\n")
               f.write('\nRetrospective diagnostic only; historical odds and special settlements unaudited.\n')
           PY
       - name: Erase all PRIVATE racer IDs and race-level data
