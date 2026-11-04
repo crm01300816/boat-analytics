@@ -2,6 +2,7 @@ import { fetchCsv, shiftDate, jstToday, venueName } from './csv.js';
 import { createRaceList, aggregateLocal, rateRacers, rate, makePicks } from './analytics.js';
 import { racerForm } from './racer-form.js';
 import { renderCourseTechniques } from './course-techniques.js';
+import { compactHistoryDay, historyForRace, historyCacheFresh, readHistoryDays, saveHistoryDay } from './history-cache.js';
 import { backtestPage, loadBacktest, setBacktestCount } from './backtest-view.js';
 import { resultsPage } from './race-results.js';
 import {dashboardPage,snapshotOdds,saveForecast,removeForecast} from './smart-navi.js';
@@ -12,6 +13,7 @@ const s={date:jstToday(),detailTab:'entries',tab:'dashboard',venue:'',raceId:'',
 let customWeights={...DEFAULT_WEIGHTS},customController=null;
 const LIVE_INTERVAL_MS=60000;
 let liveBusy=false,liveTimer=null;
+let historyTicket=0;
 function exhibitionSignature(races){return JSON.stringify(races.map(r=>[r.id,r.previews?.tkz||null,r.previews?.stt||null]));}
 function liveStatus(){return s.date===jstToday()?`<div class="live-exhibition"><span class="live-dot"></span><div><b>展示情報の自動更新</b><small>${s.liveBusy?'更新確認中…':s.liveAt?'最終確認 '+esc(s.liveAt)+' JST':'初回データ確認待ち'} ／ 60秒間隔</small></div><button type="button" id="live-refresh" ${s.liveBusy?'disabled':''}>今すぐ更新</button></div>`:'';}
 async function refreshExhibition(){
@@ -41,7 +43,7 @@ const pct=v=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':fmt(v)+'
 const yen=v=>v==null?'—':new Intl.NumberFormat('ja-JP').format(v)+'円';
 const current=()=>s.races.find(r=>r.id===s.raceId)||s.races.find(r=>r.venue===s.venue)||null;
 const currentLocal=()=>{const r=current();return r&&s.history?.venue===r.venue&&s.history?.date===s.date?aggregateLocal(s.history.records,r.entries,r.venue):null;};
-function goto(tab){s.tab=tab;location.hash=tab;render();if(tab==='backtest')loadBacktest(render);if(tab==='results')loadDailyTrends();window.scrollTo(0,0);}
+function goto(tab){s.tab=tab;location.hash=tab;render();if(tab==='backtest')loadBacktest(render);if(tab==='results')loadDailyTrends();if(['races','local','predict'].includes(tab)&&!s.historyBusy&&!s.history)void restoreCachedHistory();window.scrollTo(0,0);}
 function nav(){return MENU.map(([id,icon,name])=>`<button class="nav-link ${id===s.tab?'active':''}" data-nav="${id}"><span class="nav-icon">${icon}</span>${name}</button>`).join('');}
 const MOBILE_MENU=[['dashboard','⌂','ホーム'],['races','▦','レース'],['predict','✧','AI予想'],['backtest','◷','過去検証'],['menu','☰','メニュー']];
 function mobileNav(){return MOBILE_MENU.map(([id,icon,name])=>`<button class="nav-link ${id===s.tab||(id==='menu'&&['results','local','custom','sources'].includes(s.tab))?'active':''}" data-nav="${id}"><span class="nav-icon">${icon}</span><span>${name}</span></button>`).join('');}
@@ -222,7 +224,7 @@ async function loadDailyTrends(){
 async function loadDay(){
   s.controller?.abort();
   const ctrl=new AbortController();s.controller=ctrl;
-  s.loading=true;s.error='';s.races=[];s.resultRows=[];s.payoutRows=[];s.availability={};s.history=null;s.histError='';render();
+  invalidateHistory();s.loading=true;s.error='';s.races=[];s.resultRows=[];s.payoutRows=[];s.availability={};s.histError='';render();
   const paths={title:'programs/title',cards:'programs/race_cards',waku:'programs/waku10',tkz:'previews/tkz',stt:'previews/stt',sui:'previews/sui',od3:'previews/od3',results:'results/realtime',payouts:'results/payouts'};
   try{
     const jobs=Object.entries(paths).map(async([key,path])=>{
@@ -240,40 +242,77 @@ async function loadDay(){
     s.venue=possibleVenues.includes(s.venue)?s.venue:(possibleVenues[0]||'');
     s.raceId=s.races.find(r=>r.venue===s.venue)?.id||s.resultRows.find(r=>String(r['レースコード']||'').slice(8,10)===s.venue)?.['レースコード']||'';
     s.at=new Date().toLocaleTimeString('ja-JP',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit'});
-  }catch(err){if(!ctrl.signal.aborted)s.error=err?.message||String(err);}finally{if(!ctrl.signal.aborted){s.loading=false;render();}}
+  }catch(err){if(!ctrl.signal.aborted)s.error=err?.message||String(err);}finally{if(!ctrl.signal.aborted){s.loading=false;render();if(s.races.length)void restoreCachedHistory();}}
+}
+function invalidateHistory(){
+  historyTicket++;
+  s.histController?.abort();
+  s.histController=null;
+  s.historyBusy=false;
+  s.history=null;
+}
+const selectedHistoryDays=(date,days)=>Array.from({length:days},(_,i)=>shiftDate(date,-i-1));
+function matchedHistory(recordsByDay,r,date,days) {
+  const entries=selectedHistoryDays(date,days).map(day=>{
+    const cached=recordsByDay.get(day);
+    return cached?{records:cached.records,cacheHit:cached.cacheHit}:null;
+  });
+  return historyForRace(entries,{entries:r.entries,venue:r.venue,date,days,raceId:r.id});
+}
+async function restoreCachedHistory(){
+  const r=current();
+  if(!r||s.loading||s.historyBusy)return;
+  const token=++historyTicket,date=s.date,days=s.historyDays;
+  const daysList=selectedHistoryDays(date,days);
+  const stored=await readHistoryDays(daysList);
+  if(token!==historyTicket||s.date!==date||current()?.id!==r.id||s.historyDays!==days)return;
+  const found=new Map([...stored].map(([day,value])=>[day,{...value,cacheHit:true}]));
+  const view=matchedHistory(found,r,date,days);
+  s.history=view.loaded?view:null;
+  render();
 }
 async function getHistory(){
   const r=current();if(!r||s.historyBusy)return;
-  const venue=r.venue, date=s.date, days=s.historyDays;
-  const racerIds=new Set(r.entries.map(e=>String(e.id||'').trim()).filter(Boolean));
-  s.history=null;s.histError='';s.historyBusy=true;s.histDone=0;s.histProgress='0 / '+days+' 日';render();
+  invalidateHistory();
+  const token=++historyTicket,date=s.date,days=s.historyDays;
   const ctrl=new AbortController();s.histController=ctrl;
-  const daysList=Array.from({length:days},(_,i)=>shiftDate(date,-i-1));
-  const records=[],techniqueRecords=[];let loaded=0,processed=0,cursor=0;
-  // Historical collection is bounded, explicit, and cancelable. It never returns synthetic statistics.
-  async function worker(){
-    while(cursor<daysList.length&&!ctrl.signal.aborted){
-      const day=daysList[cursor++];
+  const daysList=selectedHistoryDays(date,days);
+  const stored=await readHistoryDays(daysList);
+  if(ctrl.signal.aborted||historyTicket!==token)return;
+  const recordsByDay=new Map([...stored].map(([day,value])=>[day,{...value,cacheHit:true}]));
+  const refreshDays=daysList.filter(day=>!historyCacheFresh(day,stored.get(day),new Date(),jstToday()));
+  s.histError='';s.historyBusy=true;
+  s.histDone=days-refreshDays.length;s.histProgress=s.histDone+' / '+days+' 日（保存済み '+stored.size+'日）';
+  render();
+  let cursor=0,done=s.histDone,persistFailed=0;
+  const worker=async()=>{
+    while(cursor<refreshDays.length&&!ctrl.signal.aborted&&historyTicket===token){
+      const day=refreshDays[cursor++];
       try{
-        const [cards,results]=await Promise.all([fetchCsv('programs/race_cards',day,ctrl.signal),fetchCsv('results/realtime',day,ctrl.signal)]);
-        const cardMap=new Map(cards.map(row=>[row['レースコード'],row]));
-        for(const result of results){
-          const card=cardMap.get(result['レースコード']);if(!card)continue;
-          if(String(card['レース場コード']||card['レースコード']?.slice(8,10)).padStart(2,'0')===venue)records.push({card,result});
-          if([1,2,3,4,5,6].some(lane=>racerIds.has(String(card['艇'+lane+'_登録番号']||'').trim())))techniqueRecords.push({card,result});
-        }
-        loaded++;
-      }catch(err){if(ctrl.signal.aborted)return;}
-      processed++;s.histDone=processed;s.histProgress=`${processed} / ${days} 日を確認中（取得成功 ${loaded} 日）`;
+        const [cards,results]=await Promise.all([
+          fetchCsv('programs/race_cards',day,ctrl.signal),
+          fetchCsv('results/realtime',day,ctrl.signal)
+        ]);
+        if(ctrl.signal.aborted||historyTicket!==token)return;
+        const records=compactHistoryDay(cards,results);
+        if(!records)throw new Error('当日の確定結果が不足しています');
+        recordsByDay.set(day,{records,cacheHit:false});
+        if(!await saveHistoryDay(day,records))persistFailed++;
+      }catch(err){if(ctrl.signal.aborted)return;/* 欠損日は未取得のまま。保存済みの内容は維持 */ }
+      done++;s.histDone=done;s.histProgress=done+' / '+days+' 日を確認中（保存済み '+stored.size+'日）';
       const label=$('hist-progress-label');if(label)label.textContent=s.histProgress;
-      const progress=$('hist-progress-bar');if(progress)progress.style.width=Math.round(processed/days*100)+'%';
+      const progress=$('hist-progress-bar');if(progress)progress.style.width=Math.round(done/days*100)+'%';
     }
-  }
+  };
   await Promise.all([worker(),worker(),worker(),worker()]);
+  if(historyTicket!==token)return;
   s.historyBusy=false;
+  s.histController=null;
   if(!ctrl.signal.aborted){
-    if(!loaded)s.histError='データが1日も取得できませんでした。接続環境や公開CSVの保存期間を確認してください。';
-    else s.history={venue,date,days,loaded,records,techniqueRecords,raceId:r.id};
+    const view=matchedHistory(recordsByDay,r,date,days);
+    s.history=view.loaded?view:null;
+    if(!view.loaded)s.histError='データが1日も取得できませんでした。接続環境や公開CSVの保存期間を確認してください。';
+    else if(persistFailed)s.histError='一部の履歴を端末へ保存できませんでした。ブラウザの保存容量やプライベートモードを確認してください。';
   }else s.histError='集計を中止しました。';
   render();
 }
@@ -298,17 +337,17 @@ async function handleClick(event){
   if(event.target.closest('#load-previous-day')){s.date=shiftDate(s.date,-1);loadDay();return;}
   if(event.target.closest('#retry-backtest')){loadBacktest(render,true);return;}
   const scope=event.target.closest('[data-technique-scope]');if(scope){s.techniqueScope=scope.dataset.techniqueScope==='venue'?'venue':'all';render();return;}
-  const detail=event.target.closest('[data-detail-tab]');if(detail){s.detailTab=detail.dataset.detailTab;render();return;}
-  const jump=event.target.closest('[data-jump-race]');if(jump){const r=s.races.find(x=>x.id===jump.dataset.jumpRace);if(r){s.venue=r.venue;s.raceId=r.id;goto('races');document.querySelector('.deadline-event')?.scrollIntoView({behavior:'smooth',block:'start'});}return;}
+  const detail=event.target.closest('[data-detail-tab]');if(detail){s.detailTab=detail.dataset.detailTab;render();if(['course','motor'].includes(s.detailTab)&&!s.history&&!s.historyBusy)void restoreCachedHistory();return;}
+  const jump=event.target.closest('[data-jump-race]');if(jump){const r=s.races.find(x=>x.id===jump.dataset.jumpRace);if(r){invalidateHistory();s.venue=r.venue;s.raceId=r.id;goto('races');document.querySelector('.deadline-event')?.scrollIntoView({behavior:'smooth',block:'start'});}return;}
   const saveNode=event.target.closest('[data-save-forecast]');if(saveNode){const r=s.races.find(x=>x.id===saveNode.dataset.saveForecast);if(r){const out=saveForecast(r,s.date);alert(out.message);render();}return;}
   const removeNode=event.target.closest('[data-remove-forecast]');if(removeNode){removeForecast(removeNode.dataset.removeForecast);render();return;}
   const node=event.target.closest('[data-recent-date],[data-history-date],[data-nav],[data-venue],[data-race],[data-mode],#refresh-btn,#date-prev,#date-next,#copy-bets,#copy-race,#retry-load,#load-history,#stop-history');
   if(!node)return;
   if(node.dataset.recentDate&&/^\d{4}-\d{2}-\d{2}$/.test(node.dataset.recentDate)&&node.dataset.recentDate<=jstToday()){s.date=node.dataset.recentDate;loadDay();return;}
   if(node.dataset.historyDate&&/^\d{4}-\d{2}-\d{2}$/.test(node.dataset.historyDate)&&node.dataset.historyDate<=jstToday()){s.date=node.dataset.historyDate;loadDay();return;}
-  if(node.dataset.nav){if(node.dataset.selectVenue){s.venue=node.dataset.selectVenue;s.raceId=s.races.find(r=>r.venue===s.venue)?.id||'';}goto(node.dataset.nav);return;}
-  if(node.dataset.venue){s.venue=node.dataset.venue;s.raceId=s.races.find(r=>r.venue===s.venue)?.id||s.resultRows.find(r=>String(r['レースコード']||'').slice(8,10)===s.venue)?.['レースコード']||'';render();return;}
-  if(node.dataset.race){s.raceId=node.dataset.race;render();return;}
+  if(node.dataset.nav){if(node.dataset.selectVenue){invalidateHistory();s.venue=node.dataset.selectVenue;s.raceId=s.races.find(r=>r.venue===s.venue)?.id||'';}goto(node.dataset.nav);return;}
+  if(node.dataset.venue){invalidateHistory();s.venue=node.dataset.venue;s.raceId=s.races.find(r=>r.venue===s.venue)?.id||s.resultRows.find(r=>String(r['レースコード']||'').slice(8,10)===s.venue)?.['レースコード']||'';render();void restoreCachedHistory();return;}
+  if(node.dataset.race){invalidateHistory();s.raceId=node.dataset.race;render();void restoreCachedHistory();return;}
   if(node.dataset.mode){s.mode=node.dataset.mode;render();return;}
   if(node.id==='live-refresh'){refreshExhibition();return;}
   if(node.id==='refresh-btn'||node.id==='retry-load'){loadDay();return;}
@@ -332,7 +371,7 @@ function handleChange(event){
   const t=event.target;
   if(t.id==='backtest-count'){setBacktestCount(t.value);render();return;}
   if(t.id==='date-input'&&/^\d{4}-\d{2}-\d{2}$/.test(t.value)&&t.value<=jstToday()){s.date=t.value;loadDay();}
-  if(t.id==='history-days'){s.historyDays=Number(t.value);s.history=null;render();}
+  if(t.id==='history-days'){invalidateHistory();s.historyDays=Number(t.value);render();void restoreCachedHistory();}
   if(t.id==='bet-count'){s.count=Number(t.value);render();}
 }
 $('date-input').value=s.date;
