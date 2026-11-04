@@ -48,29 +48,69 @@ export function determineExpectedCourses(race){
 }
 const pct=(a,b)=>b>0?(a/b*100).toFixed(1)+'%':'—';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
 const format=(num,total)=>'<b>'+pct(num,total)+'</b><small>'+num+'/'+total+'走</small>';
-export function renderCourseTechniques(race,history,{scope='all',days=60,published=null,selectedDate=''}={}){
+const VIEWS={
+  basic:{label:'着順・複勝',columns:[['1着率','wins'],['2連対','top2'],['3連対','top3'],['まくり系','attack']]},
+  moves:{label:'決まり手',columns:[['逃げ','escape'],['差し','sashi'],['まくり','makuri'],['まくり差し','makuriSashi']]},
+  tactics:{label:'攻撃・守備',columns:[['まくり系','attack'],['逃げ','escape'],['被まくり系','beaten'],['逃がし','allow']]}
+};
+export function techniqueMetric(stat,course,key){
+  if(!stat||!stat.starts)return null;
+  if(key==='wins')return stat.wins;
+  if(key==='top2')return stat.wins+stat.second;
+  if(key==='top3')return stat.wins+stat.second+stat.third;
+  if(key==='attack')return stat.byMove['まくり']+stat.byMove['まくり差し'];
+  if(key==='escape')return course===1?stat.byMove['逃げ']:null;
+  if(key==='sashi')return stat.byMove['差し'];
+  if(key==='makuri')return stat.byMove['まくり'];
+  if(key==='makuriSashi')return stat.byMove['まくり差し'];
+  if(key==='beaten')return course===1?stat.beatenByAttack:null;
+  if(key==='allow')return course===2?stat.allowedEscape:null;
+  return null;
+}
+const compareValue=(stat,course,key)=>{
+  const n=techniqueMetric(stat,course,key);
+  return n===null?'<span class="tech-empty">—</span>':'<strong>'+pct(n,stat.starts)+'</strong>';
+};
+export function renderCourseTechniques(race,history,{scope='all',days=60,published=null,selectedDate='',view='basic',selectedLane=0}={}){
   if(!race)return '';
   const hasPublished=published?.raceId===race.id&&published?.index;
   if(!hasPublished&&(!history||history.raceId!==race.id||!Array.isArray(history.techniqueRecords)))
-    return '<section class="panel"><div class="panel-header"><div><h3>決まり手・攻撃力・インの攻撃耐性</h3><p>今回の6選手を、進入コース別に比較します。</p></div></div><div class="panel-body"><p>公開3年統計を自動確認中です。まだ配信されていない場合は「過去成績から集計する」で端末保存データを利用できます。</p><p class="footnote">握って攻めた試行回数は公開結果だけでは分かりません。「まくり系勝率」を参考指標として表示します。</p></div></section>';
+    return '<section class="panel"><div class="panel-header"><div><h3>6艇のコース別成績一覧</h3><p>選手6名を1画面で比較</p></div></div><div class="panel-body"><p>公開3年統計を確認しています。未配信の場合は「不足分を取得する」で端末保存データを利用できます。</p><p class="footnote">まくり・まくり差しの「勝率」は分かりますが、仕掛けを試みた「握り率」は公開結果だけでは算出できません。</p></div></section>';
   const {confirmed,courses}=determineExpectedCourses(race);
   const stats=hasPublished?publishedRaceCourseStats(published,scope,race.venue):aggregateCourseTechniques(history.techniqueRecords,race.entries,scope==='venue'?race.venue:null);
-  const cards=race.entries.map((e,i)=>{
-    const course=courses[i],c=stats[clean(e.id)]?.courses[course-1]||blank();
-    const attack=c.byMove['まくり']+c.byMove['まくり差し'];
-    const header='<div class="technique-card-head"><span class="lane lane-'+e.lane+'">'+e.lane+'</span><div><b>'+esc(e.name)+'</b><small>'+course+'コース'+(confirmed?'（展示進入）':'（枠なり想定）')+'</small></div><span class="technique-sample">'+c.starts+'走'+(c.starts>0&&c.starts<10?'・少数':'')+'</span></div>';
-    const statCard=(label,n)=>'<div><small>'+label+'</small><strong>'+pct(n,c.starts)+'</strong><small>'+n+'/'+c.starts+'走</small></div>';
-    const summary='<div class="technique-main">'+statCard('1着率',c.wins)+statCard('複勝率（2連対）',c.wins+c.second)+statCard('3連対率（1〜3着）',c.wins+c.second+c.third)+statCard('まくり系勝率',attack)+'</div>';
-    const methods='<div class="technique-methods">'+['逃げ','差し','まくり','まくり差し'].map(k=>'<div><span>'+k+'</span>'+format(c.byMove[k],c.starts)+'</div>').join('')+'</div>';
-    const defense=course===1?'<p class="technique-defense">インの被まくり系率：<strong>'+pct(c.beatenByAttack,c.starts)+'</strong> <small>('+c.beatenByAttack+'/'+c.starts+'走) ／ 攻撃耐性指標：'+pct(c.starts-c.beatenByAttack,c.starts)+'</small></p>':'';
-    const allow=course===2?'<p class="technique-defense">2コース時の逃がし率：<strong>'+pct(c.allowedEscape,c.starts)+'</strong></p>':'';
-    return '<article class="technique-card">'+header+summary+methods+defense+allow+'</article>';
-  }).join('');
-  return '<section class="panel technique-panel"><div class="panel-header"><div><h3>決まり手・攻撃力・インの攻撃耐性</h3><p>この6選手を今回の進入コース別に比較</p></div>'+(hasPublished?'<span class="small-pill">公式過去36か月</span>':'')+'</div><div class="panel-body">'+
-    '<div class="technique-toolbar"><span>'+(hasPublished?'公式B/K集計 '+esc(published.index.start)+'〜'+esc(published.index.end)+' ・ '+Number(published.index.validRaces).toLocaleString('ja-JP')+'レース':'過去'+esc(history.days||days)+'日・取得成功'+history.loaded+'日')+'</span><div class="technique-scope"><button type="button" class="'+(scope==='all'?'active':'')+'" data-technique-scope="all">全国</button><button type="button" class="'+(scope==='venue'?'active':'')+'" data-technique-scope="venue">当地</button></div></div>'+ 
-    (hasPublished&&selectedDate<=published.index.end?'<div class="notification warning">選択した開催日以降の成績を含む3年集計です。当時の事前予想に使える数値ではありません。</div>':'')+
-    (!confirmed?'<div class="notification warning">展示進入が6艇すべて確定していないため、枠なり進入で表示しています。進入が変われば対象コースも変わります。</div>':'')+
-    '<div class="technique-grid">'+cards+'</div>'+
-    '<p class="footnote">'+(hasPublished?'公式B/Kの公開原票から集計された参考値。全レース完全収録を保証しません。対象期間と除外レースに注意。':'')+'分母は該当選手の該当実進入コースでの有効出走数.2連対率＝1着＋2着÷出走数、3連対率＝1〜3着÷出走数（いずれも該当コース、着順確定分のみ）。まくり系勝率＝まくり＋まくり差しで勝った回数÷出走数。イン被まくり系率＝1コース時に他艇のまくり・まくり差しで敗れた回数÷出走数。攻撃耐性指標＝100%−被まくり系率で、仕掛けられた時の防御成功率ではありません。着順・進入不明レースは除外。未取得日や少数標本に注意。予測モデルには未反映です。</p></div></section>';
+  const rows=race.entries.map((entry,i)=>({entry,course:courses[i],stat:stats[clean(entry.id)]?.courses[courses[i]-1]||blank()}));
+  const current=VIEWS[view]||VIEWS.basic;
+  const tabs='<div class="tech-view-switch" role="group" aria-label="比較する成績">'+Object.entries(VIEWS).map(([id,def])=>
+    '<button type="button" data-technique-view="'+id+'" class="'+(current===def?'active':'')+'" aria-pressed="'+(current===def)+'">'+def.label+'</button>').join('')+'</div>';
+  const head='<thead><tr><th scope="col">選手 / コース</th>'+current.columns.map(([label])=>'<th scope="col">'+label+'</th>').join('')+'</tr></thead>';
+  const body='<tbody>'+rows.map(({entry,course,stat})=>
+    '<tr class="'+(selectedLane===entry.lane?'tech-row-selected':'')+'"><th scope="row">'+
+    '<button type="button" class="tech-entrant" data-technique-racer="'+entry.lane+'" aria-pressed="'+(selectedLane===entry.lane)+'" title="'+esc(entry.name)+'の詳細">'+
+    '<span class="lane lane-'+entry.lane+'">'+entry.lane+'</span><span class="tech-entrant-meta"><b>'+esc(entry.name)+'</b><small>'+course+'コース · '+stat.starts+'走'+(stat.starts>0&&stat.starts<10?' · 少数':'')+'</small></span><span class="tech-open-icon" aria-hidden="true">'+(selectedLane===entry.lane?'−':'+')+'</span></button></th>'+
+    current.columns.map(([,key])=>'<td>'+compareValue(stat,course,key)+'</td>').join('')+'</tr>').join('')+'</tbody>';
+  const table='<div class="tech-compare-wrap"><table class="tech-compare-table">'+head+body+'</table></div>';
+  const detailRow=rows.find(r=>r.entry.lane===selectedLane);
+  let details='';
+  if(detailRow){
+    const {entry,course,stat}=detailRow;
+    const top2=stat.wins+stat.second,top3=top2+stat.third;
+    const attack=stat.byMove['まくり']+stat.byMove['まくり差し'];
+    const nums=[['1着率',stat.wins],['2連対率',top2],['3連対率',top3],['まくり系勝率',attack]];
+    details='<div class="tech-selected-detail" id="technique-racer-detail"><div class="tech-selected-head"><b>'+esc(entry.name)+'｜'+course+'コース詳細</b><span>'+stat.starts+'走の実績</span></div>'+
+      '<div class="tech-selected-summary">'+nums.map(([name,n])=>'<div><small>'+name+'</small><strong>'+pct(n,stat.starts)+'</strong><small>'+n+'/'+stat.starts+'走</small></div>').join('')+'</div>'+
+      '<div class="tech-selected-moves">'+['逃げ','差し','まくり','まくり差し','抜き','恵まれ'].map(m=>'<div><span>'+m+'</span>'+format(stat.byMove[m],stat.starts)+'</div>').join('')+'</div>'+
+      (course===1?'<p class="tech-selected-note">イン被まくり系率：<b>'+pct(stat.beatenByAttack,stat.starts)+'</b>（'+stat.beatenByAttack+'/'+stat.starts+'走）／ 被まくり系以外：'+pct(stat.starts-stat.beatenByAttack,stat.starts)+'</p>':'')+
+      (course===2?'<p class="tech-selected-note">2コース時の逃がし率：<b>'+pct(stat.allowedEscape,stat.starts)+'</b>（'+stat.allowedEscape+'/'+stat.starts+'走）</p>':'')+
+      '</div>';
+  }
+  const meta=hasPublished?'公式B/K '+esc(published.index.start)+'〜'+esc(published.index.end)+' ／ 有効'+Number(published.index.validRaces).toLocaleString('ja-JP')+'レース':'過去'+esc(history.days||days)+'日 ／ 取得'+history.loaded+'日';
+  return '<section class="panel technique-panel"><div class="panel-header"><div><h3>6艇のコース別成績一覧</h3><p>数字を横並びで比較。選手名を押すと詳細を表示</p></div>'+(hasPublished?'<span class="small-pill">3年実績</span>':'')+'</div><div class="panel-body">'+
+    '<div class="technique-toolbar"><span>'+meta+'</span><div class="technique-scope"><button type="button" class="'+(scope==='all'?'active':'')+'" data-technique-scope="all">全国</button><button type="button" class="'+(scope==='venue'?'active':'')+'" data-technique-scope="venue">当地</button></div></div>'+
+    tabs+table+'<p class="tech-compare-hint">数値は各選手の今回の実進入コースでの出走数を分母にした割合。「—」は対象外またはデータなし。選手名の「＋」で詳細を開けます。</p>'+details+
+    (hasPublished&&selectedDate<=published.index.end?'<div class="notification warning">選択日の後に行われたレースも含む3年統計です。当時の予想精度検証には使用できません。</div>':'')+
+    (!confirmed?'<p class="tech-course-note">※ 展示進入未確定のため枠なりを想定。進入変更時は対象コースも変わります。</p>':'')+
+    '<p class="footnote">'+(hasPublished?'公式B/K集計は除外・未収録レースを含みます。':'')+
+    '2連対率＝（1着＋2着）÷出走、3連対率＝（1〜3着）÷出走。まくり系は「まくり＋まくり差しで1着」の割合。被まくり系は1コース時に他艇のまくり系で敗れた割合、逃がしは2コース時に1コース艇が逃げた割合です。握りを試みた率や将来の的中確率ではありません。予測モデル未反映。</p></div></section>';
 }
