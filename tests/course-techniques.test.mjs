@@ -31,7 +31,7 @@ test('当地フィルタと結果/進入欠損時の除外',()=>{
  assert.equal(local['5104'].courses[3].starts,1);
 });
 test('2コース逃がし率の分母は2コース実出走数',()=>{
- const data=aggregateCourseTechniques([race({first:1,move:'逃げ'}),race({first:2,move:'差し'})],entrants);
+ const data=aggregateCourseTechniques([race({first:1,second:2,third:3,move:'逃げ'}),race({first:2,second:1,third:3,move:'差し'})],entrants);
  assert.equal(data['5102'].courses[1].starts,2);
  assert.equal(data['5102'].courses[1].allowedEscape,1);
 });
