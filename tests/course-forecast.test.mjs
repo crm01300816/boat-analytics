@@ -22,8 +22,8 @@ const baselines=[
 const record=(course,delta=0,starts=80)=>{
  const prior=baselines[course-1];
  const win=Math.max(0,Math.min(starts,Math.round((prior[1]/prior[0]+delta)*starts)));
- const second=Math.round(prior[2]/prior[0]*starts);
- const third=Math.round(prior[3]/prior[0]*starts);
+ const second=Math.min(starts-win,Math.round(prior[2]/prior[0]*starts));
+ const third=Math.min(starts-win-second,Math.round(prior[3]/prior[0]*starts));
  const attack=course===1?0:Math.round(win*.6);
  return cell(starts,win,second,third,course===1?Math.round(win*.95):0,course===2?Math.round(win*.4):0,attack,0,
   course===1?Math.max(0,Math.round(starts*(.14-delta*.4))):0,
