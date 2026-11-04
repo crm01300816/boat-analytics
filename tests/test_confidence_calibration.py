@@ -46,6 +46,38 @@ class ConfidenceTests(unittest.TestCase):
         self.assertNotEqual(a["diagnosticTest"]["calibrated"]["brier"],
                             b["diagnosticTest"]["calibrated"]["brier"])
 
+    def test_fixed_threshold_evidence_requires_three_months(self):
+        months = np.array(["2025-11"]*900 + ["2026-02"]*300 +
+                          ["2026-03"]*300 + ["2026-04"]*300 + ["2026-05"]*900)
+        mass = np.tile(np.linspace(.01, .95, 300), 9)
+        hit = (mass > .6).astype(int)
+        report = c.evaluate_count(months, np.ones(len(months), bool),
+                                  hit, hit*2000, mass)
+        all_top = report["topFractions"]
+        self.assertEqual(len(all_top), 6)
+        self.assertTrue(all(x["validation"]["races"] >= 0 for x in all_top))
+        self.assertEqual(set(next(x for x in all_top if x["method"] == "raw")["testMonths"]),
+                         {"2026-05"})
+        self.assertTrue(all("enoughValidationEvidence" in x["evidence"]
+                            for x in report["fixedThresholds"] + report["topFractions"]))
+
+    def test_top_fraction_cutoffs_ignore_test_outcomes(self):
+        months = np.array(["2025-11"]*600 + ["2026-02"]*600 +
+                          ["2026-03"]*600 + ["2026-04"]*600 + ["2026-05"]*600)
+        rng = np.random.default_rng(15)
+        mass = rng.uniform(.02, .8, size=len(months))
+        hit = (rng.random(len(months)) < mass).astype(int)
+        pay = hit*5000
+        a = c.evaluate_count(months, np.ones(len(months), bool),
+                             hit, pay, mass)
+        hit[-600:] = 1 - hit[-600:]
+        b = c.evaluate_count(months, np.ones(len(months), bool),
+                             hit, hit*5000, mass)
+        for left, right in zip(a["topFractions"], b["topFractions"]):
+            self.assertEqual(left["frozenTrainingCutoff"], right["frozenTrainingCutoff"])
+            self.assertEqual(left["evidence"], right["evidence"])
+            self.assertEqual(left["validation"], right["validation"])
+
     def test_bad_probability_rejected(self):
         with self.assertRaises(ValueError):
             c.evaluate_count(np.array(["2025-11"]), np.array([True]),
