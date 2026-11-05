@@ -13,6 +13,7 @@ on:
       - 'scripts/report-attack3-confidence50-periods.py'
       - 'scripts/fetch-recent-official-bk.py'
       - 'scripts/audit-recent-official-bk.py'
+      - 'scripts/report-recent-paired-coverage.py'
       - 'scripts/evaluate-cached-confidence.py'
       - 'tests/test_confidence_calibration*.py'
       - '.github/workflows/confidence-research-validation.yml'
@@ -90,6 +91,7 @@ jobs:
         run: |
           python -m pip install lhafile
           python scripts/audit-recent-official-bk.py
+          python scripts/report-recent-paired-coverage.py
       - name: Upload recent official B/K archive audit
         if: always()
         uses: actions/upload-artifact@v4
