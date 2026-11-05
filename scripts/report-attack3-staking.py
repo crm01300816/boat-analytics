@@ -36,16 +36,20 @@ print("RANK_DIAGNOSTICS "+json.dumps(out["rankDiagnostics"],ensure_ascii=False))
 print("MONTHLY_COMPARISON "+json.dumps(out["monthlyComparison"],ensure_ascii=False))
 print("BASELINE_AUDIT "+json.dumps(out["baselineAudit"],ensure_ascii=False))
 
-# October 29 onward: cache ends at 2026-10, so November is not represented.
-import re
-late=[]
-unknown_date=0
-for month,items in groups.items():
- for row in items:
-  ident=str(row.get("id",""))
-  match=re.search(r"202610(29|30|31)",ident)
-  if month=="2026-10" and match:late.append(row)
-  elif month=="2026-10" and not re.search(r"202610\\d{2}",ident):unknown_date+=1
-out["oct29Onward"]={"scope":"2026-10-29 through 2026-10-31 only; November excluded by input exporter","dateMatchMethod":"race ID contains YYYYMMDD","unknownDateRaceIdsOctober":unknown_date,"splits":{name:metric(late,split) for name,split in splits.items()},"sampleRaceIds":[str(r.get("id")) for r in late[:3]]}
+# Strict YYYYMMDD extraction; distinguish absent dates from zero selected races.
+from datetime import date
+all_oct=[r for r in groups.get("2026-10",[])]
+valid_days=defaultdict(int)
+invalid_ids=0
+for row in all_oct:
+ ident=str(row.get("id",""))
+ try:
+  day=date.fromisoformat(ident[:4]+"-"+ident[4:6]+"-"+ident[6:8])
+  if day.strftime("%Y%m")!="202610":raise ValueError("Month mismatch")
+  valid_days[day.isoformat()]+=1
+ except (ValueError,IndexError):
+  invalid_ids+=1
+late=[r for r in all_oct if str(r.get("id",""))[:8] in ("20261029","20261030","20261031")]
+out["oct29Onward"]={"scope":"2026-10-29 through 2026-10-31; November unavailable","octoberSelectedRaces":len(all_oct),"validDateRaceIds":sum(valid_days.values()),"invalidDateRaceIds":invalid_ids,"availableSelectedRaceDays":dict(sorted(valid_days.items())),"splits":{name:metric(late,split) for name,split in splits.items()},"interpretation":"If zero selected races, inspect availableSelectedRaceDays and invalidDateRaceIds before treating it as a true zero."}
 with open("confidence-research-results/attack3-staking-six-splits.json","w") as f:json.dump(out,f,ensure_ascii=False,indent=2)
 print("OCT29_ONWARD "+json.dumps(out["oct29Onward"],ensure_ascii=False))
