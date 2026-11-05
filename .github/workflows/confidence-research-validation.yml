@@ -5,6 +5,7 @@ on:
       - experiment/value-ensemble-research-20261030
     paths:
       - 'scripts/research-confidence*.py'
+      - 'scripts/inventory-confidence-cache.py'
       - 'tests/test_confidence_calibration*.py'
       - '.github/workflows/confidence-research-validation.yml'
   workflow_dispatch:
@@ -12,6 +13,7 @@ on:
     - cron: '17 1 * * *'
 permissions:
   contents: read
+  actions: read
 jobs:
   confidence-validation:
     if: github.ref == 'refs/heads/experiment/value-ensemble-research-20261030'
@@ -26,6 +28,10 @@ jobs:
         run: python -m pip install numpy scikit-learn
       - name: Run confidence regression tests
         run: python -m unittest discover -s tests -p 'test_confidence_calibration*.py' -v
+      - name: Inventory existing cached inputs and historical artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/inventory-confidence-cache.py
       - name: Find cached holdout predictions and evaluate when available
         shell: bash
         run: |
