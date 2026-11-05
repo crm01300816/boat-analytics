@@ -17,15 +17,16 @@ def main():
   path=root/kind/f"{kind.lower()}{date:%y%m%d}.lzh"
   rec={"date":item["date"],"type":kind,"archiveBytes":path.stat().st_size,"members":[],"status":"ok"}
   try:
-   with lhafile.Lhafile(str(path)) as archive:
-    names=archive.namelist()
-    if not names:raise ValueError("Empty archive")
-    for name in names:
-     data=archive.read(name)
-     if not data:raise ValueError("Empty member")
-     if len(data)>15_000_000:raise ValueError("Oversized member")
-     text=data.decode("cp932",errors="replace")
-     rec["members"].append({"name":name,"bytes":len(data),"lines":len(text.splitlines()),"replacementCharacters":text.count("\ufffd"),"preview":text[:180].replace("\n"," ")})
+   archive=lhafile.Lhafile(str(path))
+   if not archive.infolist():raise ValueError("Empty archive")
+   names=archive.namelist()
+   if not names:raise ValueError("Empty archive")
+   for name in names:
+    data=archive.read(name)
+    if not data:raise ValueError("Empty member")
+    if len(data)>15_000_000:raise ValueError("Oversized member")
+    text=data.decode("cp932",errors="replace")
+    rec["members"].append({"name":name,"bytes":len(data),"lines":len(text.splitlines()),"replacementCharacters":text.count("\ufffd"),"preview":text[:180].replace("\n"," ")})
   except Exception as e:
    rec["status"]="error";rec["error"]=str(e)[:250]
   records.append(rec)
@@ -33,5 +34,7 @@ def main():
  output=pathlib.Path(a.out);output.parent.mkdir(parents=True,exist_ok=True)
  output.write_text(json.dumps(summary,ensure_ascii=False,indent=2),encoding="utf-8")
  print("RECENT_ARCHIVE_AUDIT "+json.dumps({"archives":summary["archives"],"parsed":summary["parsed"],"errors":summary["errors"],"sample":records[0]["members"][:1] if records else []},ensure_ascii=False))
- if summary["errors"]:raise SystemExit(1)
+ if summary["errors"]:
+  print("ARCHIVE_ERRORS "+json.dumps([{"date":r["date"],"type":r["type"],"error":r.get("error")} for r in records if r["status"]!="ok"],ensure_ascii=False))
+  raise SystemExit(1)
 if __name__=="__main__":main()
