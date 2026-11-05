@@ -35,7 +35,8 @@ for(const {race,month} of rows){
    const units=Array(count).fill(1);for(let i=count;i<10;i++)units[i%count]++;
    const hit=match?1:0,index=match?selected.indexOf(match):-1;
    output.push(JSON.stringify({id:String(race.id),month,model,count,raw_mass:mass,hit,
-     payout:hit?Number(race.payoutPer100Yen)*units[index]:0}));
+     payout:hit?Number(race.payoutPer100Yen)*units[index]:0,
+     hitRank:index, payoutPer100Yen:hit?Number(race.payoutPer100Yen):0}));
   }
  }
 }
