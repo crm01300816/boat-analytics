@@ -1,0 +1,90 @@
+name: Continuous boat-racing research from cached historical data
+on:
+  push:
+    paths:
+      - .github/workflows/continuous-boat-research.yml
+  schedule:
+    - cron: '17 1 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: continuous-boat-research
+  cancel-in-progress: false
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: experiment/value-ensemble-research-20261030
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Reuse cached features or original private artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .local/private
+          # Prefer latest successful private feature cache from an earlier research run.
+          cached_run="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" --jq '.artifacts | map(select(.name == "private-boat-research-feature-cache" and .expired == false)) | sort_by(.created_at) | reverse | .[0].workflow_run.id // empty')"
+          if [ -n "$cached_run" ] && gh run download "$cached_run" --repo "$GITHUB_REPOSITORY" --name private-boat-research-feature-cache --dir .local/private; then
+            test -s .local/private/input.jsonl
+            echo "Using existing private feature cache"
+          else
+            echo "First run: restore previously collected official data without recollecting"
+            for i in 0 1 2 3 4 5; do
+              gh run download 41806566076 --repo "$GITHUB_REPOSITORY" --name "private-technique-chunk-$i" --dir .local/private
+            done
+            test "$(find .local/private -name 'official-20??-??.json' | wc -l)" -eq 36
+            node scripts/export-technique-input.mjs .local/private .local/private/raw.jsonl
+            python - <<'PY'
+          import json
+          with open('.local/private/raw.jsonl') as source,open('.local/private/input.jsonl','w') as dest:
+              for line in source:
+                  r=json.loads(line)
+                  for e in r.get('entries',[]):e.pop('racerId',None)
+                  dest.write(json.dumps(r,separators=(',',':'))+'\n')
+          PY
+            rm -f .local/private/raw.jsonl
+            find .local/private -name 'official-20??-??.json' -delete
+          fi
+      - name: Sweep upset filters and betting baselines
+        run: |
+          python scripts/research-upset-sweep.py --input .local/private/input.jsonl --out continuous-boat-research.json
+          python - <<'PY'
+          import json,os
+          r=json.load(open('continuous-boat-research.json'))
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+              f.write('## Daily historical betting research\n\n')
+              f.write('Trials: '+str(r['trialCount'])+'\n\n')
+              f.write('| Validation ROI | Test ROI | Test races | Tickets | Filter | Baseline |\n|---:|---:|---:|---:|---:|---|\n')
+              for x in r['topValidation20'][:10]:
+                  f.write(f"| {x['validation']['roi']:.2%} | {x['test']['roi']:.2%} | {x['test']['races']} | {x['tickets']} | {x['topValidationPercent']}% | {x['baseline']} |\n")
+              f.write('\nRepeated holdout; not prospective proof of profitability.\n')
+          PY
+      - name: Refresh private feature cache for future research
+        uses: actions/upload-artifact@v4
+        with:
+          name: private-boat-research-feature-cache
+          path: .local/private/input.jsonl
+          retention-days: 30
+          if-no-files-found: error
+      - name: Remove private local files
+        if: always()
+        run: rm -rf .local
+      - name: Upload aggregate-only findings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: continuous-boat-research-aggregate
+          path: continuous-boat-research.json
+          retention-days: 30
+          if-no-files-found: warn
