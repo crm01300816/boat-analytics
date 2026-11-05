@@ -35,3 +35,17 @@ with open("confidence-research-results/attack3-staking-six-splits.json","w") as 
 print("RANK_DIAGNOSTICS "+json.dumps(out["rankDiagnostics"],ensure_ascii=False))
 print("MONTHLY_COMPARISON "+json.dumps(out["monthlyComparison"],ensure_ascii=False))
 print("BASELINE_AUDIT "+json.dumps(out["baselineAudit"],ensure_ascii=False))
+
+# October 29 onward: cache ends at 2026-10, so November is not represented.
+import re
+late=[]
+unknown_date=0
+for month,items in groups.items():
+ for row in items:
+  ident=str(row.get("id",""))
+  match=re.search(r"202610(29|30|31)",ident)
+  if month=="2026-10" and match:late.append(row)
+  elif month=="2026-10" and not re.search(r"202610\\d{2}",ident):unknown_date+=1
+out["oct29Onward"]={"scope":"2026-10-29 through 2026-10-31 only; November excluded by input exporter","dateMatchMethod":"race ID contains YYYYMMDD","unknownDateRaceIdsOctober":unknown_date,"splits":{name:metric(late,split) for name,split in splits.items()},"sampleRaceIds":[str(r.get("id")) for r in late[:3]]}
+with open("confidence-research-results/attack3-staking-six-splits.json","w") as f:json.dump(out,f,ensure_ascii=False,indent=2)
+print("OCT29_ONWARD "+json.dumps(out["oct29Onward"],ensure_ascii=False))
