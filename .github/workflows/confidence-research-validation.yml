@@ -6,6 +6,8 @@ on:
     paths:
       - 'scripts/research-confidence*.py'
       - 'scripts/inventory-confidence-cache.py'
+      - 'scripts/export-confidence-mass.mjs'
+      - 'scripts/evaluate-cached-confidence.py'
       - 'tests/test_confidence_calibration*.py'
       - '.github/workflows/confidence-research-validation.yml'
   workflow_dispatch:
@@ -54,6 +56,32 @@ jobs:
           else:
               print("No race-level cached predictions found; metrics not fabricated.")
           PY
+      - name: Evaluate saved 36-month research feature cache (no recollection)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import io,os,urllib.request,zipfile
+          from pathlib import Path
+          artifact_id=13381974825
+          url=f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/actions/artifacts/{artifact_id}/zip"
+          req=urllib.request.Request(url,headers={"Authorization":f"Bearer {os.environ['GH_TOKEN']}","Accept":"application/vnd.github+json","User-Agent":"confidence-research"})
+          with urllib.request.urlopen(req,timeout=120) as resp:
+              data=resp.read()
+          with zipfile.ZipFile(io.BytesIO(data)) as z:
+              names=z.namelist()
+              if names!=["input.jsonl"]:
+                  raise ValueError(f"Unexpected cache archive members: {names}")
+              with z.open("input.jsonl") as src,open("/tmp/confidence-source.jsonl","wb") as dst:
+                  import shutil
+                  shutil.copyfileobj(src,dst)
+          print("Existing historical feature cache recovered; no recollection.")
+          PY
+          trap 'rm -f /tmp/confidence-source.jsonl /tmp/confidence-mass.jsonl' EXIT
+          node scripts/export-confidence-mass.mjs /tmp/confidence-source.jsonl /tmp/confidence-mass.jsonl
+          python scripts/evaluate-cached-confidence.py /tmp/confidence-mass.jsonl
       - name: Publish validation artifacts
         if: always()
         uses: actions/upload-artifact@v4
