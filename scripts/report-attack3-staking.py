@@ -18,3 +18,20 @@ for name,split in splits.items():
  out["splits"][name]={"training24":metric(rows_for([m for m in months if m<="2025-10"]),split),"postTraining12":metric(rows_for([m for m in months if m>="2025-10"]),split),"all36":metric(rows_for(months),split),"monthly":{m:metric(groups[m],split) for m in months}}
 with open("confidence-research-results/attack3-staking-six-splits.json","w") as f:json.dump(out,f,ensure_ascii=False,indent=2)
 print(json.dumps({name:{"postTraining12":x["postTraining12"]["provisionalROI"],"all36":x["all36"]["provisionalROI"]} for name,x in out["splits"].items()}))
+
+# Diagnostic: same selected races, rank-level returns and month concentration.
+for period,ms in [("training24",[m for m in months if m<="2025-10"]),("postTraining12",[m for m in months if m>="2025-10"]),("all36",months)]:
+ rows=rows_for(ms)
+ rank_details=[]
+ for rank in range(3):
+  hitrows=[r for r in rows if r["hitRank"]==rank]
+  rank_details.append({"rank":rank+1,"hits":len(hitrows),"totalPayoutPer100Yen":sum(r["payoutPer100Yen"] for r in hitrows),"meanPayoutPer100Yen":sum(r["payoutPer100Yen"] for r in hitrows)/len(hitrows) if hitrows else None,"maxPayoutPer100Yen":max((r["payoutPer100Yen"] for r in hitrows),default=0)})
+ out.setdefault("rankDiagnostics",{})[period]=rank_details
+ out.setdefault("monthlyComparison",{})[period]={name:{"positiveMonths":sum(v["profitYen"]>0 for m,v in obj["monthly"].items() if m in ms),"worstMonthProfitYen":min((v["profitYen"] for m,v in obj["monthly"].items() if m in ms),default=None),"bestMonthProfitYen":max((v["profitYen"] for m,v in obj["monthly"].items() if m in ms),default=None)} for name,obj in out["splits"].items()}
+# Audit historical baseline exporter payout against newly reconstructed per-rank payout.
+mismatches=[{"id":r["id"],"month":r["month"],"expected":r["payout"],"reconstructed":r["payoutPer100Yen"]*(4,3,3)[r["hitRank"]]} for m in months for r in groups[m] if r["hitRank"]>=0 and r["payout"]!=r["payoutPer100Yen"]*(4,3,3)[r["hitRank"]]]
+out["baselineAudit"]={"mismatchCount":len(mismatches),"examples":mismatches[:5]}
+with open("confidence-research-results/attack3-staking-six-splits.json","w") as f:json.dump(out,f,ensure_ascii=False,indent=2)
+print("RANK_DIAGNOSTICS "+json.dumps(out["rankDiagnostics"],ensure_ascii=False))
+print("MONTHLY_COMPARISON "+json.dumps(out["monthlyComparison"],ensure_ascii=False))
+print("BASELINE_AUDIT "+json.dumps(out["baselineAudit"],ensure_ascii=False))
