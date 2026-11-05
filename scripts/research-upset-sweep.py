@@ -35,7 +35,7 @@ def main():
  trials.sort(key=lambda x:x[0],reverse=True)
  selected=trials[:20]
  for _,t in selected:t["test"]=calc(test,t["threshold"],t["tickets"],t["baseline"],t["weights"])
- out={"status":"retrospective_repeated_holdout","method":"27 upset score weights x 5 filters x 4 ticket counts x 2 baseline models","trialCount":len(trials),"validationRaces":len(val),"testRaces":len(test),"topValidation20": [t for _,t in selected],"warning":"The 2026-05..10 holdout has already been examined; repeated research on it is not independent prospective validation. No pre-deadline odds audit."}
+ out={"status":"retrospective_repeated_holdout","independentOosVerified":False,"eligibleForRoi100Notification":False,"reasonNotEligible":"The May-Oct 2026 outcomes were already inspected; no untouched future period or audited pre-deadline odds.", "stakingMethod":"fixed_1000_yen_per_race; no variable stake allocation evaluated", "method":"27 upset score weights x 5 filters x 4 ticket counts x 2 baseline models","trialCount":len(trials),"validationRaces":len(val),"testRaces":len(test),"topValidation20": [t for _,t in selected],"warning":"The 2026-05..10 holdout has already been examined; repeated research on it is not independent prospective validation. No pre-deadline odds audit."}
  with open(a.out,"w") as f:json.dump(out,f,indent=2,ensure_ascii=False)
  print(json.dumps({"trials":len(trials),"bestValidationRoi":selected[0][1]["validation"]["roi"] if selected else None,"bestSelectedTestRoi":max((t["test"]["roi"] for _,t in selected),default=None)}))
 if __name__=="__main__":main()
