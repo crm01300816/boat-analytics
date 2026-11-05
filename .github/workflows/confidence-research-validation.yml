@@ -9,6 +9,7 @@ on:
       - 'scripts/export-confidence-mass.mjs'
       - 'scripts/report-attack3-36months.py'
       - 'scripts/report-attack3-staking.py'
+      - 'scripts/report-top3-reliability.py'
       - 'scripts/fetch-recent-official-bk.py'
       - 'scripts/audit-recent-official-bk.py'
       - 'scripts/evaluate-cached-confidence.py'
@@ -79,6 +80,7 @@ jobs:
           python scripts/evaluate-cached-confidence.py /tmp/confidence-mass.jsonl
           python scripts/report-attack3-36months.py /tmp/confidence-mass.jsonl
           python scripts/report-attack3-staking.py /tmp/confidence-mass.jsonl
+          python scripts/report-top3-reliability.py /tmp/confidence-mass.jsonl
       - name: Fetch official recent B/K archives (2026-10-29 through 2026-11-04)
         continue-on-error: true
         run: python scripts/fetch-recent-official-bk.py --start 2026-10-29 --end 2026-11-04 --out /tmp/official-recent-bk
