@@ -2,6 +2,8 @@
 """Audit downloaded official LZH archives without claiming prediction accuracy."""
 import argparse,json,pathlib,datetime as dt
 import lhafile
+from importlib.machinery import SourceFileLoader
+kparser=SourceFileLoader('official_k_techniques',str(pathlib.Path(__file__).with_name('official-k-techniques.py'))).load_module()
 
 def main():
  p=argparse.ArgumentParser()
@@ -26,14 +28,18 @@ def main():
     if not data:raise ValueError("Empty member")
     if len(data)>15_000_000:raise ValueError("Oversized member")
     text=data.decode("cp932",errors="replace")
+    if kind=="K":
+     parsed=kparser.parse_k_techniques(text,item["date"])
+     rec["kRacesWithSixEntrants"]=rec.get("kRacesWithSixEntrants",0)+len(parsed)
+     rec["kRacesWithKnownTechnique"]=rec.get("kRacesWithKnownTechnique",0)+sum(bool(v["technique"]) for v in parsed.values())
     rec["members"].append({"name":name,"bytes":len(data),"lines":len(text.splitlines()),"replacementCharacters":text.count("\ufffd"),"preview":text[:180].replace("\n"," ")})
   except Exception as e:
    rec["status"]="error";rec["error"]=str(e)[:250]
   records.append(rec)
- summary={"dateRange":manifest["range"],"archives":len(records),"parsed":sum(r["status"]=="ok" for r in records),"errors":sum(r["status"]!="ok" for r in records),"records":records,"warning":"Archive readability only; race feature joins, pre-deadline timestamps and ROI not yet validated"}
+ summary={"dateRange":manifest["range"],"archives":len(records),"parsed":sum(r["status"]=="ok" for r in records),"errors":sum(r["status"]!="ok" for r in records),"kRacesWithSixEntrants":sum(r.get("kRacesWithSixEntrants",0) for r in records),"kRacesWithKnownTechnique":sum(r.get("kRacesWithKnownTechnique",0) for r in records),"records":records,"warning":"Archive readability only; race feature joins, pre-deadline timestamps and ROI not yet validated"}
  output=pathlib.Path(a.out);output.parent.mkdir(parents=True,exist_ok=True)
  output.write_text(json.dumps(summary,ensure_ascii=False,indent=2),encoding="utf-8")
- print("RECENT_ARCHIVE_AUDIT "+json.dumps({"archives":summary["archives"],"parsed":summary["parsed"],"errors":summary["errors"],"sample":records[0]["members"][:1] if records else []},ensure_ascii=False))
+ print("RECENT_ARCHIVE_AUDIT "+json.dumps({"archives":summary["archives"],"parsed":summary["parsed"],"errors":summary["errors"],"kRacesWithSixEntrants":summary["kRacesWithSixEntrants"],"kRacesWithKnownTechnique":summary["kRacesWithKnownTechnique"],"sample":records[0]["members"][:1] if records else []},ensure_ascii=False))
  if summary["errors"]:
   print("ARCHIVE_ERRORS "+json.dumps([{"date":r["date"],"type":r["type"],"error":r.get("error")} for r in records if r["status"]!="ok"],ensure_ascii=False))
   raise SystemExit(1)
