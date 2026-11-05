@@ -8,6 +8,7 @@ on:
       - 'scripts/inventory-confidence-cache.py'
       - 'scripts/export-confidence-mass.mjs'
       - 'scripts/report-attack3-36months.py'
+      - 'scripts/report-attack3-staking.py'
       - 'scripts/evaluate-cached-confidence.py'
       - 'tests/test_confidence_calibration*.py'
       - '.github/workflows/confidence-research-validation.yml'
@@ -75,6 +76,7 @@ jobs:
           node scripts/export-confidence-mass.mjs "$CACHE_FILE" /tmp/confidence-mass.jsonl
           python scripts/evaluate-cached-confidence.py /tmp/confidence-mass.jsonl
           python scripts/report-attack3-36months.py /tmp/confidence-mass.jsonl
+          python scripts/report-attack3-staking.py /tmp/confidence-mass.jsonl
       - name: Publish validation artifacts
         if: always()
         uses: actions/upload-artifact@v4
