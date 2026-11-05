@@ -18,7 +18,7 @@ class TestAttackMassStrata(unittest.TestCase):
                 {"id":"d","month":"2026-05","model":"escape","count":3,"raw_mass":0.9,"hit":1,"payout":1000},
             ]
             path=root/"data.jsonl"
-            path.write_text("".join(json.dumps(x)+"\\n" for x in records),encoding="utf-8")
+            path.write_text("".join(json.dumps(x)+"\n" for x in records),encoding="utf-8")
             subprocess.run([sys.executable,str(SCRIPT),str(path)],cwd=root,check=True,capture_output=True,text=True)
             result=json.loads((root/"confidence-research-results"/"attack3-mass-strata.json").read_text())
             rows={(x["period"],x["massBand"]):x for x in result["rows"]}
@@ -35,7 +35,7 @@ class TestAttackMassStrata(unittest.TestCase):
             root=Path(td)
             r={"id":"a","month":"2026-01","model":"attack","count":3,"raw_mass":0.5,"hit":0,"payout":0}
             path=root/"data.jsonl"
-            path.write_text(json.dumps(r)+"\\n"+json.dumps(r)+"\\n")
+            path.write_text(json.dumps(r)+"\n"+json.dumps(r)+"\n")
             p=subprocess.run([sys.executable,str(SCRIPT),str(path)],cwd=root,capture_output=True,text=True)
             self.assertNotEqual(p.returncode,0)
             self.assertIn("Duplicate race",p.stderr+p.stdout)
