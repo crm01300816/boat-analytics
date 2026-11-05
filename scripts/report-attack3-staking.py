@@ -13,14 +13,14 @@ def metric(rows,split):
  return dict(races=n,hits=hits,hitRate=hits/n if n else None,stakeYen=stake,payoutYen=round(pay),profitYen=round(pay-stake),provisionalROI=pay/stake if stake else None,hitByRank=[sum(r["hitRank"]==i for r in rows) for i in range(3)])
 months=sorted(groups)
 def rows_for(ms):return [r for m in ms for r in groups[m]]
-out={"status":"retrospective_not_independent_oos","strategy":"attack top3 raw mass >= 0.50, 1000 yen per race","splits":{},"warnings":["2023-11..2025-10 model training in-sample","2025-11..2026-10 test outcomes previously inspected; no untouched holdout","Historical odds and pre-deadline features unaudited","Six splits compared on same races; best observed split is selection-biased"]}
+out={"dataCutoff":"2026-10-28 (latest selected race; full cache date coverage not established)","postTrainingStart":"2025-11","status":"retrospective_not_independent_oos","strategy":"attack top3 raw mass >= 0.50, 1000 yen per race","splits":{},"warnings":["2023-11..2025-10 model training in-sample","2025-11..2026-10 test outcomes previously inspected; no untouched holdout","Historical odds and pre-deadline features unaudited","Six splits compared on same races; best observed split is selection-biased"]}
 for name,split in splits.items():
- out["splits"][name]={"training24":metric(rows_for([m for m in months if m<="2025-10"]),split),"postTraining12":metric(rows_for([m for m in months if m>="2025-10"]),split),"all36":metric(rows_for(months),split),"monthly":{m:metric(groups[m],split) for m in months}}
+ out["splits"][name]={"training24":metric(rows_for([m for m in months if m<="2025-10"]),split),"postTraining12":metric(rows_for([m for m in months if m>="2025-11"]),split),"all36":metric(rows_for(months),split),"monthly":{m:metric(groups[m],split) for m in months}}
 with open("confidence-research-results/attack3-staking-six-splits.json","w") as f:json.dump(out,f,ensure_ascii=False,indent=2)
 print(json.dumps({name:{"postTraining12":x["postTraining12"]["provisionalROI"],"all36":x["all36"]["provisionalROI"]} for name,x in out["splits"].items()}))
 
 # Diagnostic: same selected races, rank-level returns and month concentration.
-for period,ms in [("training24",[m for m in months if m<="2025-10"]),("postTraining12",[m for m in months if m>="2025-10"]),("all36",months)]:
+for period,ms in [("training24",[m for m in months if m<="2025-10"]),("postTraining12",[m for m in months if m>="2025-11"]),("all36",months)]:
  rows=rows_for(ms)
  rank_details=[]
  for rank in range(3):
