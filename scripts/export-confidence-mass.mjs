@@ -25,7 +25,7 @@ if(training.length<1000)throw Error('Insufficient training races');
 const fit=trainLogit(training);
 const output=[];
 for(const {race,month} of rows){
- if(month<'2025-11'||month>'2026-10')continue;
+ if(month<'2023-11'||month>'2026-10')continue;
  for(const model of ['logit','escape','attack']){
   const ranked=rankedCombos(modelScores(race,model,fit));
   for(const count of [3,5,7,10]){
