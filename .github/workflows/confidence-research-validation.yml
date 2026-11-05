@@ -68,9 +68,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -s /tmp/confidence-source/input.jsonl
-          trap 'rm -f /tmp/confidence-source/input.jsonl /tmp/confidence-mass.jsonl' EXIT
-          node scripts/export-confidence-mass.mjs /tmp/confidence-source/input.jsonl /tmp/confidence-mass.jsonl
+          CACHE_FILE="$(find /tmp/confidence-source -type f -name input.jsonl -print -quit)"
+          test -n "$CACHE_FILE" && test -s "$CACHE_FILE"
+          trap 'rm -rf /tmp/confidence-source /tmp/confidence-mass.jsonl' EXIT
+          node scripts/export-confidence-mass.mjs "$CACHE_FILE" /tmp/confidence-mass.jsonl
           python scripts/evaluate-cached-confidence.py /tmp/confidence-mass.jsonl
       - name: Publish validation artifacts
         if: always()
