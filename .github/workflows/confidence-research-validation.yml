@@ -1,0 +1,59 @@
+name: Confidence research validation (research branch)
+on:
+  push:
+    branches:
+      - experiment/value-ensemble-research-20261030
+    paths:
+      - 'scripts/research-confidence*.py'
+      - 'tests/test_confidence_calibration*.py'
+      - '.github/workflows/confidence-research-validation.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '17 1 * * *'
+permissions:
+  contents: read
+jobs:
+  confidence-validation:
+    if: github.ref == 'refs/heads/experiment/value-ensemble-research-20261030'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'requirements.txt'
+      - name: Install confidence test dependencies
+        run: python -m pip install numpy scikit-learn
+      - name: Run confidence regression tests
+        run: python -m unittest discover -s tests -p 'test_confidence_calibration*.py' -v
+      - name: Find cached holdout predictions and evaluate when available
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p confidence-research-results
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          candidates = [
+              Path("data/research/confidence-predictions.json"),
+              Path("data/confidence-predictions.json"),
+              Path("research/confidence-predictions.json"),
+          ]
+          found = next((p for p in candidates if p.is_file()), None)
+          status = {"input": str(found) if found else None, "status": "ready" if found else "blocked_missing_prediction_level_cache", "note": "36-month aggregate results alone cannot reconstruct race-level probability calibration."}
+          Path("confidence-research-results/input-status.json").write_text(json.dumps(status, indent=2), encoding="utf-8")
+          if found:
+              import subprocess
+              subprocess.run(["python", "scripts/research-confidence-calibration.py", "--input", str(found), "--out", "confidence-research-results/holdout-metrics.json", "--test-start", "2026-05-01"], check=True)
+          else:
+              print("No race-level cached predictions found; metrics not fabricated.")
+          PY
+      - name: Publish validation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: confidence-research-validation
+          path: confidence-research-results/
+          if-no-files-found: warn
