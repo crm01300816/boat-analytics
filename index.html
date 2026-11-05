@@ -27,6 +27,25 @@
     </div>
   </div>
   <nav class="mobile-nav" id="mobile-nav"></nav>
-  <script type="module" src="./app.js?v=20261105-deadline-clock"></script>
+  <script>
+  // Visible recovery instead of a blank screen when the app module cannot start.
+  (function () {
+    var started = false;
+    var message = '';
+    function showRecovery() {
+      var root = document.getElementById('app-content');
+      if (!root || root.innerHTML.trim()) return;
+      var nav = document.getElementById('mobile-nav');
+      if (nav && !nav.innerHTML.trim()) {
+        nav.innerHTML = '<a href="./selective-five.html">厳選5点</a> <a href="./venue-stats.html">競艇場データ</a> <a href="./index.html">再読み込み</a>';
+      }
+      root.innerHTML = '<section style="padding:24px;max-width:720px;margin:auto"><h2>画面の読み込みに失敗しました</h2><p>アプリの起動に問題が発生しています。下のリンクから別ページを開くか、再読み込みしてください。</p><p><a href="./selective-five.html">厳選5点予想</a> ／ <a href="./venue-stats.html">全国24場の特徴</a></p><button type="button" onclick="location.reload()" style="padding:12px 20px">再読み込み</button><p style="font-size:12px;overflow-wrap:anywhere;color:#555">診断: '+(message || '起動処理が完了しませんでした').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})+'</p></section>';
+    }
+    window.addEventListener('error',function(e){message=e.message || 'JavaScript読み込みエラー';setTimeout(showRecovery,0);});
+    window.addEventListener('unhandledrejection',function(e){message=String(e.reason && e.reason.message || e.reason || '非同期エラー');setTimeout(showRecovery,0);});
+    window.addEventListener('load',function(){setTimeout(showRecovery,3500);});
+  })();
+  </script>
+  <script type="module" src="./app.js?v=20261106-recovery"></script>
 </body>
 </html>
