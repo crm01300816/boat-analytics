@@ -38,7 +38,7 @@ def extract(text, day):
         status = 'entrant_candidates_only' if len(racers) == 6 and not duplicate else 'unparsed_or_ambiguous_entries'
         if rid in result:
             raise ValueError('Duplicate B race ' + rid)
-        result[rid] = {'status':status,'entrantCount':len(racers)}
+        result[rid] = {'status':status,'entrantCount':len(racers),'racersByBoat':racers if status == 'entrant_candidates_only' else {}}
     for raw in text.splitlines():
         line = unicodedata.normalize('NFKC',raw)
         m = VENUE.match(line)
@@ -131,7 +131,14 @@ def run(root, out):
               'bRaceHeaders':len(all_races),'counts':counts,'firstRaceSample':diagnostic,'entrantRowDiagnostics':entrant_diagnostics,'bkRaceIdCoverage':coverage,
               'replayEligibleRaces':0,'modelFeaturesVerified':False,
               'note':'Candidate extraction only. Six racer IDs do not establish valid pre-race numeric features or a replayable frozen model. No K results used; do not report hits or ROI.'}
+    candidate_path = out.with_name('recent-b-entrant-candidates.json')
+    candidates = {'source':'official_B_only', 'resultsUsedForFeatures':False,
+                  'modelFeaturesVerified':False,
+                  'races':{rid:all_races[rid]['racersByBoat'] for rid in sorted(eligible_entrant_ids)}}
     out.parent.mkdir(parents=True,exist_ok=True)
+    candidate_path.write_text(json.dumps(candidates,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+    report['candidateFile'] = str(candidate_path)
+    report['candidateRaceCount'] = len(candidates['races'])
     out.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print('B_FEATURE_EXTRACTION '+json.dumps(report,ensure_ascii=False))
     return report
