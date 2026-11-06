@@ -1,6 +1,7 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>厳選5点 | BOAT ANALYTICS</title><style>body{margin:0;background:#091627;color:#eaf2ff;font-family:system-ui,sans-serif}main{max-width:960px;margin:auto;padding:20px}h1{font-size:25px}.muted{color:#a9bed1}.panel{background:#13263d;border:1px solid #2a4560;border-radius:16px;padding:18px;margin:16px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.card{background:#1a3049;border-radius:12px;padding:15px}button,input,select{font:inherit;padding:10px;border-radius:9px;border:1px solid #45617a;background:#19344f;color:white}button{cursor:pointer}button:disabled{opacity:.45}.yes{color:#7fe3a9}.no{color:#d1a8a8}.combo{font-size:24px;font-weight:800;letter-spacing:2px}.tag{font-size:12px;color:#b9cde0}.summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.summary-cell{background:#1a3049;border-radius:12px;padding:14px}.summary-cell small{display:block;color:#b9cde0;font-size:12px}.summary-cell strong{display:block;font-size:25px;margin-top:5px}.summary-heading{font-size:19px;margin:0 0 14px}.summary-note{font-size:12px;color:#b9cde0;margin-top:14px}.stat{font-size:25px;font-weight:800}a{color:#8ad2ff}</style></head><body><main><p><a href="./index.html">← BOAT ANALYTICSに戻る</a></p><h1>厳選5点予想 <span class="tag">過去検証方式</span></h1><p class="muted">2023〜2026年の公式B/K過去検証で比較した「厳選5点」の条件と買い目を表示。締切前に取得したデータのみで使ってください。</p><section class="grid"><div class="panel"><div class="tag">過去テスト 暫定回収率</div><div class="stat">80.42%</div></div><div class="panel"><div class="tag">購入対象レースの的中率</div><div class="stat">35.91%</div></div><div class="panel"><div class="tag">購入対象</div><div class="stat">5,956 / 26,064R</div></div></section><section class="panel" id="backfill-track"><h2 class="summary-heading">10/29以降の厳選5点・再判定成績</h2><p class="tag">当時の予想と過去出走表から再判定。買い目が締切前保存記録と完全一致したレースのみ対象。事前に保存した信頼度ではないため、前向き実測成績とは分けています。</p><p id="backfill-status" class="muted">再判定データを読み込み中…</p><div id="backfill-metrics" class="summary-grid" hidden></div><div id="backfill-daily" style="overflow-x:auto;margin-top:14px"></div></section><section class="panel" id="live-track"><h2 class="summary-heading">📈 厳選5点のみ・開発後の実測成績</h2><p class="tag">締切前に信頼度40%以上と判定・記録された厳選5点だけを集計します。条件が記録されていない過去データは対象外です。</p><p id="track-status" class="muted">実績データを読み込み中…</p><div id="track-metrics" class="summary-grid" hidden></div><div id="track-daily" style="overflow-x:auto;margin-top:14px"></div><p class="summary-note">1レース1,000円の仮想投資額。払戻・回収率は返還や特殊精算の監査が未完了の暫定値です。未確定・集計除外レースは投資額に含めません。過去テスト値とは分けて表示します。</p></section><div class="panel"><label>開催日 <input id="date" type="date"></label> <button id="load">レースを取得</button> <button id="refresh-results" disabled>結果を更新</button><p class="tag">結果は公開CSVに反映された時点で表示。ページを開いている間は90秒ごとに自動確認します。</p><p id="status" class="muted">取得後、条件を満たすレースだけ買い目を表示します。</p></div><div id="day-summary" class="panel" hidden></div><div id="results" class="grid"></div><p class="muted">注意：信頼度0.40以上が購入条件。1レース1,000円、5点に配分。過去の払戻監査は未完了。締切済みレースの表示は検証用であり事前予想ではありません。公開CSVの取得状況によって表示できない場合があります。結果や確定オッズは選定に使用しません。</p></main><script type="module">
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>厳選5選 | BOAT ANALYTICS</title><style>body{margin:0;background:#091627;color:#eaf2ff;font-family:system-ui,sans-serif}main{max-width:960px;margin:auto;padding:20px}h1{font-size:25px}.muted{color:#a9bed1}.panel{background:#13263d;border:1px solid #2a4560;border-radius:16px;padding:18px;margin:16px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.card{background:#1a3049;border-radius:12px;padding:15px}button,input,select{font:inherit;padding:10px;border-radius:9px;border:1px solid #45617a;background:#19344f;color:white}button{cursor:pointer}button:disabled{opacity:.45}.yes{color:#7fe3a9}.no{color:#d1a8a8}.combo{font-size:24px;font-weight:800;letter-spacing:2px}.tag{font-size:12px;color:#b9cde0}.summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.summary-cell{background:#1a3049;border-radius:12px;padding:14px}.summary-cell small{display:block;color:#b9cde0;font-size:12px}.summary-cell strong{display:block;font-size:25px;margin-top:5px}.summary-heading{font-size:19px;margin:0 0 14px}.summary-note{font-size:12px;color:#b9cde0;margin-top:14px}.stat{font-size:25px;font-weight:800}a{color:#8ad2ff}</style></head><body><main><p><a href="./index.html">← BOAT ANALYTICSに戻る</a></p><h1>厳選5選 <span class="tag">攻撃型AI・3点</span></h1><p class="muted">新方式：攻撃型AIの上位3点合計スコア50%以上のレースから、スコアの高い順に最大5レースを厳選。1レース3点・300/500/200円。スコアは未校正で、収益を保証しません。</p><section class="grid"><div class="panel"><div class="tag">旧方式・過去テスト暫定回収率（新方式とは別）</div><div class="stat">80.42%</div></div><div class="panel"><div class="tag">旧方式・購入対象レースの的中率</div><div class="stat">35.91%</div></div><div class="panel"><div class="tag">旧方式・購入対象</div><div class="stat">5,956 / 26,064R</div></div></section><section class="panel" id="backfill-track"><h2 class="summary-heading">旧・厳選5点の再判定成績（新方式とは別）</h2><p class="tag">当時の予想と過去出走表から再判定。買い目が締切前保存記録と完全一致したレースのみ対象。事前に保存した信頼度ではないため、前向き実測成績とは分けています。</p><p id="backfill-status" class="muted">再判定データを読み込み中…</p><div id="backfill-metrics" class="summary-grid" hidden></div><div id="backfill-daily" style="overflow-x:auto;margin-top:14px"></div></section><section class="panel" id="live-track"><h2 class="summary-heading">📈 旧・厳選5点の実測成績（新方式とは別）</h2><p class="tag">締切前に信頼度40%以上と判定・記録された厳選5点だけを集計します。条件が記録されていない過去データは対象外です。</p><p id="track-status" class="muted">実績データを読み込み中…</p><div id="track-metrics" class="summary-grid" hidden></div><div id="track-daily" style="overflow-x:auto;margin-top:14px"></div><p class="summary-note">1レース1,000円の仮想投資額。払戻・回収率は返還や特殊精算の監査が未完了の暫定値です。未確定・集計除外レースは投資額に含めません。過去テスト値とは分けて表示します。</p></section><div class="panel"><label>開催日 <input id="date" type="date"></label> <button id="load">レースを取得</button> <button id="refresh-results" disabled>結果を更新</button><p class="tag">結果は公開CSVに反映された時点で表示。ページを開いている間は90秒ごとに自動確認します。</p><p id="status" class="muted">取得後、条件を満たすレースだけ買い目を表示します。</p></div><div id="day-summary" class="panel" hidden></div><div id="results" class="grid"></div><p class="muted">注意：新方式は攻撃型AIの上位3点合計スコア0.50以上・最大5レース・1レース1,000円（300/500/200円）。旧方式の実績は新方式の実績ではありません。過去の払戻監査は未完了。締切済みレースの表示は検証用であり事前予想ではありません。公開CSVの取得状況によって表示できない場合があります。結果や確定オッズは選定に使用しません。</p></main><script type="module">
 import {fetchCsv,jstToday,venueName} from './csv.js';
-import {createRaceList,makePicks} from './analytics.js';
+import {createRaceList} from './analytics.js';
+import {researchAttackPicks} from './research-attack-picks.js';
 let selectedRecords=[],loadedDate='',refreshing=false;
 async function loadFivePointTrack(){
  const status=document.getElementById('track-status'),grid=document.getElementById('track-metrics'),daily=document.getElementById('track-daily');
@@ -41,7 +42,7 @@ setInterval(()=>{loadFivePointTrack();loadBackfilledSelective();},180000);
 
 const $=id=>document.getElementById(id), clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 $('date').value=jstToday();
-function confidence(r){
+function legacyConfidenceUnused(r){
  const es=[...r.entries].sort((a,b)=>Number(a.lane)-Number(b.lane));
  if(es.length!==6||es.some((e,i)=>Number(e.lane)!==i+1||['win','n2','localWin','l2','m2'].some(k=>!Number.isFinite(Number(e[k])))))return null;
  const priors=[2.05,1.02,.94,.87,.81,.75];
@@ -56,26 +57,26 @@ $('load').onclick=async()=>{
   const races=createRaceList(cards,titles,wakus,{});
   let selected=0;selectedRecords=[];loadedDate=date;$('refresh-results').disabled=true;$('day-summary').hidden=true;
   const deadlineMinutes=r=>{const raw=String(r.deadline||'');const m=raw.match(/(\d{1,2}):(\d{2})/);return m?Number(m[1])*60+Number(m[2]):Number.POSITIVE_INFINITY;};
-  const sortedRaces=[...races].sort((a,b)=>deadlineMinutes(a)-deadlineMinutes(b)||Number(a.venue)-Number(b.venue)||Number(a.number)-Number(b.number));
-  for(const r of sortedRaces){
-   const c=confidence(r);if(c===null||c<.40||r.canceled)continue;
-   const pred=makePicks({id:r.id,venue:r.venue,number:r.number,entries:r.entries,previews:{}},null,{mode:'balance',count:5});
-   if(pred.picks?.length!==5||pred.picks.reduce((s,p)=>s+p.stake,0)!==1000)continue;
+  const sortedRaces=races.filter(r=>!r.canceled).map(r=>({r,pred:researchAttackPicks(r)}))
+   .filter(x=>x.pred.eligible&&x.pred.picks.length===3&&x.pred.total===1000)
+   .sort((a,b)=>b.pred.mass-a.pred.mass||deadlineMinutes(a.r)-deadlineMinutes(b.r)||String(a.r.id).localeCompare(String(b.r.id))).slice(0,5);
+  for(const {r,pred} of sortedRaces){
+   const c=pred.mass;
    selected++;
    const box=document.createElement('article');box.className='card';
    const deadline=String(r.deadline||'');
    const deadlineLabel=deadline?'締切表示：'+deadline:'締切未確認';
    const title=document.createElement('h2');title.textContent=venueName(r.venue)+' '+r.number+'R';
-   const note=document.createElement('p');note.className='muted';note.textContent='信頼度 '+(c*100).toFixed(1)+'% ・ '+deadlineLabel;
+   const note=document.createElement('p');note.className='muted';note.textContent='上位3点の未校正スコア合計 '+(c*100).toFixed(1)+'% ・ '+deadlineLabel;
    box.append(title,note);
    const outcome=document.createElement('div');outcome.className='outcome';outcome.style.cssText='padding:12px;margin:12px 0;border:1px solid #52718b;border-radius:10px;background:#10273d;font-weight:700';outcome.textContent='⏳ 結果を確認中…';box.append(outcome);
    for(const p of pred.picks){const row=document.createElement('p');row.className='combo';row.textContent=p.combo+'　'+p.stake.toLocaleString()+'円';box.append(row)}
-   const foot=document.createElement('p');foot.className='tag';foot.textContent='5点・合計1,000円｜参考予想（購入推奨ではありません）';box.append(foot);
+   const foot=document.createElement('p');foot.className='tag';foot.textContent='攻撃型AI・3点（300/500/200円）・合計1,000円｜参考予想';box.append(foot);
 
    selectedRecords.push({id:r.id,picks:pred.picks,outcome});
    $('results').append(box);
   }
-  $('status').textContent=races.length+'レース中、条件を満たす '+selected+'レースを締切時刻の早い順に表示。条件に合わないレースは購入対象外。';
+  $('status').textContent=races.length+'レース中、条件を満たす上位 '+selected+'レースをスコア順に表示（最大5レース）。条件に合わないレースは対象外。';
   $('refresh-results').disabled=!selectedRecords.length;
   if(selectedRecords.length)await refreshResults();
  }catch(e){$('status').textContent='取得できませんでした：'+e.message}
@@ -118,7 +119,7 @@ async function refreshResults(){
   const rate=settled?(returned/(settled*1000)*100).toFixed(1)+'%':'—';
   const profit=returned-settled*1000;
   const metric=(name,value)=>'<div class="summary-cell"><small>'+name+'</small><strong>'+value+'</strong></div>';
-  summary.innerHTML='<h2 class="summary-heading">📊 '+loadedDate+' 厳選5点の収支</h2><div class="summary-grid">'
+  summary.innerHTML='<h2 class="summary-heading">📊 '+loadedDate+' 厳選5選（新方式）の暫定収支</h2><div class="summary-grid">'
    +metric('的中数',hits+' / '+settled+' R')
    +metric('暫定回収率',rate)
    +metric('投資額',(settled*1000).toLocaleString()+'円')
