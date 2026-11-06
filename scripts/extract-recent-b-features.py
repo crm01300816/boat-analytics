@@ -62,6 +62,7 @@ def extract(text, day):
 def run(root, out):
     manifest = json.loads((root/'manifest.json').read_text(encoding='utf-8'))
     all_races = {}
+    diagnostic = []
     for item in manifest['files']:
         if item['type'] != 'B' or item['status'] != 'downloaded':
             continue
@@ -70,12 +71,19 @@ def run(root, out):
         for name in archive.namelist():
             data = archive.read(name)
             if len(data)>15_000_000: raise ValueError('Oversized B member')
-            for rid, record in extract(data.decode('cp932',errors='replace'),item['date']).items():
+            decoded = data.decode('cp932',errors='replace')
+            if not diagnostic:
+                lines = decoded.splitlines()
+                for i, line in enumerate(lines):
+                    if RACE.match(unicodedata.normalize('NFKC',line)):
+                        diagnostic = [{'line':j,'text':unicodedata.normalize('NFKC',lines[j])[:135]} for j in range(i,min(i+22,len(lines)))]
+                        break
+            for rid, record in extract(decoded,item['date']).items():
                 if rid in all_races: raise ValueError('Duplicate B race '+rid)
                 all_races[rid] = record
     counts = {status:sum(r['status']==status for r in all_races.values())
               for status in ('entrant_candidates_only','unparsed_or_ambiguous_entries')}
-    report = {'bRaceHeaders':len(all_races),'counts':counts,
+    report = {'bRaceHeaders':len(all_races),'counts':counts,'firstRaceSample':diagnostic,
               'replayEligibleRaces':0,'modelFeaturesVerified':False,
               'note':'Candidate extraction only. Six racer IDs do not establish valid pre-race numeric features or a replayable frozen model. No K results used; do not report hits or ROI.'}
     out.parent.mkdir(parents=True,exist_ok=True)
