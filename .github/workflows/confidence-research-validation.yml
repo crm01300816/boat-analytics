@@ -15,6 +15,7 @@ on:
       - 'scripts/report-attack3-confidence50-calibration.py'
       - 'scripts/report-attack3-mass-strata.py'
       - 'scripts/report-alternative-consensus.py'
+      - 'scripts/research-overlooked-signals.py'
       - 'scripts/audit-alternative-model-input.py'
       - 'scripts/fetch-recent-official-bk.py'
       - 'scripts/audit-recent-official-bk.py'
@@ -101,6 +102,7 @@ jobs:
           python scripts/report-boatracecsv-ev-proxy.py --predictions /tmp/confidence-mass.jsonl --start 2026-07-19 --end 2026-11-05
           python scripts/compare-preclose-strategies.py /tmp/confidence-mass.jsonl
           python scripts/compare-36month-models.py /tmp/confidence-mass.jsonl
+          python scripts/research-overlooked-signals.py /tmp/confidence-mass.jsonl
           python scripts/audit-historical-odds-sources.py
           python scripts/audit-extended-odds-timing.py
       - name: Fetch official recent B/K archives (2026-10-29 through 2026-11-04)
