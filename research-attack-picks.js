@@ -19,8 +19,11 @@ export function researchAttackPicks(race) {
   combos.sort((a,b)=>b.p-a.p||a.combo.localeCompare(b.combo));
   const top=combos.slice(0,3),mass=top.reduce((sum,x)=>sum+x.p,0);
   const eligible=mass>=.5;
+  const oddsRow=race?.previews?.od3;
+  const evaluated=top.map(x=>{const raw=oddsRow?.['3連単_'+x.combo];const odds=raw==null||String(raw).trim()===''?null:Number(raw);return {...x,odds:Number.isFinite(odds)&&odds>0?odds:null};});
+  const evQualified=eligible&&evaluated.some(x=>x.odds!==null&&x.p*x.odds>=2);
   // Best observed all-36-month provisional profit among six predefined allocations.
   // Frozen for prospective monitoring; historical selection is not an independent holdout.
   const stakes=[300,500,200];
-  return {picks:top.map((x,i)=>({...x,stake:stakes[i]})),mass,total:1000,eligible,oddsAvailable:false,method:'攻撃型AI・上位3点50%以上・300/500/200円（過去検証選択）'};
+  return {picks:evaluated.map((x,i)=>({...x,stake:stakes[i],ev:x.odds===null?null:x.p*x.odds,estimatedPayout:x.odds===null?null:Math.round(x.odds*stakes[i])})),mass,total:1000,eligible,evQualified,confidenceScore:mass,oddsAvailable:evaluated.some(x=>x.odds!==null),method:'攻撃型AI・上位3点50%以上・300/500/200円（過去検証選択）'};
 }
