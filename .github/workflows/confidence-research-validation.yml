@@ -97,6 +97,7 @@ jobs:
           python scripts/audit-alternative-model-input.py /tmp/confidence-mass.jsonl
           python scripts/report-alternative-consensus.py /tmp/confidence-mass.jsonl
           python scripts/report-recent-cache-overlap.py /tmp/confidence-mass.jsonl confidence-research-results/recent-cache-overlap.json
+          python scripts/audit-boatracecsv-odds.py --predictions /tmp/confidence-mass.jsonl --start 2026-05-01 --end 2026-11-05
       - name: Fetch official recent B/K archives (2026-10-29 through 2026-11-04)
         continue-on-error: true
         run: python scripts/fetch-recent-official-bk.py --start 2026-10-29 --end 2026-11-04 --out /tmp/official-recent-bk
