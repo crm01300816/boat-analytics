@@ -25,15 +25,21 @@ candidates = [
     Path("research/confidence-predictions.json"),
 ]
 present = [str(p) for p in candidates if p.is_file()]
+# File existence is NOT proof of pre-deadline capture; creation and cutoff
+# timestamps, prediction schema, and race-id joins still require validation.
 out = {
     "pairedDates": len(paired_dates),
     "pairedDateRange": [paired_dates[0], paired_dates[-1]] if paired_dates else [],
     "kRaces": races,
     "predictionCacheCandidatesChecked": [str(p) for p in candidates],
     "predictionCacheFilesFound": present,
+    "predictionCacheScope": "repository working tree only; historical Actions artifacts not enumerated",
+    "predictionCacheTimestampAudited": False,
+    "replayEligibleRaces": 0,
+    "replayEligibilityStatus": "not_yet_evaluated",
     "preDeadlinePredictionsVerified": False,
     "historicalReplayVerified": False,
-    "status": "blocked_predeadline_prediction_or_time_safe_B_features",
+    "status": "awaiting_verified_predictions_or_time_safe_B_replay",
     "nextStep": ("Verify each prediction's creation timestamp against its race cutoff; "
                  "otherwise parse B features as-of race date, freeze an earlier-trained "
                  "model, and replay without same-race K results or post-race data."),
