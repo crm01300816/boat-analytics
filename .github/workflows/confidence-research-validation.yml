@@ -17,6 +17,7 @@ on:
       - 'scripts/fetch-recent-official-bk.py'
       - 'scripts/audit-recent-official-bk.py'
       - 'scripts/report-recent-paired-coverage.py'
+      - 'scripts/report-recent-cache-overlap.py'
       - 'scripts/evaluate-cached-confidence.py'
       - 'tests/test_confidence_calibration*.py'
       - '.github/workflows/confidence-research-validation.yml'
@@ -90,6 +91,7 @@ jobs:
           python scripts/report-attack3-chronological-calibration.py /tmp/confidence-mass.jsonl
           python scripts/report-attack3-confidence50-calibration.py /tmp/confidence-mass.jsonl
           python scripts/report-attack3-mass-strata.py /tmp/confidence-mass.jsonl
+          python scripts/report-recent-cache-overlap.py /tmp/confidence-mass.jsonl confidence-research-results/recent-cache-overlap.json
       - name: Fetch official recent B/K archives (2026-10-29 through 2026-11-04)
         continue-on-error: true
         run: python scripts/fetch-recent-official-bk.py --start 2026-10-29 --end 2026-11-04 --out /tmp/official-recent-bk
