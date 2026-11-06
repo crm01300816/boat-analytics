@@ -81,9 +81,9 @@ def run(root, out):
                     norm = unicodedata.normalize('NFKC',raw_line)
                     if RACE.match(norm) and len(entrant_diagnostics['raceHeaderSamples']) < 5:
                         entrant_diagnostics['raceHeaderSamples'].append(norm[:140])
-                    if re.match(r'^\\s*[1-6]\\s+',norm) and len(entrant_diagnostics['leadingBoatRows']) < 12:
+                    if re.match(r'^\s*[1-6]\s+',norm) and len(entrant_diagnostics['leadingBoatRows']) < 12:
                         entrant_diagnostics['leadingBoatRows'].append(norm[:160])
-                    if re.search(r'(?<!\\d)\\d{4}(?!\\d)',norm) and len(entrant_diagnostics['fourDigitIdRows']) < 12:
+                    if re.search(r'(?<!\d)\d{4}(?!\d)',norm) and len(entrant_diagnostics['fourDigitIdRows']) < 12:
                         entrant_diagnostics['fourDigitIdRows'].append(norm[:160])
                     if all(len(entrant_diagnostics[k]) >= (5 if k=='raceHeaderSamples' else 12) for k in entrant_diagnostics):
                         break
