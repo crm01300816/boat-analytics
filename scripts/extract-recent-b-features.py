@@ -11,6 +11,7 @@ import pathlib
 import re
 import unicodedata
 import lhafile
+from importlib.machinery import SourceFileLoader
 
 VENUE = re.compile(r'^\s*(\d{1,2})BBGN')
 RACE = re.compile(r'^\s*(\d{1,2})R\s+')
@@ -63,6 +64,8 @@ def run(root, out):
     manifest = json.loads((root/'manifest.json').read_text(encoding='utf-8'))
     all_races = {}
     diagnostic = []
+    k_ids = set()
+    k_parser = SourceFileLoader('recent_b_k_audit', str(pathlib.Path(__file__).with_name('official-k-techniques.py'))).load_module()
     for item in manifest['files']:
         if item['type'] != 'B' or item['status'] != 'downloaded':
             continue
@@ -81,9 +84,29 @@ def run(root, out):
             for rid, record in extract(decoded,item['date']).items():
                 if rid in all_races: raise ValueError('Duplicate B race '+rid)
                 all_races[rid] = record
+    # K is consulted ONLY to audit ID coverage, never to construct B features.
+    for item in manifest['files']:
+        if item['type'] != 'K' or item['status'] != 'downloaded':
+            continue
+        date = dt.date.fromisoformat(item['date'])
+        archive = lhafile.Lhafile(str(root/'K'/f'k{date:%y%m%d}.lzh'))
+        for name in archive.namelist():
+            data = archive.read(name)
+            if len(data) > 15_000_000:
+                raise ValueError('Oversized K member')
+            parsed = k_parser.parse_k_techniques(data.decode('cp932', errors='replace'), item['date'])
+            if k_ids.intersection(parsed):
+                raise ValueError('Duplicate K race IDs')
+            k_ids.update(parsed)
+    b_ids = set(all_races)
+    coverage = {'bHeaders': len(b_ids), 'kResultRaces': len(k_ids),
+                'matched': len(b_ids & k_ids),
+                'bOnlyCount': len(b_ids-k_ids), 'kOnlyCount': len(k_ids-b_ids),
+                'bOnlySample': sorted(b_ids-k_ids)[:20],
+                'kOnlySample': sorted(k_ids-b_ids)[:20]}
     counts = {status:sum(r['status']==status for r in all_races.values())
               for status in ('entrant_candidates_only','unparsed_or_ambiguous_entries')}
-    report = {'bRaceHeaders':len(all_races),'counts':counts,'firstRaceSample':diagnostic,
+    report = {'bRaceHeaders':len(all_races),'counts':counts,'firstRaceSample':diagnostic,'bkRaceIdCoverage':coverage,
               'replayEligibleRaces':0,'modelFeaturesVerified':False,
               'note':'Candidate extraction only. Six racer IDs do not establish valid pre-race numeric features or a replayable frozen model. No K results used; do not report hits or ROI.'}
     out.parent.mkdir(parents=True,exist_ok=True)
