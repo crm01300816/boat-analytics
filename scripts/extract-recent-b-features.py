@@ -64,6 +64,7 @@ def run(root, out):
     manifest = json.loads((root/'manifest.json').read_text(encoding='utf-8'))
     all_races = {}
     diagnostic = []
+    entrant_diagnostics = {'leadingBoatRows': [], 'fourDigitIdRows': [], 'raceHeaderSamples': []}
     k_ids = set()
     k_parser = SourceFileLoader('recent_b_k_audit', str(pathlib.Path(__file__).with_name('official-k-techniques.py'))).load_module()
     for item in manifest['files']:
@@ -75,6 +76,17 @@ def run(root, out):
             data = archive.read(name)
             if len(data)>15_000_000: raise ValueError('Oversized B member')
             decoded = data.decode('cp932',errors='replace')
+            if len(entrant_diagnostics['leadingBoatRows']) < 12:
+                for raw_line in decoded.splitlines():
+                    norm = unicodedata.normalize('NFKC',raw_line)
+                    if RACE.match(norm) and len(entrant_diagnostics['raceHeaderSamples']) < 5:
+                        entrant_diagnostics['raceHeaderSamples'].append(norm[:140])
+                    if re.match(r'^\\s*[1-6]\\s+',norm) and len(entrant_diagnostics['leadingBoatRows']) < 12:
+                        entrant_diagnostics['leadingBoatRows'].append(norm[:160])
+                    if re.search(r'(?<!\\d)\\d{4}(?!\\d)',norm) and len(entrant_diagnostics['fourDigitIdRows']) < 12:
+                        entrant_diagnostics['fourDigitIdRows'].append(norm[:160])
+                    if all(len(entrant_diagnostics[k]) >= (5 if k=='raceHeaderSamples' else 12) for k in entrant_diagnostics):
+                        break
             if not diagnostic:
                 lines = decoded.splitlines()
                 for i, line in enumerate(lines):
@@ -106,7 +118,7 @@ def run(root, out):
                 'kOnlySample': sorted(k_ids-b_ids)[:20]}
     counts = {status:sum(r['status']==status for r in all_races.values())
               for status in ('entrant_candidates_only','unparsed_or_ambiguous_entries')}
-    report = {'bRaceHeaders':len(all_races),'counts':counts,'firstRaceSample':diagnostic,'bkRaceIdCoverage':coverage,
+    report = {'bRaceHeaders':len(all_races),'counts':counts,'firstRaceSample':diagnostic,'entrantRowDiagnostics':entrant_diagnostics,'bkRaceIdCoverage':coverage,
               'replayEligibleRaces':0,'modelFeaturesVerified':False,
               'note':'Candidate extraction only. Six racer IDs do not establish valid pre-race numeric features or a replayable frozen model. No K results used; do not report hits or ROI.'}
     out.parent.mkdir(parents=True,exist_ok=True)
