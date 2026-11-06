@@ -39,6 +39,12 @@ class TestRecentBFeatures(unittest.TestCase):
         self.assertEqual(rows["202610292302"]["entrantCount"], 1)
         self.assertEqual(rows["202610292302"]["status"], "unparsed_or_ambiguous_entries")
 
+    def test_same_racer_in_two_boats_rejected(self):
+        sample = " 23BBGN\n 1R 予選\n" + "".join(
+            f" {i} {4001 if i == 2 else 4000+i} 選手\n" for i in range(1, 7))
+        rows = module.extract(sample, "2026-10-29")
+        self.assertEqual(rows["202610292301"]["status"], "unparsed_or_ambiguous_entries")
+
     def test_ambiguous_duplicate(self):
         sample = " 23BBGN\n 1R 予選\n" + "".join(
             f" {i} {4000+i} 選手\n" for i in range(1, 7)) + " 1 4999 選手\n"
