@@ -66,6 +66,7 @@ def run(root, out):
     diagnostic = []
     entrant_diagnostics = {'leadingBoatRows': [], 'fourDigitIdRows': [], 'raceHeaderSamples': []}
     k_ids = set()
+    k_entrants = {}
     k_parser = SourceFileLoader('recent_b_k_audit', str(pathlib.Path(__file__).with_name('official-k-techniques.py'))).load_module()
     for item in manifest['files']:
         if item['type'] != 'B' or item['status'] != 'downloaded':
@@ -110,7 +111,28 @@ def run(root, out):
             if k_ids.intersection(parsed):
                 raise ValueError('Duplicate K race IDs')
             k_ids.update(parsed)
+            k_entrants.update({rid: info['entrants'] for rid, info in parsed.items()})
     b_ids = set(all_races)
+    # Post-race K is used strictly for an AFTER-THE-FACT parser integrity audit.
+    # Never filter or modify B candidate features based on this comparison.
+    entrant_mismatches = []
+    entrant_matches = 0
+    for rid in sorted(b_ids & k_ids):
+        b = all_races[rid]
+        if b['status'] != 'entrant_candidates_only':
+            continue
+        k = k_entrants[rid]
+        differences = []
+        for boat in range(1, 7):
+            k_row = k.get(boat, k.get(str(boat), {}))
+            k_racer = k_row.get('racerId') if isinstance(k_row, dict) else None
+            b_racer = b['racersByBoat'].get(str(boat))
+            if str(k_racer) != str(b_racer):
+                differences.append(boat)
+        if differences:
+            entrant_mismatches.append({'raceId':rid,'boats':differences})
+        else:
+            entrant_matches += 1
     coverage = {'bHeaders': len(b_ids), 'kResultRaces': len(k_ids),
                 'matched': len(b_ids & k_ids),
                 'bOnlyCount': len(b_ids-k_ids), 'kOnlyCount': len(k_ids-b_ids),
@@ -126,7 +148,12 @@ def run(root, out):
         'matched_b_entries_ambiguous': len(matched_ids-eligible_entrant_ids),
         'matched_six_entrant_candidates_without_verified_model_features': len(eligible_entrant_ids),
     }
-    report = {'exclusionBreakdown':exclusions,
+    report = {'postRaceParserAudit':{
+                  'sixEntrantMatches':entrant_matches,
+                  'sixEntrantMismatches':len(entrant_mismatches),
+                  'mismatchSamples':entrant_mismatches[:20],
+                  'usedToSelectOrModifyBFeatures':False},
+              'exclusionBreakdown':exclusions,
               'matchedSixEntrantCandidates':len(eligible_entrant_ids),
               'bRaceHeaders':len(all_races),'counts':counts,'firstRaceSample':diagnostic,'entrantRowDiagnostics':entrant_diagnostics,'bkRaceIdCoverage':coverage,
               'replayEligibleRaces':0,'modelFeaturesVerified':False,
