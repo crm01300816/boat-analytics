@@ -132,9 +132,9 @@ def run(root, out):
               'replayEligibleRaces':0,'modelFeaturesVerified':False,
               'note':'Candidate extraction only. Six racer IDs do not establish valid pre-race numeric features or a replayable frozen model. No K results used; do not report hits or ROI.'}
     candidate_path = out.with_name('recent-b-entrant-candidates.json')
-    candidates = {'source':'official_B_only', 'resultsUsedForFeatures':False,
+    candidates = {'source':'official_B_only', 'selectionUsesKResults':False, 'resultsUsedForFeatures':False,
                   'modelFeaturesVerified':False,
-                  'races':{rid:all_races[rid]['racersByBoat'] for rid in sorted(eligible_entrant_ids)}}
+                  'races':{rid:all_races[rid]['racersByBoat'] for rid in sorted(b_ids) if all_races[rid]['status'] == 'entrant_candidates_only'}}
     out.parent.mkdir(parents=True,exist_ok=True)
     candidate_path.write_text(json.dumps(candidates,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     report['candidateFile'] = str(candidate_path)
