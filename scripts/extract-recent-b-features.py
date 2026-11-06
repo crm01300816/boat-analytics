@@ -118,7 +118,17 @@ def run(root, out):
                 'kOnlySample': sorted(k_ids-b_ids)[:20]}
     counts = {status:sum(r['status']==status for r in all_races.values())
               for status in ('entrant_candidates_only','unparsed_or_ambiguous_entries')}
-    report = {'bRaceHeaders':len(all_races),'counts':counts,'firstRaceSample':diagnostic,'entrantRowDiagnostics':entrant_diagnostics,'bkRaceIdCoverage':coverage,
+    matched_ids = b_ids & k_ids
+    eligible_entrant_ids = {rid for rid in matched_ids if all_races[rid]['status'] == 'entrant_candidates_only'}
+    exclusions = {
+        'b_without_k_result': len(b_ids-k_ids),
+        'k_without_b_header': len(k_ids-b_ids),
+        'matched_b_entries_ambiguous': len(matched_ids-eligible_entrant_ids),
+        'matched_six_entrant_candidates_without_verified_model_features': len(eligible_entrant_ids),
+    }
+    report = {'exclusionBreakdown':exclusions,
+              'matchedSixEntrantCandidates':len(eligible_entrant_ids),
+              'bRaceHeaders':len(all_races),'counts':counts,'firstRaceSample':diagnostic,'entrantRowDiagnostics':entrant_diagnostics,'bkRaceIdCoverage':coverage,
               'replayEligibleRaces':0,'modelFeaturesVerified':False,
               'note':'Candidate extraction only. Six racer IDs do not establish valid pre-race numeric features or a replayable frozen model. No K results used; do not report hits or ROI.'}
     out.parent.mkdir(parents=True,exist_ok=True)
