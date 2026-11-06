@@ -20,7 +20,7 @@ class RecentBExtractTests(unittest.TestCase):
 
     def test_duplicate_boat_excluded(self):
         text = "01BBGN\n 1R 朝1戦 H1800m\n" + "\n".join(
-            [f"{boat} {4000+boat}選手" for boat in range(1,7)] + ["1 4999選手"]
+            [f"{boat if boat < 6 else 1} {4000+boat}選手" for boat in range(1,7)]
         )
         self.assertEqual(MOD.extract(text, "2026-10-29")["202610290101"]["status"],
                          "unparsed_or_ambiguous_entries")
