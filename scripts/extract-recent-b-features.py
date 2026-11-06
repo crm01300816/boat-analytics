@@ -35,7 +35,7 @@ def extract(text, day):
                 if lane in racers:
                     duplicate = True
                 racers[lane] = racer
-        status = 'entrant_candidates_only' if len(racers) == 6 and not duplicate else 'unparsed_or_ambiguous_entries'
+        status = 'entrant_candidates_only' if len(racers) == 6 and not duplicate and len(set(racers.values())) == 6 else 'unparsed_or_ambiguous_entries'
         if rid in result:
             raise ValueError('Duplicate B race ' + rid)
         result[rid] = {'status':status,'entrantCount':len(racers),'racersByBoat':racers if status == 'entrant_candidates_only' else {}}
