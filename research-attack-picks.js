@@ -18,9 +18,9 @@ export function researchAttackPicks(race) {
   }
   combos.sort((a,b)=>b.p-a.p||a.combo.localeCompare(b.combo));
   const top=combos.slice(0,3),mass=top.reduce((sum,x)=>sum+x.p,0);
-  if(mass<.5)return {picks:[],mass,eligible:false,reason:'研究モデルの上位3点の合計スコアが50%未満のため対象外です。'};
+  const eligible=mass>=.5;
   // Best observed all-36-month provisional profit among six predefined allocations.
   // Frozen for prospective monitoring; historical selection is not an independent holdout.
   const stakes=[300,500,200];
-  return {picks:top.map((x,i)=>({...x,stake:stakes[i]})),mass,total:1000,eligible:true,oddsAvailable:false,method:'攻撃型AI・上位3点50%以上・300/500/200円（過去検証選択）'};
+  return {picks:top.map((x,i)=>({...x,stake:stakes[i]})),mass,total:1000,eligible,oddsAvailable:false,method:'攻撃型AI・上位3点50%以上・300/500/200円（過去検証選択）'};
 }
