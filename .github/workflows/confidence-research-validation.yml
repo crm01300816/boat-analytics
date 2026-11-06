@@ -18,6 +18,7 @@ on:
       - 'scripts/audit-recent-official-bk.py'
       - 'scripts/report-recent-paired-coverage.py'
       - 'scripts/report-recent-cache-overlap.py'
+      - 'scripts/extract-recent-b-features.py'
       - 'scripts/evaluate-cached-confidence.py'
       - 'tests/test_confidence_calibration*.py'
       - '.github/workflows/confidence-research-validation.yml'
@@ -100,6 +101,7 @@ jobs:
           python -m pip install lhafile
           python scripts/audit-recent-official-bk.py
           python scripts/report-recent-paired-coverage.py
+          python scripts/extract-recent-b-features.py
       - name: Upload recent official B/K archive audit
         if: always()
         uses: actions/upload-artifact@v4
