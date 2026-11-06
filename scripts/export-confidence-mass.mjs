@@ -37,7 +37,7 @@ for(const {race,month} of rows){
    output.push(JSON.stringify({id:String(race.id),month,model,count,raw_mass:mass,hit,
      payout:hit?Number(race.payoutPer100Yen)*units[index]:0,
      hitRank:index, payoutPer100Yen:hit?Number(race.payoutPer100Yen):0,
-     topCombos:count===3?selected.map(x=>({combo:x.combo,p:x.p})):undefined}}));
+     topCombos:count===3?selected.map(x=>({combo:x.combo,p:x.p})):undefined}));
   }
  }
 }
