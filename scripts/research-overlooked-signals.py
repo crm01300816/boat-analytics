@@ -11,8 +11,8 @@ groups=collections.defaultdict(list)
 for pair in rows.values():
  if "attack" not in pair or "logit" not in pair:continue
  a,l=pair["attack"],pair["logit"]
- ac=[str(x) for x in a.get("topCombos",[])]
- lc=[str(x) for x in l.get("topCombos",[])]
+ ac=[str(x.get("combo")) for x in a.get("topCombos",[])]
+ lc=[str(x.get("combo")) for x in l.get("topCombos",[])]
  if len(ac)!=3 or len(lc)!=3:continue
  overlap=len(set(ac)&set(lc))
  mass=float(a.get("raw_mass") or 0)
