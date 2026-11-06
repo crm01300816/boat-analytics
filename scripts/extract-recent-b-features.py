@@ -17,7 +17,7 @@ VENUE = re.compile(r'^\s*(\d{1,2})BBGN')
 RACE = re.compile(r'^\s*(\d{1,2})R\s+')
 # Official B rows start with a boat number and a four-digit racer registration.
 # Require racer IDs and exactly one of each boat before considering a race.
-ENTRY = re.compile(r'^\s*([1-6])\s+(\d{4})\s+')
+ENTRY = re.compile(r'^\s*([1-6])\s+(\d{4})(?=[^\d\s])')
 def extract(text, day):
     venue = None
     rid = None
