@@ -1,0 +1,101 @@
+name: Full 36-month official B/K three-model research
+on:
+  push:
+    branches: [experiment/value-ensemble-research-20261030]
+    paths:
+      - .github/workflows/research-three-models-36m.yml
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Regression tests
+        run: node --test tests/*.test.mjs
+  collect:
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        month: ['2023-11', '2023-12', '2024-01', '2024-02', '2024-03', '2024-04', '2024-05', '2024-06', '2024-07', '2024-08', '2024-09', '2024-10', '2024-11', '2024-12', '2025-01', '2025-02', '2025-03', '2025-04', '2025-05', '2025-06', '2025-07', '2025-08', '2025-09', '2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install LZH extractor
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq 7zip
+      - name: Collect official B/K month
+        env:
+          MONTH: ${{ matrix.month }}
+        run: |
+          START="${MONTH}-01"
+          END=$(date -d "${START} +1 month -1 day" +%F)
+          if [ "$MONTH" = "2026-10" ]; then END=2026-10-28; fi
+          python3 scripts/official-month-collector.py --start "$START" --end "$END" --out .local/private.json
+      - name: Strip racer identities before temporary handoff
+        env:
+          MONTH: ${{ matrix.month }}
+        run: |
+          node scripts/sanitize-official-model-input.mjs .local/private.json "official-${MONTH}.json"
+          rm -f .local/private.json /tmp/bkm-*.lzh
+      - name: Upload anonymous feature artifact for one day
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-feature-36m-${{ matrix.month }}
+          path: official-${{ matrix.month }}.json
+          retention-days: 1
+          if-no-files-found: error
+      - name: Remove private source rows
+        if: always()
+        run: rm -f .local/private.json /tmp/bkm-*.lzh
+  compare:
+    needs: collect
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Download 36 derived feature months
+        uses: actions/download-artifact@v4
+        with:
+          pattern: official-feature-36m-*
+          path: .local/features
+          merge-multiple: true
+      - name: Fit on 24 training months and evaluate 6 validation + 6 later months
+        run: |
+          node scripts/research-three-models.mjs .local/features three-model-36m.json
+          echo "### 36-month official B/K three-model research" >> "$GITHUB_STEP_SUMMARY"
+          node -e "const r=require('./three-model-36m.json'); console.log('Training races:',r.trainedRaces);for(const x of r.rows.filter(x=>x.period==='test'&&x.segment==='all'&&x.count===3))console.log(x.model,x.races,x.provisionalROI)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Compare train-frozen purchase-selection policies
+        run: |
+          node scripts/research-race-selection.mjs .local/features race-selection-36m.json
+          echo '### Purchase-selection policies (validation nominated, test not optimized)' >> "$GITHUB_STEP_SUMMARY"
+          node -e "const r=require('./race-selection-36m.json');for(const c of r.counts){const p=c.selectedByValidation;console.log('count',c.count,'test all ROI',c.periods.test.escape.provisionalROI,'selected',p?JSON.stringify({ranker:p.ranker,fraction:p.fraction,validationROI:p.validation.provisionalROI,testROI:p.test.provisionalROI,testBets:p.test.races}):'none passed validation guards')}" >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove temporary per-race derived features
+        if: always()
+        run: rm -rf .local/features
+      - name: Upload aggregate-only report
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-bk-three-model-36m-aggregates
+          path: three-model-36m.json
+          retention-days: 30
+          if-no-files-found: error
+      - name: Upload selective-purchase research report
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-bk-race-selection-36m-aggregates
+          path: race-selection-36m.json
+          retention-days: 30
+          if-no-files-found: error

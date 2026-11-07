@@ -7,6 +7,8 @@ export function summarizeProspective(date, records, results, payouts) {
     predictions:0,settled:0,hits:0,stakeYen:0,payoutYen:0,hitRate:null,provisionalRoi:null
   }]));
   const seen=new Set();
+  const venueMetrics={};
+  const blank=()=>Object.fromEntries([3,5,7,10].map(n=>[n,{settled:0,hits:0,stakeYen:0,payoutYen:0,hitRate:null,provisionalRoi:null}]));
   const stats={date,captured:0,pending:0,excluded:0,settled:0,byCount:metrics};
   for(const rec of records) {
     if(!rec || typeof rec.raceId!=='string'||!rec.raceId.startsWith(date.replaceAll('-',''))||seen.has(rec.raceId)) continue;
@@ -31,10 +33,13 @@ export function summarizeProspective(date, records, results, payouts) {
       new Set(finish).size!==3||winner!==payoutCombo||
       payout100===null||payout100<100){stats.excluded++;continue;}
     stats.settled++;
+    const venue=rec.raceId.slice(8,10);
+    if(!venueMetrics[venue])venueMetrics[venue]=blank();
     for(const count of [3,5,7,10]){
       const slot=metrics[count];slot.predictions++;slot.settled++;slot.stakeYen+=1000;
       const match=rec.picks[count].find(p=>p.combo===winner);
-      if(match){slot.hits++;slot.payoutYen+=match.stake/100*payout100;}
+      const vs=venueMetrics[venue][count];vs.settled++;vs.stakeYen+=1000;
+      if(match){const reward=match.stake/100*payout100;slot.hits++;slot.payoutYen+=reward;vs.hits++;vs.payoutYen+=reward;}
     }
   }
   for(const count of [3,5,7,10]) {
@@ -42,6 +47,10 @@ export function summarizeProspective(date, records, results, payouts) {
     slot.hitRate=slot.settled?slot.hits/slot.settled:null;
     slot.provisionalRoi=slot.stakeYen?slot.payoutYen/slot.stakeYen:null;
   }
+  for(const group of Object.values(venueMetrics))for(const count of [3,5,7,10]){
+    const v=group[count];v.hitRate=v.settled?v.hits/v.settled:null;v.provisionalRoi=v.stakeYen?v.payoutYen/v.stakeYen:null;
+  }
+  stats.byVenue=venueMetrics;
   return stats;
 }
 export function mergeProspective(existing,newDays){

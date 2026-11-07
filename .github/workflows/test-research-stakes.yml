@@ -1,0 +1,24 @@
+name: Test research stake allocation (fast)
+on:
+  push:
+    branches: [experiment/value-ensemble-research-20261030]
+    paths:
+      - .github/workflows/test-research-stakes.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install numpy
+        run: python -m pip install --disable-pip-version-check 'numpy>=1.26,<3'
+      - name: Test stake allocation, payouts and chronology
+        run: |
+          python -m unittest discover -s tests -p 'test_stake_allocation.py' -v
+          python -m unittest discover -s tests -p 'test_technique_model.py' -v
