@@ -29,3 +29,10 @@ This audit is a repository-inventory finding, not a strategy improvement or comp
 - The 45 recorded deadlines are distinct, and the recorded lead times range from **9.20 to 337.20 minutes**. These are only JSON-field differences, not independently attested capture times.
 - Every record has 3/5/7/10-ticket candidate sets, each with a **total recorded stake of JPY 1,000 per race**. This permits future same-cohort, equal-budget comparison once official payouts and provenance checks are complete; it does not establish ROI.
 - This batch cannot validate late odds movements or race-specific last-five-minute predictions because no timestamped odds/features are archived.
+
+## Git ancestry cross-check — 2026-11-07 evening
+- Commit `b8c141797f0d6cb978582b664e95a242ae03044a` (`Repair complete predeadline capture workflow and rerun sanity tests`, commit search timestamp 2026-10-29 15:07:38 JST) is an ancestor of the research branch (243 commits behind `b2f0bbe`).
+- Fetching `data/prospective/2026-10-29.json` **at that commit** returned GitHub 404 (file absent at this ref). The same file is present at the research head. Therefore the currently committed 45-record JSON was added **after** the 15:07:38 repair commit in Git ancestry; its asserted `recordedAt` of 15:07:47 JST alone does not prove actual archival at that time.
+- This does not establish that the predictions were generated late: a later Git commit may have imported an earlier snapshot. Capture-run timestamps/artifact provenance or an independent timestamped storage record are required before claiming prospective validation.
+- The GitHub commit-workflow lookup for the repair commit returned zero PR-triggered runs; that endpoint excludes non-PR runs and is not evidence that no Actions execution occurred.
+- **Classification remains**: 45 frozen picks, provenance unverified; official payout scoring still outstanding. Do not compute prospective ROI or claim OOS performance from this cohort until provenance is independently checked.
