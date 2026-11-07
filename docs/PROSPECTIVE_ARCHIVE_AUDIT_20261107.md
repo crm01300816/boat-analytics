@@ -23,3 +23,9 @@ Scope: research branch `experiment/value-ensemble-research-20261030`; inspected 
 4. Only then compare pre-registered 3/5/7/10 ticket counts, confidence bins, and stake rules on equal race cohorts and budgets.
 
 This audit is a repository-inventory finding, not a strategy improvement or completed validation.
+
+## Additional fixed-ticket inventory check — 2026-11-07
+- All 45 records share **one identical `recordedAt` timestamp** (`2026-10-29T06:07:47.729Z`, 15:07:47 JST); this is a **single batch snapshot**, not 45 independently timed captures.
+- The 45 recorded deadlines are distinct, and the recorded lead times range from **9.20 to 337.20 minutes**. These are only JSON-field differences, not independently attested capture times.
+- Every record has 3/5/7/10-ticket candidate sets, each with a **total recorded stake of JPY 1,000 per race**. This permits future same-cohort, equal-budget comparison once official payouts and provenance checks are complete; it does not establish ROI.
+- This batch cannot validate late odds movements or race-specific last-five-minute predictions because no timestamped odds/features are archived.
