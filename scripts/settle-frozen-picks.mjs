@@ -20,7 +20,7 @@ for(const r of official){
  if(r.status==='normal'&&(!validCombo(r.combo)||!Number.isFinite(r.payout100)||r.payout100<=0))throw Error('Invalid payout: '+r.raceId);
  byId.set(r.raceId,r);
 }
-const totals=Object.fromEntries([3,5,7,10].map(n=>[n,{races:0,hits:0,stake:0,returned:0,maxDrawdown:0,peak:0,cumulative:0,byDay:{}}]));
+const totals=Object.fromEntries([3,5,7,10].map(n=>[n,{races:0,hits:0,stake:0,returned:0,maxDrawdown:0,peak:0,cumulative:0,byDay:{},settlementEvents:[]}]));
 const seen=new Set();const exclusions={noOfficial:[],nonNormal:[],invalidFreeze:[],invalidTiming:[]};let freezeCount=0;
 for(const [date,sha] of freezes){
  const data=JSON.parse(execFileSync('git',['show',sha+':data/prospective/'+date+'.json'],{encoding:'utf8',maxBuffer:20*1024*1024}));
@@ -43,11 +43,20 @@ for(const [date,sha] of freezes){
    const t=totals[n],p=r.picks[n],win=p.find(x=>x.combo===o.combo);
    const returned=win?win.stake*o.payout100/100:0;
    t.races++;t.hits+=Number(Boolean(win));t.stake+=1000;t.returned+=returned;
-   t.cumulative+=returned-1000;t.peak=Math.max(t.peak,t.cumulative);t.maxDrawdown=Math.max(t.maxDrawdown,t.peak-t.cumulative);
+   t.settlementEvents.push({raceId:r.raceId,net:returned-1000});
    const d=t.byDay[date]??={races:0,hits:0,stake:0,returned:0};
    d.races++;d.hits+=Number(Boolean(win));d.stake+=1000;d.returned+=returned;
   }
  }
+}
+// Compute drawdown in canonical chronological race-ID order, independent of freeze record order.
+for(const t of Object.values(totals)){
+ t.settlementEvents.sort((a,b)=>a.raceId.localeCompare(b.raceId));
+ for(const e of t.settlementEvents){
+  t.cumulative+=e.net;t.peak=Math.max(t.peak,t.cumulative);
+  t.maxDrawdown=Math.max(t.maxDrawdown,t.peak-t.cumulative);
+ }
+ delete t.settlementEvents;
 }
 // Coverage is reported explicitly; numeric official rows may include races never frozen.
 const officialUnmatched=[...byId.keys()].filter(id=>!seen.has(id)).sort();
