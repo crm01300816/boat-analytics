@@ -11,9 +11,11 @@ const input=process.argv[2];if(!input)throw Error('Provide normalized official r
 const official=JSON.parse(readFileSync(input,'utf8'));
 if(!Array.isArray(official))throw Error('Expected array of official rows');
 const validCombo=s=>typeof s==='string'&&/^[1-6]-[1-6]-[1-6]$/.test(s)&&new Set(s.split('-')).size===3;
+const allowedDates=new Set(freezes.map(([date])=>date.replaceAll('-','')));
 const byId=new Map();
 for(const r of official){
  if(typeof r.raceId!=='string'||!/^[0-9]{8}(0[1-9]|1[0-9]|2[0-4])(0[1-9]|1[0-2])$/.test(r.raceId)||byId.has(r.raceId))throw Error('Invalid or duplicate official raceId: '+r.raceId);
+ if(!allowedDates.has(r.raceId.slice(0,8)))throw Error('Official race outside frozen date range: '+r.raceId);
  if(!['normal','refund','cancelled','special'].includes(r.status))throw Error('Unknown status: '+r.raceId);
  if(r.status==='normal'&&(!validCombo(r.combo)||!Number.isFinite(r.payout100)||r.payout100<=0))throw Error('Invalid payout: '+r.raceId);
  byId.set(r.raceId,r);
@@ -51,6 +53,7 @@ for(const [date,sha] of freezes){
 const officialUnmatched=[...byId.keys()].filter(id=>!seen.has(id)).sort();
 const officialStatusCounts=Object.fromEntries(['normal','refund','cancelled','special'].map(status=>[status,[...byId.values()].filter(r=>r.status===status).length]));
 const methods=Object.fromEntries(Object.entries(totals).map(([n,t])=>[n,{...t,hitRate:t.races?t.hits/t.races:null,roi:t.stake?t.returned/t.stake:null,net:t.returned-t.stake,byDay:Object.fromEntries(Object.entries(t.byDay).map(([d,v])=>[d,{...v,roi:v.returned/v.stake}]))}]));
-const result={schemaVersion:1,provenance:'original freeze Git SHAs; externally normalized official K records',warning:'Embedded cutoff checks only; official cutoff and data provenance unverified. Research-only. Official source provenance, pre-race inputs and excluded special settlements must be independently audited. Not independent OOS.',officialCount:byId.size,officialStatusCounts,officialUnmatchedCount:officialUnmatched.length,officialUnmatched,freezeCount,matchedNormal:methods[3].races,excludedCounts:Object.fromEntries(Object.entries(exclusions).map(([k,v])=>[k,v.length])),exclusions,methods};
+const result={schemaVersion:1,settlementReady:methods[3].races>0,provenance:'original freeze Git SHAs; externally normalized official K records',warning:'Embedded cutoff checks only; official cutoff and data provenance unverified. Research-only. Official source provenance, pre-race inputs and excluded special settlements must be independently audited. Not independent OOS.',officialCount:byId.size,officialStatusCounts,officialUnmatchedCount:officialUnmatched.length,officialUnmatched,freezeCount,matchedNormal:methods[3].races,excludedCounts:Object.fromEntries(Object.entries(exclusions).map(([k,v])=>[k,v.length])),exclusions,methods};
 if(process.argv[3])writeFileSync(process.argv[3],JSON.stringify(result,null,2)+'\n');
 console.log(JSON.stringify(result,null,2));
+if(methods[3].races===0){console.error('NO_MATCHED_NORMAL_RACES: settlement unavailable; do not report ROI');process.exitCode=2;}
