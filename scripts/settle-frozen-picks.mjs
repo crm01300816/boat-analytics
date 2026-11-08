@@ -43,15 +43,17 @@ for(const [date,sha] of freezes){
    const t=totals[n],p=r.picks[n],win=p.find(x=>x.combo===o.combo);
    const returned=win?win.stake*o.payout100/100:0;
    t.races++;t.hits+=Number(Boolean(win));t.stake+=1000;t.returned+=returned;
-   t.settlementEvents.push({raceId:r.raceId,net:returned-1000});
+   t.settlementEvents.push({raceId:r.raceId,deadlineMs:deadline,net:returned-1000});
    const d=t.byDay[date]??={races:0,hits:0,stake:0,returned:0};
    d.races++;d.hits+=Number(Boolean(win));d.stake+=1000;d.returned+=returned;
   }
  }
 }
-// Compute drawdown in canonical chronological race-ID order, independent of freeze record order.
+// Compute drawdown in recorded cutoff-time order (venue-first race IDs are NOT chronological).
+// Equal cutoff timestamps use race ID as a deterministic tie-breaker; actual settlement time
+// is not available, so this remains a cutoff-ordered approximation.
 for(const t of Object.values(totals)){
- t.settlementEvents.sort((a,b)=>a.raceId.localeCompare(b.raceId));
+ t.settlementEvents.sort((a,b)=>a.deadlineMs-b.deadlineMs||a.raceId.localeCompare(b.raceId));
  for(const e of t.settlementEvents){
   t.cumulative+=e.net;t.peak=Math.max(t.peak,t.cumulative);
   t.maxDrawdown=Math.max(t.maxDrawdown,t.peak-t.cumulative);
