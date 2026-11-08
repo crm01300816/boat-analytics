@@ -47,7 +47,10 @@ for(const [date,sha] of freezes){
   }
  }
 }
+// Coverage is reported explicitly; numeric official rows may include races never frozen.
+const officialUnmatched=[...byId.keys()].filter(id=>!seen.has(id)).sort();
+const officialStatusCounts=Object.fromEntries(['normal','refund','cancelled','special'].map(status=>[status,[...byId.values()].filter(r=>r.status===status).length]));
 const methods=Object.fromEntries(Object.entries(totals).map(([n,t])=>[n,{...t,hitRate:t.races?t.hits/t.races:null,roi:t.stake?t.returned/t.stake:null,net:t.returned-t.stake,byDay:Object.fromEntries(Object.entries(t.byDay).map(([d,v])=>[d,{...v,roi:v.returned/v.stake}]))}]));
-const result={schemaVersion:1,provenance:'original freeze Git SHAs; externally normalized official K records',warning:'Embedded cutoff checks only; official cutoff and data provenance unverified. Research-only. Official source provenance, pre-race inputs and excluded special settlements must be independently audited. Not independent OOS.',officialCount:byId.size,freezeCount,matchedNormal:methods[3].races,excludedCounts:Object.fromEntries(Object.entries(exclusions).map(([k,v])=>[k,v.length])),exclusions,methods};
+const result={schemaVersion:1,provenance:'original freeze Git SHAs; externally normalized official K records',warning:'Embedded cutoff checks only; official cutoff and data provenance unverified. Research-only. Official source provenance, pre-race inputs and excluded special settlements must be independently audited. Not independent OOS.',officialCount:byId.size,officialStatusCounts,officialUnmatchedCount:officialUnmatched.length,officialUnmatched,freezeCount,matchedNormal:methods[3].races,excludedCounts:Object.fromEntries(Object.entries(exclusions).map(([k,v])=>[k,v.length])),exclusions,methods};
 if(process.argv[3])writeFileSync(process.argv[3],JSON.stringify(result,null,2)+'\n');
 console.log(JSON.stringify(result,null,2));
