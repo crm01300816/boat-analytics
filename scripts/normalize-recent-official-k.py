@@ -62,11 +62,18 @@ def main():
     all_rows = {}
     quarantined = []
     days = {}
+    expected_days = {(dt.date(2026, 10, 29) + dt.timedelta(days=i)).isoformat() for i in range(7)}
+    seen_k_days = set()
     for item in manifest['files']:
         if item['type'] != 'K':
             continue
         day = item['date']
         date = dt.date.fromisoformat(day)
+        if day not in expected_days:
+            raise ValueError(f'K date outside frozen cohort: {day}')
+        if day in seen_k_days:
+            raise ValueError(f'Duplicate K archive date in manifest: {day}')
+        seen_k_days.add(day)
         path = root / 'K' / f'k{date:%y%m%d}.lzh'
         archive = lhafile.Lhafile(str(path))
         if not archive.namelist():
@@ -82,6 +89,8 @@ def main():
             venues.update(sections)
             day_rows.update(rows)
             quarantined.extend(missing)
+        if not venues or not day_rows:
+            raise ValueError(f'No valid venue sections or ordinary payouts on {day}; refusing partial normalization')
         if set(all_rows).intersection(day_rows):
             raise ValueError(f'Duplicate race across days on {day}')
         all_rows.update(day_rows)
@@ -89,8 +98,8 @@ def main():
                          unclassified=len(venues)*12-len(day_rows))
     if not all_rows:
         raise ValueError('No ordinary payout rows parsed')
-    if len(days) != 7:
-        raise ValueError(f'Expected seven K dates; found {len(days)}')
+    if set(days) != expected_days:
+        raise ValueError(f'Expected exact seven K dates; missing {sorted(expected_days - set(days))}')
     out = pathlib.Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps([all_rows[k] for k in sorted(all_rows)],
