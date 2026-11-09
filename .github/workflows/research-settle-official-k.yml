@@ -98,6 +98,10 @@ jobs:
         run: |
           set -euo pipefail
           python scripts/analyze-paired-pickcounts.py .local/results/per-race-ledger.json .local/results/paired-pickcount-comparison.json
+      - name: Audit frozen prediction timestamp coverage
+        run: |
+          set -euo pipefail
+          python scripts/audit-freeze-timestamps.py .local/results/per-race-ledger.json .local/results/freeze-timestamp-audit.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
