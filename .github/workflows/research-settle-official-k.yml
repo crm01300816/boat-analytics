@@ -71,6 +71,10 @@ jobs:
           Path('.local/results/summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n')
           for n,m in summary['methods'].items():print(n,m['races'],m['hits'],m['hitRate'],m['roi'],m['net'],m['maxDrawdown'])
           PY
+      - name: Analyze venue and chronological split on same frozen ledger
+        run: |
+          set -euo pipefail
+          node scripts/analyze-frozen-ledger.mjs .local/results/per-race-ledger.json .local/results/venue-split-analysis.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
