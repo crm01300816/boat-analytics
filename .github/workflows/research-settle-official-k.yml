@@ -94,6 +94,10 @@ jobs:
       - name: Audit payout concentration and day-cluster uncertainty
         run: |
           python scripts/audit-payout-concentration.py .local/results/per-race-ledger.json > .local/results/payout-concentration.json
+      - name: Compare pick counts paired on identical races and stakes
+        run: |
+          set -euo pipefail
+          python scripts/analyze-paired-pickcounts.py .local/results/per-race-ledger.json .local/results/paired-pickcount-comparison.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
