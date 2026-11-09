@@ -21,7 +21,7 @@ for(const r of official){
  byId.set(r.raceId,r);
 }
 const totals=Object.fromEntries([3,5,7,10].map(n=>[n,{races:0,hits:0,stake:0,returned:0,maxDrawdown:0,peak:0,cumulative:0,byDay:{},settlementEvents:[]}]));
-const seen=new Set();const exclusions={noOfficial:[],nonNormal:[],invalidFreeze:[],invalidTiming:[]};let freezeCount=0;
+const ledger=[];const seen=new Set();const exclusions={noOfficial:[],nonNormal:[],invalidFreeze:[],invalidTiming:[]};let freezeCount=0;
 for(const [date,sha] of freezes){
  const data=JSON.parse(execFileSync('git',['show',sha+':data/prospective/'+date+'.json'],{encoding:'utf8',maxBuffer:20*1024*1024}));
  for(const r of data.records){
@@ -39,14 +39,17 @@ for(const [date,sha] of freezes){
    if(!Array.isArray(picks)||picks.length!==n||new Set(picks.map(p=>p.combo)).size!==n||picks.some(p=>!validCombo(p.combo)||!Number.isInteger(p.stake)||p.stake<=0||p.stake%100!==0)||picks.reduce((s,p)=>s+p.stake,0)!==1000){valid=false;break}
   }
   if(!valid){exclusions.invalidFreeze.push(r.raceId);continue}
+  const auditRow={raceId:r.raceId,freezeCommit:sha,recordedAt:r.recordedAt,embeddedDeadline:r.deadline,officialCutoff:null,officialCutoffVerified:false,officialStatus:o.status,winningCombo:o.combo,payout100:o.payout100,methods:{}};
   for(const n of [3,5,7,10]){
    const t=totals[n],p=r.picks[n],win=p.find(x=>x.combo===o.combo);
    const returned=win?win.stake*o.payout100/100:0;
+   auditRow.methods[n]={picks:p.map(x=>({combo:x.combo,stake:x.stake})),hit:Boolean(win),stake:1000,returned,net:returned-1000};
    t.races++;t.hits+=Number(Boolean(win));t.stake+=1000;t.returned+=returned;
    t.settlementEvents.push({raceId:r.raceId,deadlineMs:deadline,net:returned-1000});
    const d=t.byDay[date]??={races:0,hits:0,stake:0,returned:0};
    d.races++;d.hits+=Number(Boolean(win));d.stake+=1000;d.returned+=returned;
   }
+  ledger.push(auditRow);
  }
 }
 // Compute drawdown in recorded cutoff-time order (venue-first race IDs are NOT chronological).
@@ -65,6 +68,7 @@ const officialUnmatched=[...byId.keys()].filter(id=>!seen.has(id)).sort();
 const officialStatusCounts=Object.fromEntries(['normal','refund','cancelled','special'].map(status=>[status,[...byId.values()].filter(r=>r.status===status).length]));
 const methods=Object.fromEntries(Object.entries(totals).map(([n,t])=>[n,{...t,hitRate:t.races?t.hits/t.races:null,roi:t.stake?t.returned/t.stake:null,net:t.returned-t.stake,byDay:Object.fromEntries(Object.entries(t.byDay).map(([d,v])=>[d,{...v,roi:v.returned/v.stake}]))}]));
 const result={schemaVersion:1,settlementReady:methods[3].races>0,provenance:'original freeze Git SHAs; externally normalized official K records',warning:'Embedded cutoff checks only; official cutoff and data provenance unverified. Research-only. Official source provenance, pre-race inputs and excluded special settlements must be independently audited. Not independent OOS.',officialCount:byId.size,officialStatusCounts,officialUnmatchedCount:officialUnmatched.length,officialUnmatched,freezeCount,matchedNormal:methods[3].races,excludedCounts:Object.fromEntries(Object.entries(exclusions).map(([k,v])=>[k,v.length])),exclusions,methods};
+if(process.argv[4])writeFileSync(process.argv[4],JSON.stringify({schemaVersion:1,warning:'Research-only: official cutoff not independently verified; no odds timestamp provenance. Excluded races appear in settlement exclusions, not ledger.',rows:ledger},null,2)+'\n');
 if(process.argv[3])writeFileSync(process.argv[3],JSON.stringify(result,null,2)+'\n');
 console.log(JSON.stringify(result,null,2));
 if(methods[3].races===0){console.error('NO_MATCHED_NORMAL_RACES: settlement unavailable; do not report ROI');process.exitCode=2;}
