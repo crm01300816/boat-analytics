@@ -48,12 +48,21 @@ jobs:
       - name: Settle original frozen Git commits and verify coverage
         run: |
           set -euo pipefail
-          node scripts/settle-frozen-picks.mjs .local/results/official-normal.json .local/results/settlement.json > .local/results/settlement-stdout.json
+          node scripts/settle-frozen-picks.mjs .local/results/official-normal.json .local/results/settlement.json .local/results/per-race-ledger.json > .local/results/settlement-stdout.json
           python - <<'PY'
           import json
           from pathlib import Path
           p=Path('.local/results/settlement.json')
           r=json.loads(p.read_text())
+          ledger=json.loads(Path('.local/results/per-race-ledger.json').read_text())['rows']
+          assert len(ledger)==931,len(ledger)
+          assert len({x['raceId'] for x in ledger})==931
+          for n in (3,5,7,10):
+            m=r['methods'][str(n)]
+            rows=[x['methods'][str(n)] for x in ledger]
+            assert sum(x['stake'] for x in rows)==m['stake']
+            assert sum(x['returned'] for x in rows)==m['returned']
+            assert sum(x['hit'] for x in rows)==m['hits']
           assert r['freezeCount']==932,r['freezeCount']
           assert r['matchedNormal']==931,r['matchedNormal']
           assert r['excludedCounts']['nonNormal']==1,r['excludedCounts']
