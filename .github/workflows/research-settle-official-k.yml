@@ -83,6 +83,10 @@ jobs:
         run: |
           set -euo pipefail
           python scripts/analyze-pick-structure-stratified.py .local/results/per-race-ledger.json .local/results/pick-structure-stratified.json
+      - name: Test head-six filter day robustness and payout concentration
+        run: |
+          set -euo pipefail
+          python scripts/analyze-head6-robustness.py .local/results/per-race-ledger.json .local/results/head6-robustness.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
