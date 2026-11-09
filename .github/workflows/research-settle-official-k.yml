@@ -1,0 +1,70 @@
+name: Research settle frozen picks against official K (isolated)
+on:
+  workflow_dispatch:
+  push:
+    branches: [experiment/value-ensemble-research-20261030]
+    paths: [.github/workflows/research-settle-official-k.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  settle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install LZH reader
+        run: python -m pip install lhafile==0.3.1
+      - name: Reuse existing official B/K artifact, do not redownload
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p .local/official-bk .local/results
+          gh api repos/${{ github.repository }}/actions/artifacts/13489984777/zip > .local/official-bk.zip
+          unzip -q .local/official-bk.zip -d .local/official-bk
+          find .local/official-bk -maxdepth 3 -type f | sort
+          test -f .local/official-bk/manifest.json
+      - name: Normalize K and quarantine nonordinary results
+        run: |
+          set -euo pipefail
+          python scripts/normalize-recent-official-k.py --root .local/official-bk --out .local/results/official-normal.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('.local/results/official-normal.json')
+          rows=json.loads(p.read_text())
+          audit=json.loads(p.with_suffix('.audit.json').read_text())
+          assert len(rows)==1043,(len(rows),'unexpected ordinary cohort')
+          assert audit['unclassifiedRaceIds']==['202610311408'],audit['unclassifiedRaceIds']
+          rows.append(dict(raceId='202610311408',status='special'))
+          p.write_text(json.dumps(rows,ensure_ascii=False,indent=2)+'\n')
+          PY
+      - name: Settle original frozen Git commits and verify coverage
+        run: |
+          set -euo pipefail
+          node scripts/settle-frozen-picks.mjs .local/results/official-normal.json .local/results/settlement.json > .local/results/settlement-stdout.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('.local/results/settlement.json')
+          r=json.loads(p.read_text())
+          assert r['freezeCount']==932,r['freezeCount']
+          assert r['matchedNormal']==931,r['matchedNormal']
+          assert r['excludedCounts']['nonNormal']==1,r['excludedCounts']
+          assert all(r['methods'][str(n)]['races']==931 for n in (3,5,7,10))
+          summary={'commit':'${{ github.sha }}','runId':'${{ github.run_id }}','officialCount':r['officialCount'],'freezeCount':r['freezeCount'],'matchedNormal':r['matchedNormal'],'excludedCounts':r['excludedCounts'],'warning':r['warning'],'methods':{str(n):{k:r['methods'][str(n)][k] for k in ('races','hits','hitRate','stake','returned','roi','net','maxDrawdown','byDay')} for n in (3,5,7,10)}}
+          Path('.local/results/summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n')
+          for n,m in summary['methods'].items():print(n,m['races'],m['hits'],m['hitRate'],m['roi'],m['net'],m['maxDrawdown'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: research-official-k-settlement-${{ github.run_id }}
+          path: .local/results/
+          retention-days: 90
