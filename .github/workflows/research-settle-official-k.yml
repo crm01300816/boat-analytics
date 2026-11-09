@@ -87,6 +87,10 @@ jobs:
         run: |
           set -euo pipefail
           python scripts/analyze-head6-robustness.py .local/results/per-race-ledger.json .local/results/head6-robustness.json
+      - name: Test first-ranked predicted head by chronological split
+        run: |
+          set -euo pipefail
+          node scripts/analyze-head-rank.mjs .local/results/per-race-ledger.json .local/results/head-rank-split.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
