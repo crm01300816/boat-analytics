@@ -102,6 +102,10 @@ jobs:
         run: |
           set -euo pipefail
           python scripts/audit-freeze-timestamps.py .local/results/per-race-ledger.json .local/results/freeze-timestamp-audit.json
+      - name: Compare skip policy under cash-hold and equal-budget assumptions
+        run: |
+          set -euo pipefail
+          python scripts/analyze-skip-budget-policy.py .local/results/per-race-ledger.json .local/results/skip-budget-policy.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
