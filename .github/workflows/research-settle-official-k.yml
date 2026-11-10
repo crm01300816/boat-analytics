@@ -106,6 +106,49 @@ jobs:
         run: |
           set -euo pipefail
           python scripts/analyze-skip-budget-policy.py .local/results/per-race-ledger.json .local/results/skip-budget-policy.json
+      - name: Test research paired-ledger auditor
+        run: |
+          python -m unittest discover -s research/tests -p 'test_paired_ledger_audit.py' -v
+      - name: Convert frozen official settlement to research audit CSV
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import csv, json
+          from pathlib import Path
+          ledger=json.loads(Path('.local/results/per-race-ledger.json').read_text())['rows']
+          out=Path('.local/results/paired-ledger-normalized.csv')
+          fields=['race_id','date','policy','stake','payout','hit','prediction_saved_at','odds_snapshot_at','deadline_at']
+          with out.open('w',newline='',encoding='utf-8') as fh:
+              w=csv.DictWriter(fh,fieldnames=fields)
+              w.writeheader()
+              for row in ledger:
+                  race=row['raceId']
+                  for policy in ('3','5','7','10'):
+                      m=row['methods'][policy]
+                      w.writerow(dict(race_id=race,date=f'{race[:4]}-{race[4:6]}-{race[6:8]}',
+                          policy=policy,stake=m['stake'],payout=m['returned'],hit=int(m['hit']),
+                          prediction_saved_at=row.get('recordedAt') or '',
+                          odds_snapshot_at='',deadline_at=row.get('embeddedDeadline') or ''))
+          assert len(ledger)==931,len(ledger)
+          assert sum(1 for _ in csv.DictReader(out.open(encoding='utf-8')))==3724
+          PY
+      - name: Run real 931-race paired audit and assert exact settlement reconciliation
+        run: |
+          set -euo pipefail
+          python research/scripts/paired_ledger_audit.py .local/results/paired-ledger-normalized.csv > .local/results/paired-ledger-audit.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path('.local/results/paired-ledger-audit.json').read_text())
+          s=json.loads(Path('.local/results/settlement.json').read_text())
+          assert a['input_rows']==3724 and a['complete_races']==931,a
+          assert a['rejected_rows']==0 and a['equal_total_stake'],a
+          for p in ('3','5','7','10'):
+              x=a['results'][p]; y=s['methods'][p]
+              assert x['hits']==y['hits'] and x['stake']==y['stake'] and x['payout']==y['returned'],(p,x,y)
+          assert a['timestamp_unverified_races']==931,'Odds timestamps unexpectedly marked verified'
+          print('RECONCILED 931 races / 3724 policies; odds timestamps unverified; exploratory only')
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
