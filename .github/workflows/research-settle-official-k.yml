@@ -170,6 +170,12 @@ jobs:
               w=r['wilson95']
               interval=f"{w[0]*100:.2f}–{w[1]*100:.2f}%" if w else 'NA'
               lines.append(f"| {p} | {r['n']} | {r['hits']} | {r['hit_rate']*100:.2f}% | {interval} | {r['roi']*100:.2f}% | {r['profit']:.0f} | {r['max_drawdown']:.0f} |")
+          lines += ['', '## Daily payout concentration (stress test; not OOS)', '', '| Picks | Profitable days | Worst day net | Best day net | ROI excluding highest-payout day | Net excluding that day |', '|---|---:|---:|---:|---:|---:|']
+          for p,r in a['results'].items():
+              stress=r['exclude_max_payout_day']
+              roi=f"{stress['roi']*100:.2f}%" if stress and stress['roi'] is not None else 'NA'
+              net=f"{stress['profit']:.0f}" if stress else 'NA'
+              lines.append(f"| {p} | {r['profitable_days']}/{len(r['by_day'])} | {r['worst_day_profit']} | {r['best_day_profit']} | {roi} | {net} |")
           lines += ['', 'Limitations: odds_snapshot_at unavailable; deadline not independently verified; no OOS claim.',
                     'Source cohort: 1029 targets, 932 frozen predictions, 931 ordinary settled; one nonordinary excluded.',
                     '36-month historical 5-pick 83.19% is exploratory and not independent OOS.']
