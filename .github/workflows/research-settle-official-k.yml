@@ -9,10 +9,12 @@ on:
       - research/scripts/nested_profit_walkforward.py
       - research/scripts/audit_nested_selection.py
       - research/scripts/fixed_budget_counterfactual.py
+      - research/scripts/daily_budget_fragility.py
       - research/tests/test_paired_ledger_audit.py
       - research/tests/test_nested_profit_walkforward.py
       - research/tests/test_audit_nested_selection.py
       - research/tests/test_fixed_budget_counterfactual.py
+      - research/tests/test_daily_budget_fragility.py
 permissions:
   contents: read
   actions: read
@@ -128,6 +130,11 @@ jobs:
           set -euo pipefail
           python research/scripts/fixed_budget_counterfactual.py .local/results/per-race-ledger.json .local/results/fixed-budget-counterfactual.json
           python -m unittest discover -s research/tests -p 'test_fixed_budget_counterfactual.py' -v
+      - name: Audit daily fragility of equal-budget counterfactual
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s research/tests -p 'test_daily_budget_fragility.py' -v
+          python -m research.scripts.daily_budget_fragility .local/results/per-race-ledger.json .local/results/daily-budget-fragility.json
       - name: Test paired nested accounting
         run: python -m unittest discover -s research/tests -p 'test_audit_nested_selection.py' -v
       - name: Test research paired-ledger auditor
