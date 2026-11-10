@@ -66,6 +66,19 @@ class AuditTests(unittest.TestCase):
         self.assertIsNone(out["results"]["10"]["day_bootstrap_roi_diff_95pct"])
         self.assertEqual(out["unique_days"],1)
 
+    def test_quarantine_cross_policy_frozen_timestamp_mismatch(self):
+        rows=[row("202611010101",p,0) for p in ("3","5","7","10")]
+        rows[1]["prediction_saved_at"]="2026-11-01T08:02:00+09:00"
+        out=self.run_rows(rows)
+        self.assertEqual(out["complete_races"],0)
+        self.assertTrue(any("cross_policy_prediction_saved_at_mismatch" in str(i) for i in out["issues"]))
+
+    def test_reject_race_date_mismatch(self):
+        rows=[row("202611020101",p,0) for p in ("3","5","7","10")]
+        out=self.run_rows(rows)
+        self.assertEqual(out["rejected_rows"],4)
+        self.assertEqual(out["complete_races"],0)
+
     def test_zero_races_and_wilson(self):
         out=self.run_rows([])
         self.assertEqual(out["complete_races"],0)
