@@ -149,6 +149,30 @@ jobs:
           assert a['timestamp_unverified_races']==931,'Odds timestamps unexpectedly marked verified'
           print('RECONCILED 931 races / 3724 policies; odds timestamps unverified; exploratory only')
           PY
+      - name: Export reproducible paired-audit research summary
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path('.local/results/paired-ledger-audit.json').read_text())
+          s=json.loads(Path('.local/results/summary.json').read_text())
+          lines=['# Paired settlement audit (exploratory)', '',
+                 f"Run: {s['runId']} | SHA: {s['commit']}",
+                 f"Normal settlements: {a['complete_races']} | Input rows: {a['input_rows']} | Rejected: {a['rejected_rows']}",
+                 f"Equal total stake: {a['equal_total_stake']} | Timestamp unverified: {a['timestamp_unverified_races']}",
+                 '', '| Picks | N | Hits | Hit rate | Wilson 95% | ROI | Profit | Max DD |',
+                 '|---|---:|---:|---:|---|---:|---:|---:|']
+          for p,r in a['results'].items():
+              w=r['wilson95']
+              interval=f"{w[0]*100:.2f}–{w[1]*100:.2f}%" if w else 'NA'
+              lines.append(f"| {p} | {r['n']} | {r['hits']} | {r['hit_rate']*100:.2f}% | {interval} | {r['roi']*100:.2f}% | {r['profit']:.0f} | {r['max_drawdown']:.0f} |")
+          lines += ['', 'Limitations: odds_snapshot_at unavailable; deadline not independently verified; no OOS claim.',
+                    'Source cohort: 1029 targets, 932 frozen predictions, 931 ordinary settled; one nonordinary excluded.',
+                    '36-month historical 5-pick 83.19% is exploratory and not independent OOS.']
+          Path('.local/results/paired-ledger-audit-summary.md').write_text('\n'.join(lines)+'\n')
+          print('\n'.join(lines))
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
