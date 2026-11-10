@@ -41,7 +41,18 @@ def build(folder):
             raise ValueError("Settlement reconciliation failed for policy " + p)
         lines.append("| %s | %d | %d | %.2f%% | %.0f | %.0f |" % (
             p, n, a["hits"], a["roi"]*100, a["profit"], a["max_drawdown"]))
-    lines += ["", "## Same races, hypothetical 1,000 yen per race (fractional, NOT executable)",
+    lines += ["", "## Break-even deficit (observed, not a strategy)",
+              "| Picks | Stake | Payout | Additional payout to break even | Required payout uplift |",
+              "|---|---:|---:|---:|---:|"]
+    for p in POLICIES:
+        a = audit["results"][p]
+        deficit = max(0, a["stake"] - a["payout"])
+        uplift = (deficit / a["payout"] * 100) if a["payout"] > 0 else None
+        lines.append("| %s | %.0f | %.0f | %.0f | %s |" % (
+            p, a["stake"], a["payout"], deficit,
+            ("%.2f%%" % uplift) if uplift is not None else "undefined (zero payout)"))
+    lines += ["", "Break-even deficits are accounting diagnostics only; they do not imply that a realizable filter or allocation can recover the shortfall.",
+              "", "## Same races, hypothetical 1,000 yen per race (fractional, NOT executable)",
               "| Picks | ROI | Net | Max DD | Worst leave-one-day-out ROI | Worst leave-one-venue-out ROI |",
               "|---|---:|---:|---:|---:|---:|"]
     for p in POLICIES:
