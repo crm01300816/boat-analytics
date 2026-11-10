@@ -3,7 +3,10 @@ on:
   workflow_dispatch:
   push:
     branches: [experiment/value-ensemble-research-20261030]
-    paths: [.github/workflows/research-settle-official-k.yml]
+    paths:
+      - .github/workflows/research-settle-official-k.yml
+      - research/scripts/paired_ledger_audit.py
+      - research/tests/test_paired_ledger_audit.py
 permissions:
   contents: read
   actions: read
