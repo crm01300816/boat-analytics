@@ -2,7 +2,10 @@
 """Research-only paired accounting for nested policy decisions; not independent OOS."""
 import json,sys
 from pathlib import Path
-from research.scripts.nested_profit_walkforward import measure
+try:
+    from research.scripts.nested_profit_walkforward import measure
+except ModuleNotFoundError:
+    from nested_profit_walkforward import measure
 
 def compare(ledger, nested):
     rows=ledger["rows"]
