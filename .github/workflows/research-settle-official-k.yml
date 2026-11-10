@@ -12,6 +12,7 @@ on:
       - research/scripts/daily_budget_fragility.py
       - research/scripts/paired_day_signflip.py
       - research/scripts/venue_leave_one_out.py
+      - research/scripts/consolidated_roi_report.py
       - research/tests/test_venue_leave_one_out.py
       - research/tests/test_paired_day_signflip.py
       - research/tests/test_paired_ledger_audit.py
@@ -226,6 +227,11 @@ jobs:
           set -euo pipefail
           python -m unittest discover -s research/tests -p 'test_venue_leave_one_out.py' -v
           python -m research.scripts.venue_leave_one_out .local/results/per-race-ledger.json .local/results/venue-leave-one-out.json
+      - name: Consolidate observed ROI, fixed-budget fragility and evidence limitations
+        run: |
+          set -euo pipefail
+          python research/scripts/consolidated_roi_report.py .local/results .local/results/consolidated-roi-research.md
+          cat .local/results/consolidated-roi-research.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:
