@@ -6,6 +6,7 @@ on:
     paths:
       - .github/workflows/research-settle-official-k.yml
       - research/scripts/paired_ledger_audit.py
+      - research/scripts/nested_profit_walkforward.py
       - research/tests/test_paired_ledger_audit.py
 permissions:
   contents: read
@@ -109,6 +110,10 @@ jobs:
         run: |
           set -euo pipefail
           python scripts/analyze-skip-budget-policy.py .local/results/per-race-ledger.json .local/results/skip-budget-policy.json
+      - name: Nested chronological profit selection diagnostic (exploratory only)
+        run: |
+          set -euo pipefail
+          python research/scripts/nested_profit_walkforward.py .local/results/per-race-ledger.json .local/results/nested-profit-walkforward.json
       - name: Test research paired-ledger auditor
         run: |
           python -m unittest discover -s research/tests -p 'test_paired_ledger_audit.py' -v
