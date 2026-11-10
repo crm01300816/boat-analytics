@@ -109,12 +109,21 @@ def audit(path, bootstrap=2000):
             [samples[int(.025*len(samples))], samples[min(len(samples)-1, int(.975*len(samples)))]] if samples else None)
     timestamp_unverified_races = sum(any(complete[k][p]["_flags"] for p in PICKS) for k in keys)
     stake_sets_equal = len({round(results[p]["stake"], 6) for p in PICKS}) == 1
+    # A paired ROI comparison is valid only on the same race set AND the same total stake.
+    # Keep raw figures for diagnostics, but do not present unequal-budget differences as comparable.
+    for p in PICKS[1:]:
+        results[p]["fixed_budget_comparable_vs_3"] = stake_sets_equal
+        if not stake_sets_equal:
+            results[p]["paired_profit_difference_vs_3"] = None
+            results[p]["day_bootstrap_roi_diff_95pct"] = None
     return dict(input_rows=total, rejected_rows=rejected_rows, unique_races=len(records),
                 complete_races=len(keys), incomplete_races=len(incomplete),
                 incomplete_examples=dict(list(sorted(incomplete.items()))[:20]),
                 timestamp_unverified_races=timestamp_unverified_races,
                 timestamp_candidate_races=len(keys)-timestamp_unverified_races,
-                equal_total_stake=stake_sets_equal, issues=issues, results=results,
+                equal_total_stake=stake_sets_equal, unique_days=len(days),
+                fixed_budget_comparison_blocked=not stake_sets_equal,
+                issues=issues, results=results,
                 warning="All results exploratory. Timestamp candidates are NOT independently verified official deadlines/odds; no OOS or causal claim.")
 
 if __name__ == "__main__":
