@@ -8,6 +8,7 @@ on:
       - research/scripts/paired_ledger_audit.py
       - research/scripts/nested_profit_walkforward.py
       - research/tests/test_paired_ledger_audit.py
+      - research/tests/test_nested_profit_walkforward.py
 permissions:
   contents: read
   actions: read
@@ -117,6 +118,8 @@ jobs:
       - name: Test research paired-ledger auditor
         run: |
           python -m unittest discover -s research/tests -p 'test_paired_ledger_audit.py' -v
+      - name: Test nested walkforward chronological isolation
+        run: python -m unittest discover -s research/tests -p 'test_nested_profit_walkforward.py' -v
       - name: Convert frozen official settlement to research audit CSV
         run: |
           set -euo pipefail
