@@ -47,6 +47,8 @@ def audit(path, bootstrap=2000):
                     raise ValueError("hit-payout mismatch: refund/special settlement requires separate handling")
                 day = row["date"].strip()
                 datetime.strptime(day, "%Y-%m-%d")
+                if len(race) >= 8 and race[:8].isdigit() and race[:8] != day.replace("-", ""):
+                    raise ValueError("race_id date does not match settlement date")
                 deadline = parse_time(row.get("deadline_at", ""))
                 saved = parse_time(row.get("prediction_saved_at", ""))
                 odds = parse_time(row.get("odds_snapshot_at", ""))
@@ -74,6 +76,15 @@ def audit(path, bootstrap=2000):
             issues.append([race, "cross_policy_date_mismatch"])
             continue
         complete[race] = group
+    # A single race must not silently mix different frozen predictions or odds snapshots.
+    for race in list(complete):
+        group = complete[race]
+        for field in ("prediction_saved_at", "odds_snapshot_at", "deadline_at"):
+            values = {str(group[p].get(field, "")).strip() for p in PICKS}
+            if len(values) > 1:
+                issues.append([race, "cross_policy_" + field + "_mismatch"])
+                del complete[race]
+                break
     keys = sorted(complete, key=lambda k: (complete[k]["3"]["date"], k))
     days = defaultdict(list)
     for k in keys:
