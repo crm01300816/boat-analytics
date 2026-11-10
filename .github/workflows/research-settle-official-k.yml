@@ -8,9 +8,11 @@ on:
       - research/scripts/paired_ledger_audit.py
       - research/scripts/nested_profit_walkforward.py
       - research/scripts/audit_nested_selection.py
+      - research/scripts/fixed_budget_counterfactual.py
       - research/tests/test_paired_ledger_audit.py
       - research/tests/test_nested_profit_walkforward.py
       - research/tests/test_audit_nested_selection.py
+      - research/tests/test_fixed_budget_counterfactual.py
 permissions:
   contents: read
   actions: read
@@ -121,6 +123,11 @@ jobs:
         run: |
           set -euo pipefail
           python research/scripts/audit_nested_selection.py .local/results/per-race-ledger.json .local/results/nested-profit-walkforward.json .local/results/nested-selection-paired-audit.json
+      - name: Compare equal per-race hypothetical budget (exploratory)
+        run: |
+          set -euo pipefail
+          python research/scripts/fixed_budget_counterfactual.py .local/results/per-race-ledger.json .local/results/fixed-budget-counterfactual.json
+          python -m unittest discover -s research/tests -p 'test_fixed_budget_counterfactual.py' -v
       - name: Test paired nested accounting
         run: python -m unittest discover -s research/tests -p 'test_audit_nested_selection.py' -v
       - name: Test research paired-ledger auditor
