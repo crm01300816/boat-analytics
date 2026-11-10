@@ -103,6 +103,31 @@ def audit(path, bootstrap=2000):
                           wilson95=wilson(hits, len(keys)), stake=stake, payout=payout,
                           profit=payout-stake, roi=payout/stake if stake else None,
                           max_drawdown=drawdown)
+    # Diagnostic day-level robustness, not an out-of-sample estimate.
+    # A high pooled ROI can be entirely driven by one unusually large payout day.
+    for p in PICKS:
+        daily = []
+        for day in sorted(days):
+            daykeys = days[day]
+            s = sum(complete[k][p]["stake"] for k in daykeys)
+            v = sum(complete[k][p]["payout"] for k in daykeys)
+            daily.append(dict(date=day, n=len(daykeys), stake=s, payout=v,
+                              profit=v-s, roi=v/s if s else None))
+        results[p]["by_day"] = daily
+        results[p]["profitable_days"] = sum(d["profit"] > 0 for d in daily)
+        results[p]["worst_day_profit"] = min((d["profit"] for d in daily), default=None)
+        results[p]["best_day_profit"] = max((d["profit"] for d in daily), default=None)
+        # Removing the best payout day is a stress test, not a tuned strategy.
+        if len(daily) > 1:
+            best = max(daily, key=lambda d: (d["payout"], d["date"]))
+            remaining_stake = results[p]["stake"] - best["stake"]
+            remaining_payout = results[p]["payout"] - best["payout"]
+            results[p]["exclude_max_payout_day"] = dict(
+                excluded_date=best["date"], n=results[p]["n"]-best["n"],
+                roi=remaining_payout/remaining_stake if remaining_stake else None,
+                profit=remaining_payout-remaining_stake)
+        else:
+            results[p]["exclude_max_payout_day"] = None
     rng = random.Random(20261110)
     daylist = sorted(days)
     for p in PICKS[1:]:
