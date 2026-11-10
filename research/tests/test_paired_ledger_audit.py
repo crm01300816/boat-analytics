@@ -54,6 +54,18 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(out["rejected_rows"],2)
         self.assertEqual(out["complete_races"],1)
 
+    def test_unequal_budget_blocks_paired_claim(self):
+        rows=[row("r1",p,2000) for p in ("3","5","7","10")]
+        for r in rows:
+            if r["policy"]=="10":
+                r["stake"]="2000"
+        out=self.run_rows(rows)
+        self.assertFalse(out["equal_total_stake"])
+        self.assertTrue(out["fixed_budget_comparison_blocked"])
+        self.assertIsNone(out["results"]["10"]["paired_profit_difference_vs_3"])
+        self.assertIsNone(out["results"]["10"]["day_bootstrap_roi_diff_95pct"])
+        self.assertEqual(out["unique_days"],1)
+
     def test_zero_races_and_wilson(self):
         out=self.run_rows([])
         self.assertEqual(out["complete_races"],0)
