@@ -46,6 +46,12 @@ def build(folder):
               "|---|---:|---:|---:|---:|"]
     for p in POLICIES:
         a = audit["results"][p]
+        if a["stake"] <= 0 or a["payout"] < 0:
+            raise ValueError("Invalid stake/payout for policy " + p)
+        if abs((a["payout"] - a["stake"]) - a["profit"]) > 0.01:
+            raise ValueError("Profit accounting mismatch for policy " + p)
+        if abs(a["payout"] / a["stake"] - a["roi"]) > 0.000001:
+            raise ValueError("ROI accounting mismatch for policy " + p)
         deficit = max(0, a["stake"] - a["payout"])
         uplift = (deficit / a["payout"] * 100) if a["payout"] > 0 else None
         lines.append("| %s | %.0f | %.0f | %.0f | %s |" % (
