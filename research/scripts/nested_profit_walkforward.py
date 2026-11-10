@@ -8,7 +8,7 @@ PICKS=("3","5","7","10")
 def eligible(r,policy):
     # Only pre-race frozen pick structure; no outcome, payout or post-race variables.
     picks=r["methods"][policy]["picks"]
-    return not any(str(p["combo"])[0]=="6" for p in picks[:3])
+    return not any(str(p["combo"][0])=="6" for p in picks[:3])
 
 def measure(rows,policy,skip=False):
     kept=[r for r in rows if not skip or eligible(r,policy)]
