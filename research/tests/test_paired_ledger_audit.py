@@ -79,6 +79,23 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(out["rejected_rows"],4)
         self.assertEqual(out["complete_races"],0)
 
+    def test_daily_profit_and_concentration_stress(self):
+        rows=[row("202611010101",p,4000) for p in ("3","5","7","10")]
+        second=[row("202611020101",p,0) for p in ("3","5","7","10")]
+        for r in second:
+            r["date"]="2026-11-02"
+            r["prediction_saved_at"]="2026-11-02T08:00:00+09:00"
+            r["odds_snapshot_at"]="2026-11-02T08:01:00+09:00"
+            r["deadline_at"]="2026-11-02T08:05:00+09:00"
+        out=self.run_rows(rows+second)
+        r=out["results"]["3"]
+        self.assertEqual(r["profitable_days"],1)
+        self.assertEqual(r["worst_day_profit"],-1000)
+        self.assertEqual(r["best_day_profit"],3000)
+        self.assertEqual(r["exclude_max_payout_day"]["excluded_date"],"2026-11-01")
+        self.assertEqual(r["exclude_max_payout_day"]["roi"],0)
+        self.assertEqual(r["exclude_max_payout_day"]["profit"],-1000)
+
     def test_zero_races_and_wilson(self):
         out=self.run_rows([])
         self.assertEqual(out["complete_races"],0)
