@@ -10,6 +10,8 @@ on:
       - research/scripts/audit_nested_selection.py
       - research/scripts/fixed_budget_counterfactual.py
       - research/scripts/daily_budget_fragility.py
+      - research/scripts/paired_day_signflip.py
+      - research/tests/test_paired_day_signflip.py
       - research/tests/test_paired_ledger_audit.py
       - research/tests/test_nested_profit_walkforward.py
       - research/tests/test_audit_nested_selection.py
@@ -212,6 +214,11 @@ jobs:
           Path('.local/results/paired-ledger-audit-summary.md').write_text('\n'.join(lines)+'\n')
           print('\n'.join(lines))
           PY
+      - name: Audit paired day-cluster uncertainty (exploratory)
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s research/tests -p 'test_paired_day_signflip.py' -v
+          python -m research.scripts.paired_day_signflip .local/results/per-race-ledger.json .local/results/paired-day-signflip.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
