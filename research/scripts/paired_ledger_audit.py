@@ -85,7 +85,12 @@ def audit(path, bootstrap=2000):
     for race in list(complete):
         group = complete[race]
         for field in ("prediction_saved_at", "odds_snapshot_at", "deadline_at"):
-            values = {str(group[p].get(field, "")).strip() for p in PICKS}
+            # ISO timestamps may use different UTC offsets for the same instant.
+            # Compare normalized instants, while retaining distinct invalid/missing values
+            # as unverified rather than pretending they are equal.
+            raw_values = [str(group[p].get(field, "")).strip() for p in PICKS]
+            parsed_values = [parse_time(value) for value in raw_values]
+            values = set(parsed_values) if all(value is not None for value in parsed_values) else set(raw_values)
             if len(values) > 1:
                 issues.append([race, "cross_policy_" + field + "_mismatch"])
                 del complete[race]
