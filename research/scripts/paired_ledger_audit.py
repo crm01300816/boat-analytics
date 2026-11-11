@@ -13,7 +13,10 @@ PICKS = ("3", "5", "7", "10")
 def parse_time(value):
     if not value:
         return None
-    dt = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    try:
+        dt = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    except (ValueError, TypeError, AttributeError):
+        return None  # Malformed timestamps are quarantined, not silently dropped from ROI denominators.
     if dt.tzinfo is None:
         return None  # Ambiguous timezone must not be accepted as verified.
     return dt.astimezone(timezone.utc)
