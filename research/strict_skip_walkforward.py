@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""Strict chronological paired evaluation for pre-set skip rules.
+Input CSV: race_id,cutoff_at,odds_observed_at,prediction_saved_at,stake,payout,score.
+All timestamps must be timezone-aware ISO-8601. Score must be recorded before cutoff.
+A single fixed threshold is selected on past data; future fold is never used for selection.
+This is an audit utility, NOT proof of independent OOS unless score provenance is verified.
+"""
+import argparse
+import csv
+import datetime as dt
+import json
+from collections import defaultdict
+
+def timestamp(s):
+    x = dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
+    if x.tzinfo is None: raise ValueError("timezone missing")
+    return x.astimezone(dt.timezone.utc)
+
+def load(path):
+    rows, rejected = [], defaultdict(int)
+    with open(path, newline="", encoding="utf-8-sig") as f:
+        for n, r in enumerate(csv.DictReader(f), 2):
+            try:
+                cutoff = timestamp(r["cutoff_at"])
+                odds = timestamp(r["odds_observed_at"])
+                saved = timestamp(r["prediction_saved_at"])
+                if not odds <= saved < cutoff: raise ValueError("timing_violation")
+                stake, payout, score = (float(r[k]) for k in ("stake","payout","score"))
+                if stake <= 0 or payout < 0 or not 0 <= score <= 1:
+                    raise ValueError("invalid_values")
+                rows.append(dict(id=r["race_id"], t=cutoff, stake=stake, payout=payout, score=score))
+            except (KeyError, ValueError, TypeError) as exc:
+                rejected[str(exc)] += 1
+    unique = {}
+    for r in rows:
+        if r["id"] in unique:
+            rejected["duplicate_race_id"] += 1
+            unique.pop(r["id"], None)
+        else: unique[r["id"]] = r
+    return sorted(unique.values(), key=lambda x:(x["t"],x["id"])), dict(rejected)
+
+def metrics(rows, threshold):
+    selected = [r for r in rows if r["score"] >= threshold]
+    spent = sum(r["stake"] for r in selected)
+    paid = sum(r["payout"] for r in selected)
+    equity = peak = dd = 0
+    for r in selected:
+        equity += r["payout"] - r["stake"]
+        peak = max(peak, equity)
+        dd = max(dd, peak-equity)
+    return dict(n=len(selected), stake=spent, payout=paid, profit=paid-spent,
+                roi=(paid/spent if spent else None), max_dd=dd)
+
+def evaluate(rows, train_days=3, test_days=1):
+    dates = sorted({r["t"].date() for r in rows})
+    folds = []
+    for start in range(train_days, len(dates), test_days):
+        train_dates = set(dates[:start])
+        test_dates = set(dates[start:start+test_days])
+        train = [r for r in rows if r["t"].date() in train_dates]
+        test = [r for r in rows if r["t"].date() in test_dates]
+        # Search on training only; a no-bet option is retained.
+        candidates = [0, .25, .5, .75, .9, 1.01]
+        # Do not optimize on raw ROI of tiny samples: require 30 training bets.
+        def objective(t):
+            m = metrics(train, t)
+            return (m["profit"] if m["n"] >= 30 else float("-inf"))
+        threshold = max(candidates, key=objective)
+        if objective(threshold) == float("-inf"): threshold = 1.01
+        folds.append(dict(train_end=str(max(train_dates)), test_dates=sorted(map(str,test_dates)),
+                          threshold=threshold, selected=metrics(test,threshold),
+                          all_bets=metrics(test,0)))
+    return folds
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("csv")
+    p.add_argument("--train-days",type=int,default=3)
+    p.add_argument("--test-days",type=int,default=1)
+    a=p.parse_args()
+    rows,rejected=load(a.csv)
+    print(json.dumps(dict(accepted=len(rows),rejected=rejected,
+                          folds=evaluate(rows,a.train_days,a.test_days),
+                          limitations=["Score provenance and true pre-race availability must be externally verified.",
+                          "Fold results are exploratory unless untouched future periods are reserved.",
+                          "Selected and all-bets have different stakes; this is not an equal-budget paired comparison.",
+                          "Refunds/special settlements require upstream audit."]),
+                     ensure_ascii=False,indent=2))
+if __name__=="__main__": main()
