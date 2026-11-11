@@ -2,6 +2,7 @@
 import datetime as dt
 import unittest
 from nested_skip_walkforward import nested_evaluate
+from strict_skip_walkforward import aggregate_oos
 
 class NestedSkipTests(unittest.TestCase):
     def rows(self, payout=0):
@@ -34,6 +35,26 @@ class NestedSkipTests(unittest.TestCase):
         folds = nested_evaluate(rows)
         self.assertEqual(folds[0]["threshold"], 0.0)
         self.assertEqual(folds[0]["inner_folds"], 2)
+
+    def test_nested_folds_support_pooled_cashflow_and_drawdown(self):
+        folds = nested_evaluate(self.rows(payout=200))
+        pooled = aggregate_oos(folds)
+        self.assertEqual(pooled["folds"], 3)
+        self.assertEqual(pooled["selected_bets"], 120)
+        self.assertEqual(pooled["selected_stake"], 12000)
+        self.assertEqual(pooled["selected_profit"], 12000)
+        self.assertEqual(pooled["selected_roi"], 2.0)
+        self.assertEqual(pooled["global_max_drawdown"], 0)
+        self.assertTrue(all(f["matched_turnover"]["eligible"] for f in folds))
+
+    def test_no_bet_keeps_cash_but_has_undefined_deployed_roi(self):
+        folds = nested_evaluate(self.rows(payout=0))
+        pooled = aggregate_oos(folds)
+        self.assertEqual(pooled["selected_bets"], 0)
+        self.assertIsNone(pooled["selected_roi"])
+        self.assertEqual(pooled["committed_roi"], 1.0)
+        self.assertEqual(pooled["global_max_drawdown"], 0)
+        self.assertTrue(all(not f["matched_turnover"]["eligible"] for f in folds))
 
     def test_requires_enough_inner_folds(self):
         with self.assertRaises(ValueError):
