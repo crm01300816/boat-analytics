@@ -19,9 +19,11 @@ def timestamp(s):
 
 def load(path):
     rows, rejected = [], defaultdict(int)
+    source_count = 0
     seen_ids = defaultdict(int)
     with open(path, newline="", encoding="utf-8-sig") as f:
         for n, r in enumerate(csv.DictReader(f), 2):
+            source_count += 1
             # Count all source records, including invalid ones, before eligibility checks.
             # Otherwise a malformed duplicate could leave a valid record tradable.
             race_id = (r.get("race_id") or "").strip()
@@ -42,6 +44,9 @@ def load(path):
     # Quarantine every record sharing a source race ID, regardless of validity.
     rejected["duplicate_race_id"] += sum(n for n in seen_ids.values() if n > 1)
     unique = {r["id"]: r for r in rows if seen_ids[r["id"]] == 1}
+    rejected["source_rows"] = source_count
+    rejected["quarantined_rows"] = source_count - len(unique)
+    rejected["reason_counts_overlap"] = True  # Duplicates can also have invalid timestamps/values.
     return sorted(unique.values(), key=lambda x:(x["t"],x["id"])), dict(rejected)
 
 def metrics(rows, threshold):
