@@ -44,6 +44,22 @@ class StrictSkipTests(unittest.TestCase):
         self.assertEqual(pooled["global_max_drawdown"], 100)
         self.assertEqual(pooled["baseline_global_max_drawdown"], 100)
 
+    def test_inner_validation_rejects_early_only_profit(self):
+        import datetime as dt
+        rows = []
+        # The first training day looks spectacular, but later training days lose.
+        # A threshold selected using the entire training period would leak
+        # early fitting performance into its selection.
+        for day in range(1, 5):
+            for i in range(40):
+                payout = 1000 if day == 1 else 0
+                rows.append(dict(id=f"inner-{day}-{i}",
+                    t=dt.datetime(2026, 11, day, 12, tzinfo=dt.timezone.utc),
+                    stake=100, payout=payout, score=.9))
+        folds = evaluate(rows, train_days=3, test_days=1)
+        self.assertEqual(folds[0]["threshold"], 1.01)
+        self.assertEqual(folds[0]["selected"]["n"], 0)
+
     def test_invalid_fold_lengths_rejected(self):
         for a,b in ((0,1),(1,0),(-1,1)):
             with self.assertRaises(ValueError):
