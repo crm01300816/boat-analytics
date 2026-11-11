@@ -73,6 +73,16 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(out["complete_races"],0)
         self.assertTrue(any("cross_policy_prediction_saved_at_mismatch" in str(i) for i in out["issues"]))
 
+    def test_same_instant_different_timezone_offsets_is_not_cross_policy_mismatch(self):
+        rows=[row("202611010101",p,0) for p in ("3","5","7","10")]
+        # Same instant: JST 08:00 equals UTC 23:00 on the previous day.
+        rows[1]["prediction_saved_at"]="2026-10-31T23:00:00Z"
+        rows[2]["deadline_at"]="2026-10-31T23:05:00Z"
+        out=self.run_rows(rows)
+        self.assertEqual(out["complete_races"],1)
+        self.assertFalse(any("cross_policy_" in str(i) for i in out["issues"]))
+        self.assertEqual(out["timestamp_unverified_races"],1)  # Odds follow saved prediction.
+
     def test_reject_race_date_mismatch(self):
         rows=[row("202611020101",p,0) for p in ("3","5","7","10")]
         out=self.run_rows(rows)
