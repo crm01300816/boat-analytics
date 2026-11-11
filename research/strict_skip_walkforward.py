@@ -9,6 +9,7 @@ import argparse
 import csv
 import datetime as dt
 import json
+import math
 from collections import defaultdict
 
 def timestamp(s):
@@ -33,7 +34,7 @@ def load(path):
                 saved = timestamp(r["prediction_saved_at"])
                 if not odds <= saved < cutoff: raise ValueError("timing_violation")
                 stake, payout, score = (float(r[k]) for k in ("stake","payout","score"))
-                if stake <= 0 or payout < 0 or not 0 <= score <= 1:
+                if not all(map(math.isfinite, (stake, payout, score))) or stake <= 0 or payout < 0 or not 0 <= score <= 1:
                     raise ValueError("invalid_values")
                 rows.append(dict(id=race_id, t=cutoff, stake=stake, payout=payout, score=score))
             except (KeyError, ValueError, TypeError) as exc:
