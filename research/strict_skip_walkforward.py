@@ -106,6 +106,35 @@ def evaluate(rows, train_days=3, test_days=1):
                           all_bets=metrics(test,0), equal_budget=equal_budget_pair(test,threshold)))
     return folds
 
+def aggregate_oos(folds):
+    """Pool disjoint forward test folds by money, never average fold ROI.
+
+    This is chronological out-of-sample relative to each fold's threshold
+    selection, but not an untouched independent holdout. Repeated testing
+    and score provenance remain separate limitations.
+    """
+    selected = [f["selected"] for f in folds]
+    baseline = [f["all_bets"] for f in folds]
+    spent = sum(m["stake"] for m in selected)
+    paid = sum(m["payout"] for m in selected)
+    base_spent = sum(m["stake"] for m in baseline)
+    base_paid = sum(m["payout"] for m in baseline)
+    # Rebuild max drawdown from chronological race-level equity requires
+    # individual test bets; do not sum or average fold drawdowns.
+    return dict(folds=len(folds), selected_bets=sum(m["n"] for m in selected),
+                baseline_bets=sum(m["n"] for m in baseline),
+                selected_stake=spent, selected_payout=paid,
+                selected_profit=paid-spent,
+                selected_roi=(paid/spent if spent else None),
+                baseline_stake=base_spent, baseline_payout=base_paid,
+                baseline_profit=base_paid-base_spent,
+                baseline_roi=(base_paid/base_spent if base_spent else None),
+                incremental_profit=(paid-spent)-(base_paid-base_spent),
+                unspent_cash=base_spent-spent,
+                committed_roi=((base_spent-spent+paid)/base_spent if base_spent else None),
+                global_max_drawdown=None,
+                caveat="Fold max drawdowns cannot be combined without chronological bet-level equity.")
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("csv")
@@ -113,8 +142,9 @@ def main():
     p.add_argument("--test-days",type=int,default=1)
     a=p.parse_args()
     rows,rejected=load(a.csv)
+    folds=evaluate(rows,a.train_days,a.test_days)
     print(json.dumps(dict(accepted=len(rows),rejected=rejected,
-                          folds=evaluate(rows,a.train_days,a.test_days),
+                          folds=folds, pooled_forward=aggregate_oos(folds),
                           limitations=["Score provenance and true pre-race availability must be externally verified.",
                           "Fold results are exploratory unless untouched future periods are reserved.",
                           "Equal-budget comparison preserves unspent cash; it does not reallocate skipped stakes or equalize actual betting turnover.",
