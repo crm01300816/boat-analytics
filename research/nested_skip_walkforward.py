@@ -13,7 +13,9 @@ def nested_evaluate(rows, outer_train_days=4, inner_train_days=2,
     if outer_train_days < inner_train_days + min_inner_folds:
         raise ValueError("outer training period too short for inner folds")
     by_day = defaultdict(list)
-    for r in rows:
+    # Settlement cash flows must be ordered chronologically even when input CSV is shuffled.
+    # Otherwise the maximum drawdown depends on input file order.
+    for r in sorted(rows, key=lambda item: (item["t"], str(item.get("id", "")))):
         by_day[r["t"].astimezone(JST).date()].append(r)
     dates = sorted(by_day)
     results = []
