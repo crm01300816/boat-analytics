@@ -42,6 +42,9 @@ class StrictSkipTests(unittest.TestCase):
             rows, rejected = load(p)
             self.assertEqual(rows, [])
             self.assertEqual(rejected["duplicate_race_id"], 2)
+            self.assertEqual(rejected["source_rows"], 2)
+            self.assertEqual(rejected["quarantined_rows"], 2)
+            self.assertTrue(rejected["reason_counts_overlap"])
 
     def test_jst_day_boundary_keeps_local_races_in_same_fold(self):
         import datetime as dt
