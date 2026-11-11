@@ -1,7 +1,7 @@
 """Nested chronological evaluation; all inputs must pass pre-cutoff provenance audit."""
 import datetime as dt
 from collections import defaultdict
-from strict_skip_walkforward import metrics, equal_budget_pair
+from strict_skip_walkforward import metrics, equal_budget_pair, matched_turnover_pair, aggregate_oos
 
 JST = dt.timezone(dt.timedelta(hours=9))
 CANDIDATES = (0.0, 0.25, 0.5, 0.75, 0.9, 1.01)
@@ -44,7 +44,11 @@ def nested_evaluate(rows, outer_train_days=4, inner_train_days=2,
                             threshold=chosen[0], inner_profit=chosen[1],
                             inner_folds=chosen[2], inner_bets=chosen[3],
                             selected=metrics(test, chosen[0]),
-                            equal_budget=equal_budget_pair(test, chosen[0])))
+                            all_bets=metrics(test, 0),
+                            equal_budget=equal_budget_pair(test, chosen[0]),
+                            matched_turnover=matched_turnover_pair(test, chosen[0]),
+                            selected_equity_changes=[r["payout"]-r["stake"] for r in test if r["score"] >= chosen[0]],
+                            baseline_equity_changes=[r["payout"]-r["stake"] for r in test]))
     return results
 
 if __name__ == "__main__":
@@ -55,8 +59,9 @@ if __name__ == "__main__":
     parser.add_argument("csv")
     args = parser.parse_args()
     rows, rejected = load(args.csv)
+    folds = nested_evaluate(rows)
     print(json.dumps(dict(accepted=len(rows), audit=rejected,
-                          folds=nested_evaluate(rows),
+                          folds=folds, pooled_forward=aggregate_oos(folds),
                           limitations=["Requires externally verified pre-race score and odds timestamps.",
                                        "Inner folds share training history; outer test periods must remain untouched.",
                                        "Committed-budget comparison does not equalize actual turnover."]),
