@@ -80,6 +80,32 @@ def equal_budget_pair(rows, threshold):
                 incremental_profit=selected["profit"] - baseline["profit"],
                 deployed_roi=selected["roi"])
 
+def matched_turnover_pair(rows, threshold, max_stake_multiplier=3.0):
+    """Counterfactual same-turnover comparison; NOT observed betting performance.
+
+    Scale every selected ticket proportionally to match baseline actual spend.
+    Requires stake-scalable payout and no odds/market impact; if no selections,
+    or the multiplier exceeds the cap, the pair is ineligible.
+    """
+    if not math.isfinite(max_stake_multiplier) or max_stake_multiplier < 1:
+        raise ValueError("invalid multiplier cap")
+    base = metrics(rows, 0)
+    chosen = metrics(rows, threshold)
+    if not chosen["stake"] or not base["stake"]:
+        return dict(eligible=False, reason="zero selected or baseline turnover",
+                    baseline=base, selected=chosen)
+    factor = base["stake"] / chosen["stake"]
+    if factor > max_stake_multiplier + 1e-12:
+        return dict(eligible=False, reason="stake multiplier exceeds cap",
+                    multiplier=factor, baseline=base, selected=chosen)
+    scaled_payout = chosen["payout"] * factor
+    return dict(eligible=True, multiplier=factor, matched_stake=base["stake"],
+                matched_payout=scaled_payout, matched_profit=scaled_payout-base["stake"],
+                matched_roi=scaled_payout/base["stake"],
+                baseline_profit=base["profit"], baseline_roi=base["roi"],
+                incremental_profit=scaled_payout-base["stake"]-base["profit"],
+                assumption="Counterfactual proportional staking; payouts/odds assumed linear and unchanged.")
+
 def evaluate(rows, train_days=3, test_days=1):
     if train_days < 1 or test_days < 1:
         raise ValueError("train_days and test_days must be positive")
@@ -103,7 +129,8 @@ def evaluate(rows, train_days=3, test_days=1):
         threshold = max(candidates, key=objective)
         folds.append(dict(train_end=str(max(train_dates)), test_dates=sorted(map(str,test_dates)),
                           threshold=threshold, selected=metrics(test,threshold),
-                          all_bets=metrics(test,0), equal_budget=equal_budget_pair(test,threshold)))
+                          all_bets=metrics(test,0), equal_budget=equal_budget_pair(test,threshold),
+                          matched_turnover=matched_turnover_pair(test,threshold)))
     return folds
 
 def aggregate_oos(folds):
@@ -148,6 +175,7 @@ def main():
                           limitations=["Score provenance and true pre-race availability must be externally verified.",
                           "Fold results are exploratory unless untouched future periods are reserved.",
                           "Equal-budget comparison preserves unspent cash; it does not reallocate skipped stakes or equalize actual betting turnover.",
-                          "Refunds/special settlements require upstream audit."]),
+                          "Refunds/special settlements require upstream audit.",
+                          "Matched-turnover results are counterfactual and assume unchanged odds and linear payouts."]),
                      ensure_ascii=False,indent=2))
 if __name__=="__main__": main()
