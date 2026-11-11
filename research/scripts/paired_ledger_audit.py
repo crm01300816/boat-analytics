@@ -145,7 +145,18 @@ def audit(path, bootstrap=2000):
         results[p]["paired_profit_difference_vs_3"] = results[p]["profit"] - results["3"]["profit"]
         results[p]["day_bootstrap_roi_diff_95pct"] = (
             [samples[int(.025*len(samples))], samples[min(len(samples)-1, int(.975*len(samples)))]] if samples else None)
-    timestamp_unverified_races = sum(any(complete[k][p]["_flags"] for p in PICKS) for k in keys)
+    # Explicitly quarantine any race whose prediction/odds timing is not fully auditable.
+    # Do not interpret the exploratory all-race ROI as timestamp-verified evidence.
+    quarantined = {k: sorted(set(flag for p in PICKS for flag in complete[k][p]["_flags"]))
+                   for k in keys if any(complete[k][p]["_flags"] for p in PICKS)}
+    verified_keys = [k for k in keys if k not in quarantined]
+    verified_results = {}
+    for p in PICKS:
+        stake = sum(complete[k][p]["stake"] for k in verified_keys)
+        payout = sum(complete[k][p]["payout"] for k in verified_keys)
+        verified_results[p] = dict(n=len(verified_keys), stake=stake, payout=payout,
+                                   profit=payout-stake, roi=payout/stake if stake else None)
+    timestamp_unverified_races = len(quarantined)
     stake_sets_equal = len({round(results[p]["stake"], 6) for p in PICKS}) == 1
     # A paired ROI comparison is valid only on the same race set AND the same total stake.
     # Keep raw figures for diagnostics, but do not present unequal-budget differences as comparable.
@@ -157,7 +168,7 @@ def audit(path, bootstrap=2000):
     return dict(input_rows=total, rejected_rows=rejected_rows, unique_races=len(records),
                 complete_races=len(keys), incomplete_races=len(incomplete),
                 incomplete_examples=dict(list(sorted(incomplete.items()))[:20]),
-                timestamp_unverified_races=timestamp_unverified_races,
+                timestamp_unverified_races=timestamp_unverified_races,\n                quarantined_reason_counts=dict(sorted(__import__("collections").Counter(flag for flags in quarantined.values() for flag in flags).items())),\n                verified_only_results=verified_results,
                 timestamp_candidate_races=len(keys)-timestamp_unverified_races,
                 equal_total_stake=stake_sets_equal, unique_days=len(days),
                 fixed_budget_comparison_blocked=not stake_sets_equal,
