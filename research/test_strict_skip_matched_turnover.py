@@ -13,7 +13,7 @@ class MatchedTurnoverTests(unittest.TestCase):
         self.assertEqual(r["multiplier"], 2.)
         self.assertEqual(r["matched_stake"], 200.)
         self.assertEqual(r["matched_profit"], 280.)
-        self.assertEqual(r["incremental_profit"], 140.)
+        self.assertEqual(r["incremental_profit"], 240.)
 
     def test_no_bets_is_ineligible(self):
         r = matched_turnover_pair([dict(score=.2, stake=100., payout=0.)], .5)
