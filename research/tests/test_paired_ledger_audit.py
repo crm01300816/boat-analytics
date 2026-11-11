@@ -108,6 +108,27 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(out["verified_only_results"]["3"]["n"],0)
         self.assertEqual(out["quarantined_reason_counts"]["odds_snapshot_at:missing_or_unzoned"],1)
 
+    def test_drawdown_uses_deadline_order_not_venue_race_id(self):
+        # Lexical race ID order is intentionally the reverse of cutoff order.
+        a=[row("202611019999",p,0) for p in ("3","5","7","10")]
+        b=[row("202611010001",p,3000) for p in ("3","5","7","10")]
+        for r in a:
+            r["deadline_at"]="2026-11-01T08:05:00+09:00"
+        for r in b:
+            r["deadline_at"]="2026-11-01T09:05:00+09:00"
+        out=self.run_rows(a+b)
+        self.assertTrue(out["drawdown_order_verified"])
+        self.assertEqual(out["results"]["3"]["max_drawdown"],1000)
+
+    def test_missing_cutoff_does_not_fabricate_drawdown(self):
+        rows=[row("r1",p,0) for p in ("3","5","7","10")]
+        for r in rows:
+            r["deadline_at"]=""
+        out=self.run_rows(rows)
+        self.assertFalse(out["drawdown_order_verified"])
+        self.assertIsNone(out["results"]["3"]["max_drawdown"])
+        self.assertEqual(out["complete_races"],1)
+
     def test_zero_races_and_wilson(self):
         out=self.run_rows([])
         self.assertEqual(out["complete_races"],0)
