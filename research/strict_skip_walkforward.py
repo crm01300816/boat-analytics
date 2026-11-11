@@ -31,12 +31,16 @@ def load(path):
                 rows.append(dict(id=r["race_id"], t=cutoff, stake=stake, payout=payout, score=score))
             except (KeyError, ValueError, TypeError) as exc:
                 rejected[str(exc)] += 1
-    unique = {}
+    unique, duplicates = {}, set()
     for r in rows:
-        if r["id"] in unique:
+        if r["id"] in duplicates:
             rejected["duplicate_race_id"] += 1
+        elif r["id"] in unique:
+            rejected["duplicate_race_id"] += 2
+            duplicates.add(r["id"])
             unique.pop(r["id"], None)
-        else: unique[r["id"]] = r
+        else:
+            unique[r["id"]] = r
     return sorted(unique.values(), key=lambda x:(x["t"],x["id"])), dict(rejected)
 
 def metrics(rows, threshold):
@@ -64,9 +68,9 @@ def evaluate(rows, train_days=3, test_days=1):
         # Do not optimize on raw ROI of tiny samples: require 30 training bets.
         def objective(t):
             m = metrics(train, t)
+            if t > 1: return 0.0  # Explicit no-bet baseline.
             return (m["profit"] if m["n"] >= 30 else float("-inf"))
         threshold = max(candidates, key=objective)
-        if objective(threshold) == float("-inf"): threshold = 1.01
         folds.append(dict(train_end=str(max(train_dates)), test_dates=sorted(map(str,test_dates)),
                           threshold=threshold, selected=metrics(test,threshold),
                           all_bets=metrics(test,0)))
