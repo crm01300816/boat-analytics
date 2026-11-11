@@ -90,7 +90,12 @@ def audit(path, bootstrap=2000):
                 issues.append([race, "cross_policy_" + field + "_mismatch"])
                 del complete[race]
                 break
+    # Race IDs are venue identifiers, not chronological ordering. Intraday max DD
+    # must not be reported unless every race has an auditable cutoff timestamp.
+    deadline_times = {k: parse_time(complete[k]["3"].get("deadline_at", "")) for k in complete}
+    drawdown_order_verified = bool(complete) and all(deadline_times.values())
     keys = sorted(complete, key=lambda k: (complete[k]["3"]["date"], k))
+    dd_keys = sorted(keys, key=lambda k: (deadline_times[k], k)) if drawdown_order_verified else []
     days = defaultdict(list)
     for k in keys:
         days[complete[k]["3"]["date"]].append(k)
@@ -100,14 +105,14 @@ def audit(path, bootstrap=2000):
         payout = sum(complete[k][p]["payout"] for k in keys)
         hits = sum(complete[k][p]["hit"] for k in keys)
         equity = peak = drawdown = 0.0
-        for k in keys:
+        for k in dd_keys:
             equity += complete[k][p]["payout"] - complete[k][p]["stake"]
             peak = max(peak, equity)
             drawdown = max(drawdown, peak-equity)
         results[p] = dict(n=len(keys), hits=hits, hit_rate=hits/len(keys) if keys else None,
                           wilson95=wilson(hits, len(keys)), stake=stake, payout=payout,
                           profit=payout-stake, roi=payout/stake if stake else None,
-                          max_drawdown=drawdown)
+                          max_drawdown=drawdown if drawdown_order_verified else None)
     # Diagnostic day-level robustness, not an out-of-sample estimate.
     # A high pooled ROI can be entirely driven by one unusually large payout day.
     for p in PICKS:
@@ -176,6 +181,7 @@ def audit(path, bootstrap=2000):
                 verified_only_results=verified_results,
                 timestamp_candidate_races=len(keys)-timestamp_unverified_races,
                 equal_total_stake=stake_sets_equal, unique_days=len(days),
+                drawdown_order_verified=drawdown_order_verified,
                 fixed_budget_comparison_blocked=not stake_sets_equal,
                 issues=issues, results=results,
                 warning="All results exploratory. Timestamp candidates are NOT independently verified official deadlines/odds; no OOS or causal claim.")
