@@ -61,7 +61,28 @@ def metrics(rows, threshold):
     return dict(n=len(selected), stake=spent, payout=paid, profit=paid-spent,
                 roi=(paid/spent if spent else None), max_dd=dd)
 
+def equal_budget_pair(rows, threshold):
+    """Compare on the same race set and committed budget, without re-staking skipped cash.
+
+    Committed ROI uses the all-bets budget; deployed ROI uses only placed bets.
+    A zero-bet strategy therefore has committed ROI 100% (cash preserved),
+    but deployed ROI is undefined. This is NOT a claim of betting profitability.
+    """
+    baseline = metrics(rows, 0)
+    selected = metrics(rows, threshold)
+    budget = baseline["stake"]
+    cash = budget - selected["stake"]
+    if cash < -1e-8:
+        raise ValueError("selected stake exceeds budget")
+    return dict(races=len(rows), committed_budget=budget, baseline=baseline,
+                selected=selected, unspent_cash=cash,
+                committed_roi=((cash + selected["payout"]) / budget if budget else None),
+                incremental_profit=selected["profit"] - baseline["profit"],
+                deployed_roi=selected["roi"])
+
 def evaluate(rows, train_days=3, test_days=1):
+    if train_days < 1 or test_days < 1:
+        raise ValueError("train_days and test_days must be positive")
     # Japanese race-day boundaries must not be derived from UTC calendar dates.
     jst = dt.timezone(dt.timedelta(hours=9))
     race_day = lambda r: r["t"].astimezone(jst).date()
@@ -82,7 +103,7 @@ def evaluate(rows, train_days=3, test_days=1):
         threshold = max(candidates, key=objective)
         folds.append(dict(train_end=str(max(train_dates)), test_dates=sorted(map(str,test_dates)),
                           threshold=threshold, selected=metrics(test,threshold),
-                          all_bets=metrics(test,0)))
+                          all_bets=metrics(test,0), equal_budget=equal_budget_pair(test,threshold)))
     return folds
 
 def main():
@@ -96,7 +117,7 @@ def main():
                           folds=evaluate(rows,a.train_days,a.test_days),
                           limitations=["Score provenance and true pre-race availability must be externally verified.",
                           "Fold results are exploratory unless untouched future periods are reserved.",
-                          "Selected and all-bets have different stakes; this is not an equal-budget paired comparison.",
+                          "Equal-budget comparison preserves unspent cash; it does not reallocate skipped stakes or equalize actual betting turnover.",
                           "Refunds/special settlements require upstream audit."]),
                      ensure_ascii=False,indent=2))
 if __name__=="__main__": main()
