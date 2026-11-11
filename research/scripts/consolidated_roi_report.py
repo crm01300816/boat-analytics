@@ -39,8 +39,9 @@ def build(folder):
         s = summary["methods"][p]
         if a["n"] != n or a["stake"] != s["stake"] or a["payout"] != s["returned"]:
             raise ValueError("Settlement reconciliation failed for policy " + p)
-        lines.append("| %s | %d | %d | %.2f%% | %.0f | %.0f |" % (
-            p, n, a["hits"], a["roi"]*100, a["profit"], a["max_drawdown"]))
+        dd = ("%.0f" % a["max_drawdown"]) if a["max_drawdown"] is not None else "NA (cutoff order unverified)"
+        lines.append("| %s | %d | %d | %.2f%% | %.0f | %s |" % (
+            p, n, a["hits"], a["roi"]*100, a["profit"], dd))
     lines += ["", "## Break-even deficit (observed, not a strategy)",
               "| Picks | Stake | Payout | Additional payout to break even | Required payout uplift |",
               "|---|---:|---:|---:|---:|"]
