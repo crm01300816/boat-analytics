@@ -9,6 +9,7 @@ on:
       - research/test_nested_skip_walkforward.py
       - research/test_strict_skip_walkforward.py
       - research/test_strict_skip_nonfinite.py
+      - research/test_strict_skip_matched_turnover.py
       - .github/workflows/research-strict-skip-tests.yml
   workflow_dispatch:
 permissions:
@@ -23,7 +24,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Compile research script and tests
-        run: python -m compileall -q research/strict_skip_walkforward.py research/test_strict_skip_walkforward.py research/test_strict_skip_nonfinite.py research/nested_skip_walkforward.py research/test_nested_skip_walkforward.py
+        run: python -m compileall -q research/strict_skip_walkforward.py research/test_strict_skip_walkforward.py research/test_strict_skip_nonfinite.py research/test_strict_skip_matched_turnover.py research/nested_skip_walkforward.py research/test_nested_skip_walkforward.py
       - name: Run strict-skip regression tests
         run: python -m unittest discover -s research -p 'test_strict_skip*.py' -v
       - name: Run nested selection regression tests
