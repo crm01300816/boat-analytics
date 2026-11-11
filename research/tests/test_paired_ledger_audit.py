@@ -34,7 +34,7 @@ class AuditTests(unittest.TestCase):
         self.assertTrue(out["equal_total_stake"])
         self.assertEqual(out["results"]["3"]["roi"],1)
         self.assertEqual(out["results"]["3"]["hits"],1)
-        self.assertEqual(out["timestamp_candidate_races"],2)
+        self.assertEqual(out["timestamp_candidate_races"],0)  # Odds snapshot is later than saved prediction.
 
     def test_incomplete_and_timestamp_not_silently_verified(self):
         rows=[row("r1",p,0,saved="2026-11-01T08:06:00+09:00") for p in ("3","5","7","10")]
@@ -95,6 +95,18 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(r["exclude_max_payout_day"]["excluded_date"],"2026-11-01")
         self.assertEqual(r["exclude_max_payout_day"]["roi"],0)
         self.assertEqual(r["exclude_max_payout_day"]["profit"],-1000)
+
+    def test_malformed_timestamp_keeps_exploratory_settlement_but_quarantines(self):
+        rows=[row("r1",p,2000) for p in ("3","5","7","10")]
+        for r in rows:
+            r["odds_snapshot_at"]="not-an-iso-date"
+        out=self.run_rows(rows)
+        self.assertEqual(out["rejected_rows"],0)
+        self.assertEqual(out["complete_races"],1)
+        self.assertEqual(out["results"]["3"]["profit"],1000)
+        self.assertEqual(out["timestamp_unverified_races"],1)
+        self.assertEqual(out["verified_only_results"]["3"]["n"],0)
+        self.assertEqual(out["quarantined_reason_counts"]["odds_snapshot_at:missing_or_unzoned"],1)
 
     def test_zero_races_and_wilson(self):
         out=self.run_rows([])
