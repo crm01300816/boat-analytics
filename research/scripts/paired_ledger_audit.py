@@ -60,6 +60,8 @@ def audit(path, bootstrap=2000):
                     flags.append("prediction_after_deadline")
                 if deadline and odds and odds > deadline:
                     flags.append("odds_after_deadline")
+                if saved and odds and odds > saved:
+                    flags.append("odds_after_prediction_saved")
                 row.update(stake=stake, payout=payout, hit=hit, date=day, _flags=flags)
                 records[race][policy] = row
                 for flag in flags:
