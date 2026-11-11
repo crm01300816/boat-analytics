@@ -18,9 +18,16 @@ def timestamp(s):
 
 def load(path):
     rows, rejected = [], defaultdict(int)
+    seen_ids = defaultdict(int)
     with open(path, newline="", encoding="utf-8-sig") as f:
         for n, r in enumerate(csv.DictReader(f), 2):
+            # Count all source records, including invalid ones, before eligibility checks.
+            # Otherwise a malformed duplicate could leave a valid record tradable.
+            race_id = (r.get("race_id") or "").strip()
+            if race_id:
+                seen_ids[race_id] += 1
             try:
+                if not race_id: raise ValueError("missing_race_id")
                 cutoff = timestamp(r["cutoff_at"])
                 odds = timestamp(r["odds_observed_at"])
                 saved = timestamp(r["prediction_saved_at"])
@@ -28,19 +35,12 @@ def load(path):
                 stake, payout, score = (float(r[k]) for k in ("stake","payout","score"))
                 if stake <= 0 or payout < 0 or not 0 <= score <= 1:
                     raise ValueError("invalid_values")
-                rows.append(dict(id=r["race_id"], t=cutoff, stake=stake, payout=payout, score=score))
+                rows.append(dict(id=race_id, t=cutoff, stake=stake, payout=payout, score=score))
             except (KeyError, ValueError, TypeError) as exc:
                 rejected[str(exc)] += 1
-    unique, duplicates = {}, set()
-    for r in rows:
-        if r["id"] in duplicates:
-            rejected["duplicate_race_id"] += 1
-        elif r["id"] in unique:
-            rejected["duplicate_race_id"] += 2
-            duplicates.add(r["id"])
-            unique.pop(r["id"], None)
-        else:
-            unique[r["id"]] = r
+    # Quarantine every record sharing a source race ID, regardless of validity.
+    rejected["duplicate_race_id"] += sum(n for n in seen_ids.values() if n > 1)
+    unique = {r["id"]: r for r in rows if seen_ids[r["id"]] == 1}
     return sorted(unique.values(), key=lambda x:(x["t"],x["id"])), dict(rejected)
 
 def metrics(rows, threshold):
@@ -56,13 +56,16 @@ def metrics(rows, threshold):
                 roi=(paid/spent if spent else None), max_dd=dd)
 
 def evaluate(rows, train_days=3, test_days=1):
-    dates = sorted({r["t"].date() for r in rows})
+    # Japanese race-day boundaries must not be derived from UTC calendar dates.
+    jst = dt.timezone(dt.timedelta(hours=9))
+    race_day = lambda r: r["t"].astimezone(jst).date()
+    dates = sorted({race_day(r) for r in rows})
     folds = []
     for start in range(train_days, len(dates), test_days):
         train_dates = set(dates[:start])
         test_dates = set(dates[start:start+test_days])
-        train = [r for r in rows if r["t"].date() in train_dates]
-        test = [r for r in rows if r["t"].date() in test_dates]
+        train = [r for r in rows if race_day(r) in train_dates]
+        test = [r for r in rows if race_day(r) in test_dates]
         # Search on training only; a no-bet option is retained.
         candidates = [0, .25, .5, .75, .9, 1.01]
         # Do not optimize on raw ROI of tiny samples: require 30 training bets.
