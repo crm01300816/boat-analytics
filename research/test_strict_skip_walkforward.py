@@ -3,9 +3,31 @@ import csv
 import tempfile
 import unittest
 from pathlib import Path
-from strict_skip_walkforward import load, evaluate
+from strict_skip_walkforward import load, evaluate, equal_budget_pair
 
 class StrictSkipTests(unittest.TestCase):
+    def test_equal_budget_cash_preserved_and_roi_denominators(self):
+        import datetime as dt
+        rows = [
+            dict(id="A",t=dt.datetime(2026,11,1,tzinfo=dt.timezone.utc),stake=100,payout=300,score=.9),
+            dict(id="B",t=dt.datetime(2026,11,1,tzinfo=dt.timezone.utc),stake=100,payout=0,score=.1),
+        ]
+        pair = equal_budget_pair(rows,.5)
+        self.assertEqual(pair["committed_budget"],200)
+        self.assertEqual(pair["unspent_cash"],100)
+        self.assertEqual(pair["selected"]["profit"],200)
+        self.assertEqual(pair["incremental_profit"],100)
+        self.assertAlmostEqual(pair["committed_roi"],2.0)
+        self.assertAlmostEqual(pair["deployed_roi"],3.0)
+        no_bet = equal_budget_pair(rows,1.01)
+        self.assertEqual(no_bet["committed_roi"],1)
+        self.assertIsNone(no_bet["deployed_roi"])
+
+    def test_invalid_fold_lengths_rejected(self):
+        for a,b in ((0,1),(1,0),(-1,1)):
+            with self.assertRaises(ValueError):
+                evaluate([],train_days=a,test_days=b)
+
     def test_three_duplicate_rows_all_excluded(self):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / "rows.csv"
