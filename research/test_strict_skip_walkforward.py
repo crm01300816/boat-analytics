@@ -3,7 +3,7 @@ import csv
 import tempfile
 import unittest
 from pathlib import Path
-from strict_skip_walkforward import load, evaluate, equal_budget_pair
+from strict_skip_walkforward import load, evaluate, equal_budget_pair, aggregate_oos
 
 class StrictSkipTests(unittest.TestCase):
     def test_equal_budget_cash_preserved_and_roi_denominators(self):
@@ -22,6 +22,27 @@ class StrictSkipTests(unittest.TestCase):
         no_bet = equal_budget_pair(rows,1.01)
         self.assertEqual(no_bet["committed_roi"],1)
         self.assertIsNone(no_bet["deployed_roi"])
+
+    def test_pooled_drawdown_uses_full_forward_equity_path(self):
+        import datetime as dt
+        rows = []
+        # Three training days with positive outcomes select the all-bet rule.
+        for day in range(1, 4):
+            for i in range(40):
+                rows.append(dict(id=f"train-{day}-{i}",
+                    t=dt.datetime(2026, 11, day, 12, tzinfo=dt.timezone.utc),
+                    stake=100, payout=200, score=.9))
+        # Forward days: loss, recovery, loss. Global drawdown is 200,
+        # not the sum of each fold's isolated drawdown.
+        for day, payout in ((4, 0), (5, 200), (6, 0)):
+            rows.append(dict(id=f"test-{day}",
+                t=dt.datetime(2026, 11, day, 12, tzinfo=dt.timezone.utc),
+                stake=100, payout=payout, score=.9))
+        folds = evaluate(rows, train_days=3, test_days=1)
+        pooled = aggregate_oos(folds)
+        self.assertEqual(pooled["selected_bets"], 3)
+        self.assertEqual(pooled["global_max_drawdown"], 100)
+        self.assertEqual(pooled["baseline_global_max_drawdown"], 100)
 
     def test_invalid_fold_lengths_rejected(self):
         for a,b in ((0,1),(1,0),(-1,1)):
