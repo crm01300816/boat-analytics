@@ -130,7 +130,9 @@ def evaluate(rows, train_days=3, test_days=1):
         folds.append(dict(train_end=str(max(train_dates)), test_dates=sorted(map(str,test_dates)),
                           threshold=threshold, selected=metrics(test,threshold),
                           all_bets=metrics(test,0), equal_budget=equal_budget_pair(test,threshold),
-                          matched_turnover=matched_turnover_pair(test,threshold)))
+                          matched_turnover=matched_turnover_pair(test,threshold),
+                          selected_equity_changes=[r["payout"]-r["stake"] for r in test if r["score"] >= threshold],
+                          baseline_equity_changes=[r["payout"]-r["stake"] for r in test]))
     return folds
 
 def aggregate_oos(folds):
@@ -146,8 +148,15 @@ def aggregate_oos(folds):
     paid = sum(m["payout"] for m in selected)
     base_spent = sum(m["stake"] for m in baseline)
     base_paid = sum(m["payout"] for m in baseline)
-    # Rebuild max drawdown from chronological race-level equity requires
-    # individual test bets; do not sum or average fold drawdowns.
+    # Forward folds are disjoint and chronological; reconstruct running equity.
+    def chronological_dd(key):
+        equity = peak = maximum = 0.0
+        for fold in folds:
+            for delta in fold.get(key, []):
+                equity += delta
+                peak = max(peak, equity)
+                maximum = max(maximum, peak-equity)
+        return maximum if all(key in fold for fold in folds) else None
     return dict(folds=len(folds), selected_bets=sum(m["n"] for m in selected),
                 baseline_bets=sum(m["n"] for m in baseline),
                 selected_stake=spent, selected_payout=paid,
@@ -159,8 +168,9 @@ def aggregate_oos(folds):
                 incremental_profit=(paid-spent)-(base_paid-base_spent),
                 unspent_cash=base_spent-spent,
                 committed_roi=((base_spent-spent+paid)/base_spent if base_spent else None),
-                global_max_drawdown=None,
-                caveat="Fold max drawdowns cannot be combined without chronological bet-level equity.")
+                global_max_drawdown=chronological_dd("selected_equity_changes"),
+                baseline_global_max_drawdown=chronological_dd("baseline_equity_changes"),
+                caveat="Drawdowns use chronological test-fold settled cash flows, not intra-race mark-to-market.")
 
 def main():
     p = argparse.ArgumentParser()
