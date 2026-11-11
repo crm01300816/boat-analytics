@@ -30,5 +30,29 @@ class StrictSkipTests(unittest.TestCase):
         self.assertEqual(folds[0]["selected"]["stake"], 0)
         self.assertEqual(folds[0]["selected"]["profit"], 0)
 
+    def test_invalid_duplicate_quarantines_valid_record(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "rows.csv"
+            with p.open("w", newline="") as f:
+                w = csv.DictWriter(f, fieldnames=["race_id","cutoff_at","odds_observed_at","prediction_saved_at","stake","payout","score"])
+                w.writeheader()
+                base = dict(race_id="R1",cutoff_at="2026-11-01T15:00:00+09:00",odds_observed_at="2026-11-01T14:50:00+09:00",prediction_saved_at="2026-11-01T14:55:00+09:00",stake=100,payout=0,score=.9)
+                w.writerow(base)
+                w.writerow(dict(base, prediction_saved_at="invalid"))
+            rows, rejected = load(p)
+            self.assertEqual(rows, [])
+            self.assertEqual(rejected["duplicate_race_id"], 2)
+
+    def test_jst_day_boundary_keeps_local_races_in_same_fold(self):
+        import datetime as dt
+        rows = []
+        for day in range(1, 5):
+            for hour in (1, 20):
+                rows.append(dict(id=f"{day}-{hour}",t=dt.datetime(2026,11,day,hour,tzinfo=dt.timezone(dt.timedelta(hours=9))).astimezone(dt.timezone.utc),stake=100,payout=0,score=.9))
+        folds = evaluate(rows, train_days=3)
+        self.assertEqual(len(folds), 1)
+        self.assertEqual(folds[0]["test_dates"], ["2026-11-04"])
+        self.assertEqual(folds[0]["all_bets"]["n"], 2)
+
 if __name__ == "__main__":
     unittest.main()
