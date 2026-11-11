@@ -24,6 +24,17 @@ class NestedSkipTests(unittest.TestCase):
         self.assertTrue(all(f["threshold"] <= .9 for f in folds))
         self.assertTrue(all(f["selected"]["profit"] > 0 for f in folds))
 
+    def test_zero_purchase_validation_days_do_not_count_as_replicated_profit(self):
+        rows = self.rows(payout=200)
+        # First two inner validation days: day 3 has high-score bets,
+        # day 4 has only low-score bets. High threshold has one active fold.
+        for r in rows:
+            if r["t"].day == 4:
+                r["score"] = .1
+        folds = nested_evaluate(rows)
+        self.assertEqual(folds[0]["threshold"], 0.0)
+        self.assertEqual(folds[0]["inner_folds"], 2)
+
     def test_requires_enough_inner_folds(self):
         with self.assertRaises(ValueError):
             nested_evaluate([], outer_train_days=2, inner_train_days=2)
