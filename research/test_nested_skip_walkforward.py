@@ -56,6 +56,19 @@ class NestedSkipTests(unittest.TestCase):
         self.assertEqual(pooled["global_max_drawdown"], 0)
         self.assertTrue(all(not f["matched_turnover"]["eligible"] for f in folds))
 
+    def test_shuffled_input_does_not_change_chronological_drawdown(self):
+        rows = self.rows(payout=200)
+        for r in rows:
+            index = int(r["id"].split("-")[1])
+            r["t"] = r["t"] + dt.timedelta(minutes=index)
+            if r["t"].day >= 5:
+                r["payout"] = 300 if index < 20 else 0
+        forward = aggregate_oos(nested_evaluate(rows))
+        reversed_input = aggregate_oos(nested_evaluate(list(reversed(rows))))
+        self.assertEqual(forward["selected_profit"], reversed_input["selected_profit"])
+        self.assertEqual(forward["global_max_drawdown"], reversed_input["global_max_drawdown"])
+        self.assertGreater(forward["global_max_drawdown"], 0)
+
     def test_requires_enough_inner_folds(self):
         with self.assertRaises(ValueError):
             nested_evaluate([], outer_train_days=2, inner_train_days=2)
