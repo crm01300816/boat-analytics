@@ -119,13 +119,19 @@ def evaluate(rows, train_days=3, test_days=1):
         test_dates = set(dates[start:start+test_days])
         train = [r for r in rows if race_day(r) in train_dates]
         test = [r for r in rows if race_day(r) in test_dates]
-        # Search on training only; a no-bet option is retained.
+        # Inner chronological validation: choose threshold on later training
+        # days only, never on the outer forward test. Earlier days are reserved
+        # as inner history; this does not make scores independently OOS.
         candidates = [0, .25, .5, .75, .9, 1.01]
-        # Do not optimize on raw ROI of tiny samples: require 30 training bets.
+        inner_dates = sorted(train_dates)
+        inner_validation_dates = set(inner_dates[max(1, len(inner_dates)//2):])
+        inner_validation = [r for r in train if race_day(r) in inner_validation_dates]
+        # Compare absolute profit, not sample ROI. Require >=30 placed bets
+        # across inner validation days to avoid tiny-sample optimization.
         def objective(t):
-            m = metrics(train, t)
             if t > 1: return 0.0  # Explicit no-bet baseline.
-            return (m["profit"] if m["n"] >= 30 else float("-inf"))
+            m = metrics(inner_validation, t)
+            return m["profit"] if m["n"] >= 30 else float("-inf")
         threshold = max(candidates, key=objective)
         folds.append(dict(train_end=str(max(train_dates)), test_dates=sorted(map(str,test_dates)),
                           threshold=threshold, selected=metrics(test,threshold),
