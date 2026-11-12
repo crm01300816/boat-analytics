@@ -61,6 +61,35 @@ def audit(report):
             peak = max(peak, equity)
             max_dd = max(max_dd, peak - equity)
         return max_dd
+    # Validate trade-level cash-flow paths against each fold's settlement totals.
+    # Missing paths are explicitly unknown, never silently replaced with fold-end DD.
+    def trade_drawdown(path_key, side):
+        equity = peak = maximum = 0.0
+        for i, fold in enumerate(folds):
+            if path_key not in fold:
+                return None
+            changes = fold[path_key]
+            if not isinstance(changes, list):
+                raise ValueError(f"fold {i}: invalid {path_key} path")
+            if len(changes) != fold[side]["n"]:
+                raise ValueError(f"fold {i}: {path_key} length disagrees with bet count")
+            if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) for v in changes):
+                raise ValueError(f"fold {i}: nonnumeric {path_key} entry")
+            if not math.isclose(sum(changes), fold[side]["profit"], abs_tol=1e-6):
+                raise ValueError(f"fold {i}: {path_key} sum disagrees with profit")
+            for delta in changes:
+                equity += delta
+                peak = max(peak, equity)
+                maximum = max(maximum, peak - equity)
+        return maximum
+    selected_trade_dd = trade_drawdown("selected_equity_changes", "selected")
+    baseline_trade_dd = trade_drawdown("baseline_equity_changes", "all_bets")
+    for field, actual in (("global_max_drawdown", selected_trade_dd),
+                          ("baseline_global_max_drawdown", baseline_trade_dd)):
+        if field in pooled and actual is not None:
+            value = pooled[field]
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not math.isclose(value, actual, abs_tol=1e-6):
+                raise ValueError(f"pooled_forward.{field} disagrees with trade path")
     baseline_profits = [f["all_bets"]["profit"] for f in folds]
     return {
         "status": "audited_exploratory_forward_folds",
@@ -77,6 +106,8 @@ def audit(report):
         "total_baseline_profit": baseline_profit,
         "total_incremental_profit": selected_profit - baseline_profit,
         "selected_fold_end_max_drawdown": fold_end_drawdown(profits),
+        "selected_trade_max_drawdown": selected_trade_dd,
+        "baseline_trade_max_drawdown": baseline_trade_dd,
         "baseline_fold_end_max_drawdown": fold_end_drawdown(baseline_profits),
         "selected_purchase_folds": sum(f["selected"]["stake"] > 0 for f in folds),
         "selected_no_purchase_folds": sum(f["selected"]["stake"] == 0 for f in folds),
@@ -87,7 +118,7 @@ def audit(report):
         "matched_turnover_eligible_folds": sum(m.get("eligible") is True for m in matched),
         "matched_turnover_ineligible_folds": sum(m.get("eligible") is False for m in matched),
         "limitations": [
-            "Fold-end maximum drawdown excludes intra-fold losses and may understate actual drawdown.",
+            "Fold-end maximum drawdown excludes intra-fold losses and may understate actual drawdown; trade DD is null if paths are missing.",
             "Fold stability is descriptive; folds can share training history and are not independent observations.",
             "Chronological test folds are not an untouched independent OOS period.",
             "Matched-turnover results assume proportional payouts and unchanged odds.",
