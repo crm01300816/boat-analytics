@@ -45,6 +45,17 @@ def audit(report):
     profits = [f["selected"]["profit"] for f in folds]
     deltas = [f["selected"]["profit"] - f["all_bets"]["profit"] for f in folds]
     matched = [f.get("matched_turnover", {}) for f in folds]
+    # Fold-end drawdown uses chronological fold profits, not intra-fold trade paths.
+    def fold_end_drawdown(values):
+        equity = 0.0
+        peak = 0.0
+        max_dd = 0.0
+        for profit in values:
+            equity += profit
+            peak = max(peak, equity)
+            max_dd = max(max_dd, peak - equity)
+        return max_dd
+    baseline_profits = [f["all_bets"]["profit"] for f in folds]
     return {
         "status": "audited_exploratory_forward_folds",
         "folds": len(folds),
@@ -59,6 +70,10 @@ def audit(report):
         "total_baseline_payout": baseline_payout,
         "total_baseline_profit": baseline_profit,
         "total_incremental_profit": selected_profit - baseline_profit,
+        "selected_fold_end_max_drawdown": fold_end_drawdown(profits),
+        "baseline_fold_end_max_drawdown": fold_end_drawdown(baseline_profits),
+        "selected_purchase_folds": sum(f["selected"]["stake"] > 0 for f in folds),
+        "selected_no_purchase_folds": sum(f["selected"]["stake"] == 0 for f in folds),
         "selected_roi": (sum(f["selected"]["payout"] for f in folds) / selected_stake
                          if selected_stake else None),
         "baseline_roi": (sum(f["all_bets"]["payout"] for f in folds) / baseline_stake
@@ -66,6 +81,7 @@ def audit(report):
         "matched_turnover_eligible_folds": sum(m.get("eligible") is True for m in matched),
         "matched_turnover_ineligible_folds": sum(m.get("eligible") is False for m in matched),
         "limitations": [
+            "Fold-end maximum drawdown excludes intra-fold losses and may understate actual drawdown.",
             "Fold stability is descriptive; folds can share training history and are not independent observations.",
             "Chronological test folds are not an untouched independent OOS period.",
             "Matched-turnover results assume proportional payouts and unchanged odds.",
