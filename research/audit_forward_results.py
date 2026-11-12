@@ -20,6 +20,8 @@ def audit(report):
                     raise ValueError(f"fold {i}: nonfinite {side}.{field}")
             if m["stake"] < 0 or m["payout"] < 0:
                 raise ValueError(f"fold {i}: negative cash flow")
+            if m["stake"] == 0 and m["payout"] != 0:
+                raise ValueError(f"fold {i}: payout without stake for {side}")
             if not math.isclose(m["profit"], m["payout"] - m["stake"], abs_tol=1e-6):
                 raise ValueError(f"fold {i}: inconsistent profit")
         if fold["selected"]["stake"] > fold["all_bets"]["stake"] + 1e-6:
