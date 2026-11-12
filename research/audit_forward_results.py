@@ -15,6 +15,10 @@ def audit(report):
     for i, fold in enumerate(folds):
         for side in ("selected", "all_bets"):
             m = fold[side]
+            if "n" not in m or isinstance(m["n"], bool) or not isinstance(m["n"], int) or m["n"] < 0:
+                raise ValueError(f"fold {i}: invalid bet count {side}.n")
+            if m["n"] == 0 and (m["stake"] != 0 or m["payout"] != 0 or m["profit"] != 0):
+                raise ValueError(f"fold {i}: nonzero cash flow with zero bets for {side}")
             for field in ("stake", "payout", "profit"):
                 if not math.isfinite(float(m[field])):
                     raise ValueError(f"fold {i}: nonfinite {side}.{field}")
@@ -28,6 +32,8 @@ def audit(report):
                 raise ValueError(f"fold {i}: payout without stake for {side}")
             if not math.isclose(m["profit"], m["payout"] - m["stake"], abs_tol=1e-6):
                 raise ValueError(f"fold {i}: inconsistent profit")
+        if fold["selected"]["n"] > fold["all_bets"]["n"]:
+            raise ValueError(f"fold {i}: selected count exceeds baseline")
         if fold["selected"]["stake"] > fold["all_bets"]["stake"] + 1e-6:
             raise ValueError(f"fold {i}: selected turnover exceeds baseline")
     # Fold metrics must be chronologically ordered by their source before DD is interpreted.
