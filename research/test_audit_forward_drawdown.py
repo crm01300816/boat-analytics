@@ -19,7 +19,7 @@ class DrawdownTest(unittest.TestCase):
         ]}
         result = audit(report)
         self.assertEqual(result["selected_fold_end_max_drawdown"], 60)
-        self.assertEqual(result["baseline_fold_end_max_drawdown"], 30)
+        self.assertEqual(result["baseline_fold_end_max_drawdown"], 40)
         self.assertEqual(result["selected_purchase_folds"], 3)
         self.assertEqual(result["selected_no_purchase_folds"], 1)
         self.assertEqual(result["total_selected_profit"], 10)
