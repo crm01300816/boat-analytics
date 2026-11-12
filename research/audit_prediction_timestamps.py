@@ -47,17 +47,18 @@ def classify(row):
 def audit(rows):
     rows = list(rows)
     counts = Counter()
-    seen = set()
+    race_counts = Counter(str(row.get("race_id", "")).strip() for row in rows)
     quarantined = []
     for index, row in enumerate(rows, 2):
         race_id = str(row.get("race_id", "")).strip()
-        reason = classify(row)
-        if race_id in seen and race_id:
-            reason = "duplicate_race_id"
-        seen.add(race_id)
+        original_reason = classify(row)
+        # Quarantine every occurrence of a duplicate, including the first.
+        # Keep the original chronology finding so duplicates cannot hide leaks.
+        reason = "duplicate_race_id" if race_id and race_counts[race_id] > 1 else original_reason
         counts[reason] += 1
         if reason != "chronology_pass_provenance_unverified":
-            quarantined.append({"csv_line": index, "race_id": race_id, "reason": reason})
+            quarantined.append({"csv_line": index, "race_id": race_id, "reason": reason,
+                                "chronology_reason": original_reason})
     return {
         "rows": len(rows),
         "counts": dict(sorted(counts.items())),
