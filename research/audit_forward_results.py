@@ -18,6 +18,10 @@ def audit(report):
             for field in ("stake", "payout", "profit"):
                 if not math.isfinite(float(m[field])):
                     raise ValueError(f"fold {i}: nonfinite {side}.{field}")
+            # Reject booleans and numeric strings rather than silently coercing accounting data.
+            for field in ("stake", "payout", "profit"):
+                if isinstance(m[field], bool) or not isinstance(m[field], (int, float)):
+                    raise ValueError(f"fold {i}: invalid numeric type {side}.{field}")
             if m["stake"] < 0 or m["payout"] < 0:
                 raise ValueError(f"fold {i}: negative cash flow")
             if m["stake"] == 0 and m["payout"] != 0:
@@ -26,6 +30,8 @@ def audit(report):
                 raise ValueError(f"fold {i}: inconsistent profit")
         if fold["selected"]["stake"] > fold["all_bets"]["stake"] + 1e-6:
             raise ValueError(f"fold {i}: selected turnover exceeds baseline")
+    # Fold metrics must be chronologically ordered by their source before DD is interpreted.
+    # Report only fold-end DD; do not mistake it for trade-level DD.
     selected_profit = sum(f["selected"]["profit"] for f in folds)
     selected_payout = sum(f["selected"]["payout"] for f in folds)
     baseline_payout = sum(f["all_bets"]["payout"] for f in folds)
@@ -39,7 +45,7 @@ def audit(report):
                           ("baseline_stake", baseline_stake),
                           ("selected_payout", selected_payout),
                           ("baseline_payout", baseline_payout)):
-        if field in pooled and (not math.isfinite(float(pooled[field])) or
+        if field in pooled and (isinstance(pooled[field], bool) or not isinstance(pooled[field], (int, float)) or not math.isfinite(float(pooled[field])) or
                                 not math.isclose(float(pooled[field]), actual, abs_tol=1e-6)):
             raise ValueError(f"pooled_forward.{field} does not match folds")
     profits = [f["selected"]["profit"] for f in folds]
