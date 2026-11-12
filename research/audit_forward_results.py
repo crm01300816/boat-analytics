@@ -25,6 +25,8 @@ def audit(report):
         if fold["selected"]["stake"] > fold["all_bets"]["stake"] + 1e-6:
             raise ValueError(f"fold {i}: selected turnover exceeds baseline")
     selected_profit = sum(f["selected"]["profit"] for f in folds)
+    selected_payout = sum(f["selected"]["payout"] for f in folds)
+    baseline_payout = sum(f["all_bets"]["payout"] for f in folds)
     baseline_profit = sum(f["all_bets"]["profit"] for f in folds)
     selected_stake = sum(f["selected"]["stake"] for f in folds)
     baseline_stake = sum(f["all_bets"]["stake"] for f in folds)
@@ -32,8 +34,11 @@ def audit(report):
     for field, actual in (("selected_profit", selected_profit),
                           ("baseline_profit", baseline_profit),
                           ("selected_stake", selected_stake),
-                          ("baseline_stake", baseline_stake)):
-        if field in pooled and not math.isclose(float(pooled[field]), actual, abs_tol=1e-6):
+                          ("baseline_stake", baseline_stake),
+                          ("selected_payout", selected_payout),
+                          ("baseline_payout", baseline_payout)):
+        if field in pooled and (not math.isfinite(float(pooled[field])) or
+                                not math.isclose(float(pooled[field]), actual, abs_tol=1e-6)):
             raise ValueError(f"pooled_forward.{field} does not match folds")
     profits = [f["selected"]["profit"] for f in folds]
     deltas = [f["selected"]["profit"] - f["all_bets"]["profit"] for f in folds]
@@ -48,6 +53,8 @@ def audit(report):
         "worst_fold_profit": min(profits),
         "worst_fold_incremental_profit": min(deltas),
         "total_selected_profit": selected_profit,
+        "total_selected_payout": selected_payout,
+        "total_baseline_payout": baseline_payout,
         "total_baseline_profit": baseline_profit,
         "total_incremental_profit": selected_profit - baseline_profit,
         "selected_roi": (sum(f["selected"]["payout"] for f in folds) / selected_stake
