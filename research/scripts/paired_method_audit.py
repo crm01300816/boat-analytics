@@ -59,6 +59,22 @@ def audit(ledger):
             "negative_days": sum(daily[d][m]["net"] < 0 for d in dates),
             "day_close_path": dd_path
         }
+    # Exact paired day-block sign-flip diagnostic; exploratory, not OOS proof.
+    def signflip_p(diffs):
+        nonzero = [float(x) for x in diffs if x != 0]
+        n = len(nonzero)
+        if n == 0:
+            return 1.0
+        if n > 20:
+            return None
+        observed = abs(sum(nonzero))
+        extreme = 0
+        for mask in range(1 << n):
+            signed = sum(x if mask & (1 << i) else -x for i, x in enumerate(nonzero))
+            if abs(signed) >= observed - 1e-9:
+                extreme += 1
+        return extreme / (1 << n)
+
     pairs = []
     for i, a in enumerate(METHODS):
         for b in METHODS[i+1:]:
@@ -72,6 +88,7 @@ def audit(ledger):
                           "negative_days_a": sum(v < 0 for v in diffs),
                           "tied_days": sum(v == 0 for v in diffs),
                           "daily_net_differences": dict(zip(dates, diffs)),
+                          "exploratory_day_block_signflip_p_two_sided": signflip_p(diffs) if matched else None,
                           "interpretation": "matched-stake" if matched else "NOT matched-stake"})
     # Conservative time-unit robustness: remove each complete day, not individual races.
     leave_one_day_out = {}
@@ -88,7 +105,8 @@ def audit(ledger):
                 "Equal total stakes do not imply matched exposure; strict per-race equality is reported.",
                 "Day-close drawdown is a lower bound; full intraday maximum drawdown requires verified settlement chronology.",
                 "Odds capture timestamps, prediction creation times, refund handling and special settlements are not verified by this ledger-only audit.",
-                "Do not infer profitable future performance from leave-one-day-out sensitivity."
+                "Do not infer profitable future performance from leave-one-day-out sensitivity.",
+                "Day-block sign-flip p-values are exploratory, unadjusted for multiple comparisons, and not independent OOS."
             ]}
 
 def selftest():
@@ -100,6 +118,7 @@ def selftest():
     result = audit(data)
     assert result["totals"]["3"]["net"] == 0
     assert result["totals"]["10"]["net"] == 100
+    assert result["pairs"][0]["exploratory_day_block_signflip_p_two_sided"] == 1.0
     assert result["pairs"][0]["strict_equal_stake"]
     assert result["day_close_risk"]["3"]["max_day_close_drawdown"] == 100
     assert result["day_close_risk"]["10"]["max_day_close_drawdown"] == 100
