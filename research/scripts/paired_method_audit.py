@@ -53,6 +53,8 @@ def audit(ledger):
         day_close_risk[m] = {
             "max_day_close_drawdown": worst_dd,
             "worst_day_net": min(daily[d][m]["net"] for d in dates),
+            "worst_day": min(dates, key=lambda d: daily[d][m]["net"]),
+            "largest_single_day_loss_share_of_total_stake": max(0, -min(daily[d][m]["net"] for d in dates)) / totals[m]["stake"],
             "positive_days": sum(daily[d][m]["net"] > 0 for d in dates),
             "negative_days": sum(daily[d][m]["net"] < 0 for d in dates),
             "day_close_path": dd_path
@@ -102,6 +104,8 @@ def selftest():
     assert result["day_close_risk"]["3"]["max_day_close_drawdown"] == 100
     assert result["day_close_risk"]["10"]["max_day_close_drawdown"] == 100
     assert result["day_close_risk"]["10"]["positive_days"] == 1
+    assert result["day_close_risk"]["10"]["worst_day"] == "20261102"
+    assert result["day_close_risk"]["10"]["largest_single_day_loss_share_of_total_stake"] == 0.5
     assert result["day_count"] == 2
     assert result["leave_one_day_out"]["10"]["20261102"]["net"] == 200
     try:
