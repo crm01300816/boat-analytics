@@ -29,6 +29,23 @@ def test():
         assert "duplicate" in str(e)
     else:
         raise AssertionError("duplicate must fail")
+    # Corrupt settlements must fail even when the rule would skip that race.
+    bad = [make(d, i, "1" if i % 2 else "2") for d in range(1, 6) for i in range(1, 21)]
+    bad[0]["methods"]["3"]["returned"] = -100
+    try:
+        mod.analyze({"rows": bad})
+    except ValueError as e:
+        assert "invalid settlement" in str(e)
+    else:
+        raise AssertionError("corrupt excluded method must fail")
+    bad[0]["methods"]["3"]["returned"] = 0
+    bad[0]["methods"]["10"]["picks"][0]["combo"] = "111"
+    try:
+        mod.analyze({"rows": bad})
+    except ValueError as e:
+        assert "invalid frozen combo" in str(e)
+    else:
+        raise AssertionError("invalid pick must fail")
     print("nested skip regression passed")
 
 if __name__ == "__main__":
