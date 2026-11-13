@@ -101,6 +101,16 @@ def audit(ledger):
         pairs[index]["exploratory_holm_adjusted_p"] = running
     for pair in pairs:
         pair.setdefault("exploratory_holm_adjusted_p", None)
+    # Chronological halves are descriptive stability diagnostics, never independent OOS.
+    # Split by complete days so races on the same day cannot straddle the boundary.
+    split = max(1, len(dates) // 2)
+    chronological_halves = {}
+    for name, selected_days in (("early", dates[:split]), ("late", dates[split:])):
+        subset = [r for d in selected_days for r in by_day[d]]
+        chronological_halves[name] = {
+            "days": selected_days,
+            "methods": {m: calc(subset, m) if subset else None for m in METHODS}
+        }
     # Conservative time-unit robustness: remove each complete day, not individual races.
     leave_one_day_out = {}
     for m in METHODS:
@@ -110,13 +120,14 @@ def audit(ledger):
             leave_one_day_out[m][d] = calc(other, m)
     return {"schema": 1, "race_count": len(allrows), "day_count": len(dates),
             "totals": totals, "daily": daily, "day_close_risk": day_close_risk, "pairs": pairs,
-            "leave_one_day_out": leave_one_day_out,
+            "leave_one_day_out": leave_one_day_out, "chronological_halves": chronological_halves,
             "limitations": [
                 "Historical cohort may have been used to design strategies; NOT independent OOS.",
                 "Equal total stakes do not imply matched exposure; strict per-race equality is reported.",
                 "Day-close drawdown is a lower bound; full intraday maximum drawdown requires verified settlement chronology.",
                 "Odds capture timestamps, prediction creation times, refund handling and special settlements are not verified by this ledger-only audit.",
                 "Do not infer profitable future performance from leave-one-day-out sensitivity.",
+                "Chronological halves are descriptive and were not held out from strategy selection; do not treat as independent OOS.",
                 "Day-block sign-flip p-values are exploratory; Holm-adjusted values cover only the six pre-specified method pairs, not other explored hypotheses or independent OOS."
             ]}
 
@@ -137,6 +148,8 @@ def selftest():
     assert result["day_close_risk"]["10"]["positive_days"] == 1
     assert result["day_close_risk"]["10"]["worst_day"] == "20261102"
     assert result["day_close_risk"]["10"]["largest_single_day_loss_share_of_total_stake"] == 0.5
+    assert result["chronological_halves"]["early"]["methods"]["10"]["net"] == 200
+    assert result["chronological_halves"]["late"]["methods"]["10"]["net"] == -100
     assert result["day_count"] == 2
     assert result["leave_one_day_out"]["10"]["20261102"]["net"] == 200
     try:
