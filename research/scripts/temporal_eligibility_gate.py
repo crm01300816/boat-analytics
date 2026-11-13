@@ -49,6 +49,21 @@ def audit(rows):
             failures.append("prediction_not_before_cutoff")
         if odds and cutoff and odds >= cutoff:
             failures.append("odds_not_before_cutoff")
+        # Prevent silently accepting timestamps for another race date.
+        # race_id convention begins YYYYMMDD; compare in Japan local time.
+        if race and len(race) >= 8 and race[:8].isdigit():
+            try:
+                race_date = dt.datetime.strptime(race[:8], "%Y%m%d").date()
+            except ValueError:
+                failures.append("invalid_race_date")
+            else:
+                jst = dt.timezone(dt.timedelta(hours=9))
+                if cutoff and cutoff.astimezone(jst).date() != race_date:
+                    failures.append("cutoff_race_date_mismatch")
+                if prediction and prediction.astimezone(jst).date() != race_date:
+                    failures.append("prediction_race_date_mismatch")
+                if odds and odds.astimezone(jst).date() != race_date:
+                    failures.append("odds_race_date_mismatch")
         if failures:
             counts["quarantined_rows"] += 1
         else:
@@ -81,6 +96,10 @@ def selftest():
     mixed = audit([valid, dict(valid, race_id="202611140102", odds_captured_at="")])
     assert [r["eligible"] for r in mixed["row_results"]] == [True, False]
     assert mixed["row_results"][1]["reasons"] == ["unverified_odds_timestamp"]
+    mismatch = audit([dict(valid, odds_captured_at="2026-11-13T10:01:00+09:00")])
+    assert mismatch["quarantine_reasons"]["odds_race_date_mismatch"] == 1
+    wrong_cutoff = audit([dict(valid, official_cutoff_at="2026-11-15T10:05:00+09:00")])
+    assert wrong_cutoff["quarantine_reasons"]["cutoff_race_date_mismatch"] == 1
 
 def main():
     if len(sys.argv) == 2 and sys.argv[1] == "--self-test":
