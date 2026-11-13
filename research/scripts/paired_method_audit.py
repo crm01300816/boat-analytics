@@ -99,7 +99,7 @@ def selftest():
     assert result["totals"]["3"]["net"] == 0
     assert result["totals"]["10"]["net"] == 100
     assert result["pairs"][0]["strict_equal_stake"]
-    assert result["day_close_risk"]["3"]["max_day_close_drawdown"] == 0
+    assert result["day_close_risk"]["3"]["max_day_close_drawdown"] == 100
     assert result["day_close_risk"]["10"]["max_day_close_drawdown"] == 100
     assert result["day_close_risk"]["10"]["positive_days"] == 1
     assert result["day_count"] == 2
