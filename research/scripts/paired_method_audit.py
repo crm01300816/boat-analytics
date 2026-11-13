@@ -130,7 +130,8 @@ def selftest():
     assert result["totals"]["3"]["net"] == 0
     assert result["totals"]["10"]["net"] == 100
     assert result["pairs"][0]["exploratory_day_block_signflip_p_two_sided"] == 1.0
-    assert result["pairs"][0]["exploratory_holm_adjusted_p"] == 1.0\n    assert result["pairs"][0]["strict_equal_stake"]
+    assert result["pairs"][0]["exploratory_holm_adjusted_p"] == 1.0
+    assert result["pairs"][0]["strict_equal_stake"]
     assert result["day_close_risk"]["3"]["max_day_close_drawdown"] == 100
     assert result["day_close_risk"]["10"]["max_day_close_drawdown"] == 100
     assert result["day_close_risk"]["10"]["positive_days"] == 1
