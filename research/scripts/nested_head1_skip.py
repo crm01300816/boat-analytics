@@ -9,6 +9,8 @@ import sys
 from pathlib import Path
 
 def eligible(row, rule):
+    if rule not in ("all", "head1", "not_head1"):
+        raise ValueError("unknown policy: " + str(rule))
     if rule == "all":
         return True
     picks = row["methods"]["10"]["picks"]
@@ -42,6 +44,17 @@ def metrics(rows, rule):
 
 def analyze(ledger):
     rows = sorted(ledger["rows"], key=lambda r:r["raceId"])
+    if not rows:
+        raise ValueError("empty ledger")
+    for row in rows:
+        rid = row["raceId"]
+        if not isinstance(rid, str) or len(rid) < 9 or not rid[:8].isdigit():
+            raise ValueError("invalid raceId/date")
+        for method in ("3", "5", "7", "10"):
+            if method not in row.get("methods", {}):
+                raise ValueError("missing strategy " + method)
+        if not row["methods"]["10"].get("picks"):
+            raise ValueError("missing frozen picks")
     ids = [r["raceId"] for r in rows]
     if len(ids) != len(set(ids)):
         raise ValueError("duplicate race")
