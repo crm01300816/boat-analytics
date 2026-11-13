@@ -28,10 +28,10 @@ def test():
     assert [(f["test_day"], f["selected"]) for f in a["folds"]] == [
         (f["test_day"], f["selected"]) for f in b["folds"]]
     assert a["folds"][0]["selected"] == "all"
-    assert a["folds"][0]["test"]["net"] == -2000
-    assert a["folds"][1]["selected"] == "cash"
-    assert a["folds"][1]["test"]["roi"] is None
-    assert b["folds"][1]["selected"] == "cash"
+    assert a["folds"][1]["test"]["net"] == -2000
+    assert a["folds"][2]["selected"] == "cash"
+    assert a["folds"][2]["test"]["roi"] is None
+    assert b["folds"][2]["selected"] == "cash"
     print("future-settlement invariance regression passed")
 
 if __name__ == "__main__":
