@@ -39,6 +39,24 @@ def audit(ledger):
     allrows = [r for day in dates for r in sorted(by_day[day], key=lambda r: r["raceId"])]
     totals = {m: calc(allrows, m) for m in METHODS}
     daily = {d: {m: calc(by_day[d], m) for m in METHODS} for d in dates}
+    # Day-close risk: valid even when intraday settlement ordering is unknown.
+    # This is a lower bound on intraday peak-to-trough drawdown, NOT full max DD.
+    day_close_risk = {}
+    for m in METHODS:
+        equity = peak = worst_dd = 0
+        dd_path = {}
+        for d in dates:
+            equity += daily[d][m]["net"]
+            peak = max(peak, equity)
+            worst_dd = max(worst_dd, peak - equity)
+            dd_path[d] = {"cumulative_net": equity, "day_close_drawdown": peak - equity}
+        day_close_risk[m] = {
+            "max_day_close_drawdown": worst_dd,
+            "worst_day_net": min(daily[d][m]["net"] for d in dates),
+            "positive_days": sum(daily[d][m]["net"] > 0 for d in dates),
+            "negative_days": sum(daily[d][m]["net"] < 0 for d in dates),
+            "day_close_path": dd_path
+        }
     pairs = []
     for i, a in enumerate(METHODS):
         for b in METHODS[i+1:]:
@@ -61,12 +79,12 @@ def audit(ledger):
             other = [r for day in dates if day != d for r in by_day[day]]
             leave_one_day_out[m][d] = calc(other, m)
     return {"schema": 1, "race_count": len(allrows), "day_count": len(dates),
-            "totals": totals, "daily": daily, "pairs": pairs,
+            "totals": totals, "daily": daily, "day_close_risk": day_close_risk, "pairs": pairs,
             "leave_one_day_out": leave_one_day_out,
             "limitations": [
                 "Historical cohort may have been used to design strategies; NOT independent OOS.",
                 "Equal total stakes do not imply matched exposure; strict per-race equality is reported.",
-                "Maximum drawdown requires independently verified event chronology and is not asserted here.",
+                "Day-close drawdown is a lower bound; full intraday maximum drawdown requires verified settlement chronology.",
                 "Odds capture timestamps, prediction creation times, refund handling and special settlements are not verified by this ledger-only audit.",
                 "Do not infer profitable future performance from leave-one-day-out sensitivity."
             ]}
@@ -81,6 +99,9 @@ def selftest():
     assert result["totals"]["3"]["net"] == 0
     assert result["totals"]["10"]["net"] == 100
     assert result["pairs"][0]["strict_equal_stake"]
+    assert result["day_close_risk"]["3"]["max_day_close_drawdown"] == 0
+    assert result["day_close_risk"]["10"]["max_day_close_drawdown"] == 100
+    assert result["day_close_risk"]["10"]["positive_days"] == 1
     assert result["day_count"] == 2
     assert result["leave_one_day_out"]["10"]["20261102"]["net"] == 200
     try:
