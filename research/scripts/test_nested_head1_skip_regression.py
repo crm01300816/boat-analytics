@@ -4,9 +4,9 @@ import unittest
 from nested_head1_skip import analyze, eligible, metrics
 
 def row(day, seq, head="1", returned=0):
-    return {"raceId": f"{day}{seq:04d}", "methods": {"10": {
+    return {"raceId": f"{day}{seq:04d}", "methods": {k: {
         "picks": [{"combo": head+"23"}], "stake": 1000,
-        "returned": returned, "hit": returned > 0}}}
+        "returned": returned, "hit": returned > 0} for k in ("3", "5", "7", "10")}}
 
 class NestedPolicyTests(unittest.TestCase):
     def test_cash_when_all_train_and_validation_negative(self):
@@ -18,6 +18,17 @@ class NestedPolicyTests(unittest.TestCase):
         self.assertIsNone(result["selected"]["roi"])
         self.assertEqual(result["baseline"]["stake"],60000)
         self.assertEqual(result["baseline"]["net"],-60000)
+
+    def test_positive_training_and_validation_selects_without_test_leakage(self):
+        rows = [row(f"202611{d:02d}", i, "1", 2000 if d <= 3 else 0)
+                for d in range(1, 8) for i in range(15)]
+        result = analyze({"rows": rows})
+        first = result["folds"][0]
+        self.assertEqual(first["selected"], "head1")
+        self.assertEqual(first["test"]["net"], -15000)
+        self.assertEqual(first["test"]["roi"], 0)
+        self.assertEqual(result["selected"]["net"], -15000)
+        self.assertEqual(result["baseline"]["net"], -60000)
 
     def test_rule_is_based_on_frozen_pick_not_settlement(self):
         a=row("20261101",1,"1",0)
