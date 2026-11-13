@@ -90,6 +90,17 @@ def audit(ledger):
                           "daily_net_differences": dict(zip(dates, diffs)),
                           "exploratory_day_block_signflip_p_two_sided": signflip_p(diffs) if matched else None,
                           "interpretation": "matched-stake" if matched else "NOT matched-stake"})
+    # Holm step-down family-wise correction across the six exploratory pairwise tests.
+    # This is a multiple-testing diagnostic, NOT an independent OOS claim.
+    valid = sorted(((p["exploratory_day_block_signflip_p_two_sided"], i)
+                    for i, p in enumerate(pairs)
+                    if p["exploratory_day_block_signflip_p_two_sided"] is not None))
+    running = 0.0
+    for rank, (pvalue, index) in enumerate(valid):
+        running = max(running, min(1.0, pvalue * (len(valid) - rank)))
+        pairs[index]["exploratory_holm_adjusted_p"] = running
+    for pair in pairs:
+        pair.setdefault("exploratory_holm_adjusted_p", None)
     # Conservative time-unit robustness: remove each complete day, not individual races.
     leave_one_day_out = {}
     for m in METHODS:
@@ -106,7 +117,7 @@ def audit(ledger):
                 "Day-close drawdown is a lower bound; full intraday maximum drawdown requires verified settlement chronology.",
                 "Odds capture timestamps, prediction creation times, refund handling and special settlements are not verified by this ledger-only audit.",
                 "Do not infer profitable future performance from leave-one-day-out sensitivity.",
-                "Day-block sign-flip p-values are exploratory, unadjusted for multiple comparisons, and not independent OOS."
+                "Day-block sign-flip p-values are exploratory; Holm-adjusted values cover only the six pre-specified method pairs, not other explored hypotheses or independent OOS."
             ]}
 
 def selftest():
@@ -119,7 +130,7 @@ def selftest():
     assert result["totals"]["3"]["net"] == 0
     assert result["totals"]["10"]["net"] == 100
     assert result["pairs"][0]["exploratory_day_block_signflip_p_two_sided"] == 1.0
-    assert result["pairs"][0]["strict_equal_stake"]
+    assert result["pairs"][0]["exploratory_holm_adjusted_p"] == 1.0\n    assert result["pairs"][0]["strict_equal_stake"]
     assert result["day_close_risk"]["3"]["max_day_close_drawdown"] == 100
     assert result["day_close_risk"]["10"]["max_day_close_drawdown"] == 100
     assert result["day_close_risk"]["10"]["positive_days"] == 1
