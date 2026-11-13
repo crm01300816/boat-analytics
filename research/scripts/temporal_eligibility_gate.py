@@ -28,7 +28,8 @@ def audit(rows):
     frequencies = Counter(keys)
     counts = Counter()
     reasons = Counter()
-    for row, (race, policy) in zip(rows, keys):
+    row_results = []
+    for index, (row, (race, policy)) in enumerate(zip(rows, keys), start=1):
         counts["rows"] += 1
         failures = []
         if not race or not policy:
@@ -53,7 +54,10 @@ def audit(rows):
         else:
             counts["eligible_rows"] += 1
         reasons.update(set(failures))
+        row_results.append({"source_row": index, "race_id": race, "policy": policy,
+                            "eligible": not failures, "reasons": sorted(set(failures))})
     return {"counts": dict(counts), "quarantine_reasons": dict(reasons),
+            "row_results": row_results,
             "note": "Every duplicate occurrence is quarantined. No timestamps are inferred; all must include timezone offsets. Eligibility is not proof of source authenticity or independent OOS."}
 
 def selftest():
@@ -66,6 +70,7 @@ def selftest():
     assert duplicate["counts"].get("eligible_rows", 0) == 0
     assert duplicate["counts"]["quarantined_rows"] == 2
     assert duplicate["quarantine_reasons"]["duplicate_key"] == 2
+    assert all(not r["eligible"] for r in duplicate["row_results"])
     missing = audit([dict(valid, odds_captured_at="")])
     assert missing["counts"]["quarantined_rows"] == 1
     assert missing["quarantine_reasons"]["unverified_odds_timestamp"] == 1
@@ -73,6 +78,9 @@ def selftest():
     assert late["quarantine_reasons"]["prediction_not_before_cutoff"] == 1
     naive = audit([dict(valid, official_cutoff_at="2026-11-14T10:05:00")])
     assert naive["quarantine_reasons"]["unverified_official_cutoff"] == 1
+    mixed = audit([valid, dict(valid, race_id="202611140102", odds_captured_at="")])
+    assert [r["eligible"] for r in mixed["row_results"]] == [True, False]
+    assert mixed["row_results"][1]["reasons"] == ["unverified_odds_timestamp"]
 
 def main():
     if len(sys.argv) == 2 and sys.argv[1] == "--self-test":
