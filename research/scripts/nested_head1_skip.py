@@ -55,6 +55,19 @@ def analyze(ledger):
                 raise ValueError("missing strategy " + method)
         if not row["methods"]["10"].get("picks"):
             raise ValueError("missing frozen picks")
+        # Validate the complete cohort before any rule can exclude a bad settlement.
+        # Otherwise a selective policy could silently hide corrupt losing rows.
+        for method in ("3", "5", "7", "10"):
+            m = row["methods"][method]
+            s, p = m.get("stake"), m.get("returned")
+            if (type(s) not in (int, float) or type(p) not in (int, float)
+                    or not math.isfinite(s) or not math.isfinite(p)
+                    or s <= 0 or p < 0):
+                raise ValueError("invalid settlement: " + rid + " method " + method)
+        # The selector must be valid even when the chosen rule is 'all'.
+        first = row["methods"]["10"]["picks"][0]
+        if not isinstance(first, dict) or not isinstance(first.get("combo"), str) or len(first["combo"]) != 3 or any(ch not in "123456" for ch in first["combo"]) or len(set(first["combo"])) != 3:
+            raise ValueError("invalid frozen combo: " + rid)
     ids = [r["raceId"] for r in rows]
     if len(ids) != len(set(ids)):
         raise ValueError("duplicate race")
