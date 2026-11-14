@@ -7,6 +7,7 @@ from pathlib import Path
 
 def audit_files(paths, expected_targets=1029, expected_saved=932, expected_settled=931):
     rows, invalid, source_counts = [], [], {}
+    rejected_record_count = 0
     for path in sorted(map(Path, paths)):
         try:
             doc = json.loads(path.read_text(encoding="utf-8"))
@@ -21,6 +22,7 @@ def audit_files(paths, expected_targets=1029, expected_saved=932, expected_settl
         for index, row in enumerate(records):
             if not isinstance(row, dict):
                 invalid.append({"file": str(path), "index": index, "reason": "NonObjectRecord"})
+                rejected_record_count += 1
                 continue
             rows.append((str(row.get("raceId") or ""), str(path), index, row))
     by_id = defaultdict(list)
@@ -37,12 +39,15 @@ def audit_files(paths, expected_targets=1029, expected_saved=932, expected_settl
     raw_mass_present = len(rows) - missing_raw_mass
     return {
         "expected": {"targets": expected_targets, "saved": expected_saved, "normal_settlements": expected_settled},
-        "observed": {"files": len(source_counts), "rows": len(rows), "unique_race_ids": len(by_id),
+        "observed": {"files": len(source_counts), "rows": len(rows),
+                     "source_record_rows": sum(source_counts.values()), "rejected_record_rows": rejected_record_count, "unique_race_ids": len(by_id),
                      "duplicate_race_ids": len(duplicates), "duplicate_extra_rows": sum(len(v)-1 for v in duplicates.values()), "missing_race_ids": len(missing_id),
                      "missing_odds_capture_timestamp": missing_odds_capture, "missing_raw_mass": missing_raw_mass,
                      "odds_timestamp_present_unverified": timestamp_present,
                      "raw_mass_present_unverified": raw_mass_present},
-        "saved_count_gap": expected_saved - len(rows),
+        "saved_count_gap": expected_saved - sum(source_counts.values()),
+        "usable_saved_count_gap": expected_saved - len(rows),
+        "input_completeness": "COMPLETE_COUNT_ONLY" if not invalid and sum(source_counts.values()) == expected_saved else "INCOMPLETE_OR_INVALID",
         "coverage_unique_vs_expected_saved": {"numerator": valid_unique, "denominator": expected_saved},
         "identity_reconciliation_check": "PASS" if len(rows) == valid_unique + sum(len(v)-1 for v in duplicates.values()) + blank_id else "FAIL",
         "sources": source_counts, "duplicate_locations": duplicates, "missing_id_locations": missing_id,
@@ -79,6 +84,11 @@ def selftest():
         assert result["invalid_entries"][0]["reason"] == "NonObjectRecord"
         assert result["identity_reconciliation_check"] == "PASS"
         assert result["observed"]["missing_race_ids"] == 1
+        assert result["observed"]["source_record_rows"] == 3
+        assert result["observed"]["rejected_record_rows"] == 1
+        assert result["saved_count_gap"] == 0
+        assert result["usable_saved_count_gap"] == 1
+        assert result["input_completeness"] == "INCOMPLETE_OR_INVALID"
     print("self-test passed")
 
 if __name__ == "__main__":
