@@ -56,7 +56,9 @@ def audit(rows):
                               payout=returned, profit=day_profit))
         output[m] = dict(n=len(rows), purchased_races=purchased_races, skipped_races=len(rows)-purchased_races, stake=total_stake, payout=total_return,
                          profit=total_return-total_stake, roi=total_return/total_stake if total_stake else None,
-                         max_drawdown=dd, daily_close_max_drawdown=daily_dd,
+                         max_drawdown=dd, max_drawdown_order_verified=False,
+                         max_drawdown_ordering_basis="lexicographic_raceId_proxy_not_verified_settlement_time",
+                         daily_close_max_drawdown=daily_dd,
                          worst_day_profit=min((x["profit"] for x in daily), default=None),
                          losing_days=sum(x["profit"] < 0 for x in daily),
                          max_consecutive_losing_days=max_losing_streak, profitable_days=sum(x["profit"]>0 for x in daily),
@@ -85,7 +87,7 @@ def audit(rows):
                              "Day-level differences are descriptive, not independent OOS.",
                              "Same total stake does not guarantee identical per-race stake or odds; inspect same_per_race_stake.",
                              "Zero-stake skips are allowed only with zero payout; selected ROI is undefined if all races are skipped.",
-                             "Trade-level drawdown uses raceId ordering within a day; verify raceId matches actual settlement order.",
+                             "Trade-level max_drawdown is a raceId-order proxy, NOT a verified chronological maximum drawdown; max_drawdown_order_verified=false. Do not use for policy selection until actual settlement timestamps are available.",
                              "Daily-close drawdown ignores intraday troughs; compare both risk metrics.",
                              "Refunds and special settlements must be separately reconciled."])
 
