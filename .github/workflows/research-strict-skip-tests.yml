@@ -1,0 +1,37 @@
+name: Research strict skip audit tests
+on:
+  push:
+    branches:
+      - experiment/value-ensemble-research-20261030
+    paths:
+      - research/strict_skip_walkforward.py
+      - research/nested_skip_walkforward.py
+      - research/test_nested_skip_walkforward.py
+      - research/test_strict_skip_walkforward.py
+      - research/test_strict_skip_nonfinite.py
+      - research/test_strict_skip_matched_turnover.py
+      - .github/workflows/research-strict-skip-tests.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  strict-skip-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile research script and tests
+        run: python -m compileall -q research/strict_skip_walkforward.py research/test_strict_skip_walkforward.py research/test_strict_skip_nonfinite.py research/test_strict_skip_matched_turnover.py research/nested_skip_walkforward.py research/test_nested_skip_walkforward.py
+      - name: Run strict-skip regression tests
+        run: python -m unittest discover -s research -p 'test_strict_skip*.py' -v
+      - name: Run nested selection regression tests
+        run: python -m unittest discover -s research -p 'test_nested_skip*.py' -v
+      - name: Record limitations
+        if: always()
+        run: |
+          echo 'Strict-skip tests cover synthetic regression fixtures only.' >> "$GITHUB_STEP_SUMMARY"
+          echo '931 settled races cannot be certified OOS without timestamp-provenance-valid odds and cutoff records.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No production files or live betting rules are changed.' >> "$GITHUB_STEP_SUMMARY"

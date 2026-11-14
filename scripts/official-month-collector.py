@@ -11,11 +11,34 @@ import json
 from pathlib import Path
 import time
 import urllib.error
+import socket
 
 s = importlib.util.spec_from_file_location(
     "bk_pilot", Path(__file__).with_name("official-backtest-pilot.py"))
 pilot = importlib.util.module_from_spec(s)
 s.loader.exec_module(pilot)
+t = importlib.util.spec_from_file_location('k_techniques', Path(__file__).with_name('official-k-techniques.py'))
+techniques = importlib.util.module_from_spec(t)
+t.loader.exec_module(techniques)
+
+def fetch_with_retry(url, attempts=4):
+    """Retry transient transport failures, never access restrictions or missing archives."""
+    for attempt in range(attempts):
+        try:
+            return pilot.fetch(url)
+        except urllib.error.HTTPError as exc:
+            if exc.code not in (500, 502, 503, 504) or attempt == attempts - 1:
+                raise
+            delay = min(45, 3 * 2 ** attempt)
+            print(f"TRANSIENT_HTTP_RETRY status={exc.code} attempt={attempt + 1} delaySeconds={delay}", flush=True)
+            time.sleep(delay)
+        except (urllib.error.URLError, ConnectionError, TimeoutError, socket.timeout):
+            if attempt == attempts - 1:
+                raise
+            delay = min(20, 2 ** attempt * 3)
+            print(f'TRANSIENT_DOWNLOAD_RETRY attempt={attempt + 1} delaySeconds={delay}', flush=True)
+            time.sleep(delay)
+
 
 def collect(args):
     first, last = dt.date.fromisoformat(args.start), dt.date.fromisoformat(args.end)
@@ -39,7 +62,7 @@ def collect(args):
             url="https://www1.mbrace.or.jp/od2/{}/{}/{}{}.lzh".format(
                 kind, stamp[:6], kind.lower(), stamp[2:])
             try:
-                raw = pilot.fetch(url)
+                raw = fetch_with_retry(url)
                 temp = Path("/tmp") / ("bkm-"+kind.lower()+stamp+".lzh")
                 temp.write_bytes(raw)
                 try:
@@ -64,6 +87,8 @@ def collect(args):
             cards, binfo=pilot.parse_b(archive_text["B"],iso)
             payouts=pilot.parse_k(archive_text["K"],iso)
             rows=[{**r, **payouts[r["id"]]} for r in cards if r["id"] in payouts]
+            if args.include_technique:
+                entry['techniqueAudit']=techniques.augment_races(rows,archive_text['K'],iso)
             for row in rows:
                 if row["id"] in seen:
                     raise ValueError("Duplicate race id: "+row["id"])
@@ -77,6 +102,22 @@ def collect(args):
         days.append(entry)
         print("PERIOD_DAY "+json.dumps(entry,ensure_ascii=False),flush=True)
         day += dt.timedelta(days=1)
+    if not records:
+        print("PERIOD_SUMMARY "+json.dumps({
+            "start":first.isoformat(),"end":last.isoformat(),
+            "days":len(days),"races":0,
+            "missingDays":sum(x["joined"]==0 for x in days),
+            "error":"No valid B/K race joins"
+        }),flush=True)
+        raise RuntimeError("No official B/K races joined in this month; stop rather than treating an empty month as verified data")
+    if args.include_technique:
+        print("TECHNIQUE_MONTH_AUDIT "+json.dumps({
+            "start":first.isoformat(),"end":last.isoformat(),
+            "races":len(records),
+            "kJoined":sum(d.get("techniqueAudit",{}).get("joined",0) for d in days),
+            "methodKnown":sum(d.get("techniqueAudit",{}).get("methodKnown",0) for d in days),
+            "kMismatch":sum(d.get("techniqueAudit",{}).get("mismatch",0) for d in days)
+        }),flush=True)
     output=Path(args.out)
     output.parent.mkdir(parents=True,exist_ok=True)
     output.write_text(json.dumps({
@@ -94,4 +135,5 @@ if __name__=="__main__":
     parser.add_argument("--start",required=True)
     parser.add_argument("--end",required=True)
     parser.add_argument("--out",required=True)
+    parser.add_argument("--include-technique",action="store_true",help="PRIVATE K method/course labels; never upload raw rows")
     raise SystemExit(collect(parser.parse_args()))

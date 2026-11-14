@@ -1,0 +1,62 @@
+name: Research upset filter from cached 36m official data
+on:
+  push:
+    branches: [experiment/value-ensemble-research-20261030]
+    paths:
+      - .github/workflows/research-upset-cached.yml
+      - scripts/research-upset-filter.py
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: upset-cached-research
+  cancel-in-progress: true
+jobs:
+  analyze-cached:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Reuse existing six PRIVATE chunks; never recollect
+        run: |
+          set -euo pipefail
+          mkdir -p .local/private
+          for i in 0 1 2 3 4 5; do
+            gh run download 41806566076 --repo "$GITHUB_REPOSITORY" --name "private-technique-chunk-$i" --dir ".local/private"
+          done
+          test "$(find .local/private -name 'official-20??-??.json' | wc -l)" -eq 36
+      - name: Export private features and evaluate upset filtering
+        run: |
+          node scripts/export-technique-input.mjs .local/private .local/input.jsonl
+          python scripts/research-upset-filter.py --input .local/input.jsonl --out upset-cached-36m-aggregate.json
+          python - <<'PY'
+          import json,os
+          r=json.load(open('upset-cached-36m-aggregate.json'))
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+              f.write('## Cached 36-month upset filter diagnostic\n\n')
+              f.write('| Validation top % | Test races | Escape ROI | Consensus ROI |\n|---:|---:|---:|---:|\n')
+              for x in r['strategies']:
+                  a=x['test']['escape'];b=x['test']['consensus']
+                  f.write(f"| {x['topValidationPercent']}% | {a['races']} | {a['roi']:.2%} | {b['roi']:.2%} |\n")
+              f.write('\nDiagnostic only: historical odds unavailable; no prospective profitability claim.\n')
+          PY
+      - name: Delete private racer and race-level data
+        if: always()
+        run: rm -rf .local
+      - name: Upload aggregate-only results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upset-cached-36m-aggregate
+          path: upset-cached-36m-aggregate.json
+          if-no-files-found: warn
+          retention-days: 30

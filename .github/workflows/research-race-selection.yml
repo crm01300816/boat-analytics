@@ -1,0 +1,47 @@
+name: Research B/K selective purchase policies
+# Research-only workflow: no live app changes
+on:
+  push:
+    branches: [experiment/value-ensemble-research-20261030]
+    paths:
+      - scripts/research-race-selection.mjs
+      - tests/research-race-selection.test.mjs
+      - .github/workflows/research-race-selection.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  selection-research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Run regression tests
+        run: node --test tests/*.test.mjs
+      - name: Retrieve 36 anonymous B/K feature months from verified source run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p .local/raw .local/features
+          gh run download 41372002521 --repo crm01300816/boat-analytics --pattern 'official-feature-36m-*' --dir .local/raw
+          find .local/raw -type f -name 'official-20??-??.json' -exec cp {} .local/features/ \;
+          test "$(find .local/features -maxdepth 1 -name 'official-20??-??.json' | wc -l)" -eq 36
+      - name: Evaluate predeclared top 10 20 30 percent policies
+        run: |
+          node scripts/research-race-selection.mjs .local/features race-selection-36m.json
+          echo '### Race-selection research: validation-chosen policy only' >> "$GITHUB_STEP_SUMMARY"
+          node -e "const r=require('./race-selection-36m.json');for(const c of r.counts){const p=c.selectedByValidation;console.log('bets',c.count,'baseline test',c.periods.test.escape.provisionalROI,'chosen',p?JSON.stringify({ranker:p.ranker,fraction:p.fraction,validationROI:p.validation.provisionalROI,testROI:p.test.provisionalROI,testBets:p.test.races}):'none passed validation guards')}" >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove private per-race features
+        if: always()
+        run: rm -rf .local
+      - name: Upload aggregate-only research report
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-bk-race-selection-36m-aggregates
+          path: race-selection-36m.json
+          retention-days: 30
+          if-no-files-found: error

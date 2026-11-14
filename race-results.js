@@ -34,6 +34,20 @@ export function resultsPage({date,races=[],results=[],payouts=[],venue='',raceId
   <div><small>平均風速（確定結果）</small><b>${mean(winds)}<span>m/s</span></b></div></div>`;
   if(venues.length)html+=`<div class="section-head"><h2>競艇場を選択</h2><span class="time">${venues.length}場</span></div>
     <div class="venue-list">${venues.map(code=>`<button data-venue="${esc(code)}" class="venue ${code===v?'active':''}">${esc(venueName(code))}<small>${options.filter(x=>x.venue===code&&rmap.has(x.id)).length}R確定</small></button>`).join('')}</div>`;
+  if(venues.length){
+    const summary=venues.map(code=>{
+      const rows=todayRows.filter(r=>String(r['レースコード']).slice(8,10)===code);
+      const first=rows.filter(r=>Number(r['1着_艇番'])===1).length;
+      const methods={};let totalPayout=0,payoutCount=0;
+      for(const r of rows){
+        const method=String(r['決まり手']||'').trim();if(method)methods[method]=(methods[method]||0)+1;
+        const pay=numeric(pmap.get(r['レースコード'])?.['3連単_払戻金']);
+        if(pay!==null&&pay>0){totalPayout+=pay;payoutCount++}
+      }
+      return {code,races:rows.length,first,methods,avg:payoutCount?Math.round(totalPayout/payoutCount):null};
+    });
+    html+=`<div class="panel"><div class="panel-header"><div><h3>競艇場別・当日の結果一覧</h3><p>開催場を選ぶと1〜12Rの着順・決まり手・払戻を確認できます。</p></div></div><div class="table-wrap"><table class="data-table result-history-table"><thead><tr><th>競艇場</th><th>結果</th><th>1号艇1着率</th><th>決まり手</th><th>平均3連単払戻</th></tr></thead><tbody>${summary.map(x=>`<tr><td><button class="result-day-button" data-venue="${esc(x.code)}">${esc(venueName(x.code))}</button></td><td>${x.races}R</td><td>${x.races?formatPct(x.first/x.races*100):'—'}</td><td>${Object.entries(x.methods).sort((a,b)=>b[1]-a[1]).map(([k,n])=>esc(k)+':'+n).join(' / ')||'—'}</td><td>${x.avg===null?'—':yen(x.avg)}</td></tr>`).join('')}</tbody></table></div></div>`;
+  }
   if(selection.length)html+=`<div class="section-head"><h2>${esc(venueName(v))}のレース結果</h2><span class="time">${selection.filter(x=>rmap.has(x.id)).length}/${selection.length}R確定</span></div>
     <div class="race-pills">${selection.map(x=>`<button data-race="${esc(x.id)}" class="race-pill ${picked?.id===x.id?'active':''}"><small>${rmap.has(x.id)?'結果確定':'結果待ち'}</small><b>${x.number}<span>R</span></b></button>`).join('')}</div>`;
   if(picked) {
@@ -76,6 +90,17 @@ export function resultsPage({date,races=[],results=[],payouts=[],venue='',raceId
       recentProspective.map(d=>'<tr><td>'+esc(d.date)+'</td><td>'+d.captured+'R</td><td>'+d.settled+'R</td>'+
       [3,5,7,10].map(k=>'<td>'+formatPct(d.byCount?.[k]?.provisionalRoi==null?null:d.byCount[k].provisionalRoi*100)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
   }else html+='<div class="panel-body"><p class="page-description">締切前に保存した買い目の評価結果は、翌日以降に追加されます。</p></div>';
+  const recent=Array.isArray(prospective?.days)?prospective.days.filter(d=>d.date<=date):[];
+  const totals=Object.fromEntries([3,5,7,10].map(k=>[k,{settled:0,hits:0,stakeYen:0,payoutYen:0}]));
+  const venueTotals=Object.fromEntries([3,5,7,10].map(k=>[k,{settled:0,hits:0,stakeYen:0,payoutYen:0}]));
+  for(const d of recent)for(const k of [3,5,7,10]){
+    const a=d.byCount?.[k],b=d.byVenue?.[v]?.[k];
+    for(const [target,source] of [[totals[k],a],[venueTotals[k],b]])if(source){
+      for(const field of ['settled','hits','stakeYen','payoutYen'])target[field]+=Number(source[field]||0);
+    }
+  }
+  const rowFor=(label,group)=>`<tr><td>${label}</td>${[3,5,7,10].map(k=>{const x=group[k];return `<td>${x.settled}R / ${x.settled?formatPct(x.hits/x.settled*100):'—'} / ${x.stakeYen?formatPct(x.payoutYen/x.stakeYen*100):'—'}</td>`}).join('')}</tr>`;
+  html+=`<div class="panel"><div class="panel-header"><div><h3>3・5・7・10点別の的中率・回収率</h3><p>締切前に保存された予想だけを集計。各レース1,000円想定。表示：精算R数 / 的中率 / 暫定回収率。</p></div></div><div class="table-wrap"><table class="data-table result-history-table"><thead><tr><th>対象</th><th>3点</th><th>5点</th><th>7点</th><th>10点</th></tr></thead><tbody>${rowFor('全競艇場',totals)}${rowFor(esc(venueName(v)),venueTotals)}</tbody></table></div><div class="panel-body"><p class="time">場別の数値は場別集計を保存し始めた日から対象。過去の場別記録がない場合は「—」です。未購入レースや過去検証の推計値は含みません。</p></div></div>`;
   html+='</div>';
   return html+'<div class="footnote">日別データは終了後の集計。予想精度と回収率は締切前に保存した買い目のみ評価し、返還・特殊決済の監査がない場合は暫定値として扱います。</div>';
 }

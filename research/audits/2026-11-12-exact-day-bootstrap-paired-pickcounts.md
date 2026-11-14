@@ -1,0 +1,11 @@
+# 2026-11-12 exact seven-day cluster bootstrap: 10 vs 3 picks (exploratory)
+
+Source: research/audits/2026-11-11-931-ledger-day-stability.md; independently cross-checked daily 10-pick minus 3-pick net differences in research/audits/2026-11-12-artifact-recovery-and-day-paired-robustness.md. Original artifact: Actions run 42881774362 / artifact 13793957202; prior original ZIP audit in research/reports/artifact-42881774362-original-audit-20261112.md. Source research SHA fba8e15b3d6fba80f07a1a38d6f6b2853a772d35.
+
+Matched cohort: 931 races, 2026-10-29 to 2026-11-04, seven calendar days, both methods stake JPY 931,000. Three picks: payout JPY 682,010; net -248,990; ROI 73.26%; hits 171. Ten picks: payout JPY 689,110; net -241,890; ROI 74.02%; hits 403. Paired net delta +7,100 JPY (ten minus three), ROI +0.76 percentage points.
+
+New diagnostic: **exact nonparametric day-cluster bootstrap**, enumerate all 7^7 = 823,543 ordered draws of seven days with replacement from the seven observed paired daily deltas [6830,-15850,27120,2580,-12740,18130,-18970] JPY. For each resample, sum seven day deltas; equal day-weight resampling preserves each day's within-day dependence, not individual race independence. Distribution: mean +7,100 JPY; median +6,380; 2.5th percentile -74,240; 97.5th percentile +93,500; proportion strictly positive 55.58%; extreme values -132,790 to +189,840. These percentiles are descriptive, **not a reliable 95% confidence interval**, because seven days, possible time trends, post-selection and unverified odds provenance violate strong inference assumptions.
+
+Decision: **do not select ten picks based on +7,100 JPY**; advantage direction is fragile. Both policies lose >JPY 240,000; cash hold dominates retrospectively but no verified profitable alternative established. The 931/931 missing odds_snapshot_at and unverified official cutoff prohibit independent pre-race OOS claims. The 1029 target / 932 saved / 931 settled discrepancy remains separate. The nested walk-forward artifact's all-cash-hold decision has undefined betting ROI, not a 100% ROI claim.
+
+Next hypothesis: timestamp-proven odds and frozen predictions first; only then compare preregistered skip thresholds against all-buy and cash hold, with equal-budget paired comparison, pure profit, ROI, max drawdown, and calendar-block stability. No production promotion.
