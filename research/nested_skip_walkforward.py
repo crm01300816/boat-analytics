@@ -27,7 +27,7 @@ def nested_evaluate(rows, outer_train_days=4, inner_train_days=2,
             inner.append((training, by_day[past[k]]))
         eligible = [(1.01, 0.0, 0, 0)]  # No-bet option is always available.
         for threshold in CANDIDATES[:-1]:
-            profits, bets = [], 0
+            profits, bets, active_folds = [], 0, 0
             for training, validation in inner:
                 if metrics(training, threshold)["n"] < min_train_bets:
                     continue
@@ -36,7 +36,12 @@ def nested_evaluate(rows, outer_train_days=4, inner_train_days=2,
                 # days. Excluding these conditions fold coverage on strategy selections.
                 profits.append(m["profit"])
                 bets += m["n"]
-            if len(profits) >= min_inner_folds and bets >= min_train_bets:
+                active_folds += int(m["n"] > 0)
+            # Require independent active validation days and at least 50% day coverage.
+            # Zero-bet days remain in the denominator, not silently discarded.
+            if (active_folds >= min_inner_folds and
+                    active_folds * 2 >= len(profits) and
+                    bets >= min_train_bets):
                 eligible.append((threshold, sum(profits), len(profits), bets))
         chosen = max(eligible, key=lambda x: (x[1], -x[0]))
         test = [r for d in future for r in by_day[d]]
