@@ -8,7 +8,11 @@ from pathlib import Path
 def audit_files(paths, expected_targets=1029, expected_saved=932, expected_settled=931):
     rows, invalid, source_counts = [], [], {}
     for path in sorted(map(Path, paths)):
-        doc = json.loads(path.read_text(encoding="utf-8"))
+        try:
+            doc = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            invalid.append({"file": str(path), "reason": type(exc).__name__})
+            continue
         records = doc.get("records") if isinstance(doc, dict) else doc
         if not isinstance(records, list):
             invalid.append(str(path))
@@ -27,11 +31,15 @@ def audit_files(paths, expected_targets=1029, expected_saved=932, expected_settl
     missing_id = [{"file": p, "index": i} for rid, p, i, _ in rows if not rid]
     missing_odds_capture = sum(not (r.get("oddsCapturedAt") or r.get("odds_captured_at")) for _, _, _, r in rows)
     missing_raw_mass = sum(r.get("raw_mass") is None for _, _, _, r in rows)
+    timestamp_present = len(rows) - missing_odds_capture
+    raw_mass_present = len(rows) - missing_raw_mass
     return {
         "expected": {"targets": expected_targets, "saved": expected_saved, "normal_settlements": expected_settled},
         "observed": {"files": len(source_counts), "rows": len(rows), "unique_race_ids": len(by_id),
                      "duplicate_race_ids": len(duplicates), "missing_race_ids": len(missing_id),
-                     "missing_odds_capture_timestamp": missing_odds_capture, "missing_raw_mass": missing_raw_mass},
+                     "missing_odds_capture_timestamp": missing_odds_capture, "missing_raw_mass": missing_raw_mass,
+                     "odds_timestamp_present_unverified": timestamp_present,
+                     "raw_mass_present_unverified": raw_mass_present},
         "saved_count_gap": expected_saved - len(rows),
         "sources": source_counts, "duplicate_locations": duplicates, "missing_id_locations": missing_id,
         "invalid_entries": invalid,
@@ -53,6 +61,12 @@ def selftest():
         assert result["saved_count_gap"] == 0
         assert len(result["duplicate_locations"]["r1"]) == 2
         assert result["observed"]["missing_odds_capture_timestamp"] == 4
+        broken = Path(d)/"broken.json"
+        broken.write_text("{bad json", encoding="utf-8")
+        result = audit_files([a, broken], expected_saved=4)
+        assert result["observed"]["rows"] == 2
+        assert result["saved_count_gap"] == 2
+        assert result["invalid_entries"][0]["reason"] == "JSONDecodeError"
     print("self-test passed")
 
 if __name__ == "__main__":
