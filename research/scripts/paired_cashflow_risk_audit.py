@@ -30,6 +30,8 @@ def audit(rows):
     for m in METHODS:
         total_stake = total_return = equity = peak = dd = 0.0
         daily = []
+        daily_equity = daily_peak = daily_dd = 0.0
+        losing_streak = max_losing_streak = 0
         purchased_races = 0
         for day in days:
             stake = returned = 0.0
@@ -44,11 +46,20 @@ def audit(rows):
                 dd = max(dd, peak - equity)
             total_stake += stake
             total_return += returned
+            day_profit = returned - stake
+            daily_equity += day_profit
+            daily_peak = max(daily_peak, daily_equity)
+            daily_dd = max(daily_dd, daily_peak - daily_equity)
+            losing_streak = losing_streak + 1 if day_profit < 0 else 0
+            max_losing_streak = max(max_losing_streak, losing_streak)
             daily.append(dict(day=day, n=len(by_day[day]), stake=stake,
-                              payout=returned, profit=returned-stake))
+                              payout=returned, profit=day_profit))
         output[m] = dict(n=len(rows), purchased_races=purchased_races, skipped_races=len(rows)-purchased_races, stake=total_stake, payout=total_return,
                          profit=total_return-total_stake, roi=total_return/total_stake if total_stake else None,
-                         max_drawdown=dd, profitable_days=sum(x["profit"]>0 for x in daily),
+                         max_drawdown=dd, daily_close_max_drawdown=daily_dd,
+                         worst_day_profit=min((x["profit"] for x in daily), default=None),
+                         losing_days=sum(x["profit"] < 0 for x in daily),
+                         max_consecutive_losing_days=max_losing_streak, profitable_days=sum(x["profit"]>0 for x in daily),
                          daily=daily)
     pairs = []
     for i, a in enumerate(METHODS):
@@ -74,6 +85,8 @@ def audit(rows):
                              "Day-level differences are descriptive, not independent OOS.",
                              "Same total stake does not guarantee identical per-race stake or odds; inspect same_per_race_stake.",
                              "Zero-stake skips are allowed only with zero payout; selected ROI is undefined if all races are skipped.",
+                             "Trade-level drawdown uses raceId ordering within a day; verify raceId matches actual settlement order.",
+                             "Daily-close drawdown ignores intraday troughs; compare both risk metrics.",
                              "Refunds and special settlements must be separately reconciled."])
 
 def main():
