@@ -32,10 +32,8 @@ def nested_evaluate(rows, outer_train_days=4, inner_train_days=2,
                 if metrics(training, threshold)["n"] < min_train_bets:
                     continue
                 m = metrics(validation, threshold)
-                # A validation day with zero purchases provides no evidence of
-                # reproducible returns; do not count it toward fold coverage.
-                if m["n"] == 0:
-                    continue
+                # Count every chronological validation day, including zero-purchase
+                # days. Excluding these conditions fold coverage on strategy selections.
                 profits.append(m["profit"])
                 bets += m["n"]
             if len(profits) >= min_inner_folds and bets >= min_train_bets:
