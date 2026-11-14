@@ -26,5 +26,16 @@ class PairedCashflowTests(unittest.TestCase):
         row["methods"]["5"]["returned"]=-1
         with self.assertRaises(ValueError): audit([row])
 
+    def test_large_total_stake_difference_not_masked_by_relative_tolerance(self):
+        row = race("2026102901", (0, 0, 0, 0))
+        for method in ("3", "5", "7", "10"):
+            row["methods"][method]["stake"] = 1000000
+        row["methods"]["5"]["stake"] = 1000000.5
+        result = audit([row])
+        pair = next(x for x in result["pairs"] if x["a"] == "3" and x["b"] == "5")
+        self.assertFalse(pair["same_total_stake"])
+        self.assertFalse(pair["same_per_race_stake"])
+        self.assertEqual(pair["per_race_stake_mismatch_count"], 1)
+
 if __name__=="__main__":
     unittest.main()
