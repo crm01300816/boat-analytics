@@ -65,7 +65,7 @@ def audit(rows):
                               same_per_race_stake=(len(mismatched_races) == 0),
                               per_race_stake_mismatch_count=len(mismatched_races),
                               per_race_stake_mismatch_ids=mismatched_races[:25],
-                              same_total_stake=math.isclose(x["stake"], y["stake"],abs_tol=1e-7),
+                              same_total_stake=math.isclose(x["stake"], y["stake"], rel_tol=0, abs_tol=1e-7),
                               profit_difference=x["profit"]-y["profit"],
                               daily_pairs=paired))
     return dict(source_rows=len(rows), distinct_days=len(days), methods=output, pairs=pairs,
