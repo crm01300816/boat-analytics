@@ -22,7 +22,7 @@ def audit(rows):
         for m in METHODS:
             trade = row["methods"][m]
             stake, returned = float(trade["stake"]), float(trade["returned"])
-            if not all(map(math.isfinite, (stake, returned))) or stake <= 0 or returned < 0:
+            if not all(map(math.isfinite, (stake, returned))) or stake < 0 or returned < 0 or (stake == 0 and returned != 0):
                 raise ValueError("invalid settlement: " + rid + "/" + m)
         by_day[rid[:8]].append(row)
     days = sorted(by_day)
@@ -30,12 +30,14 @@ def audit(rows):
     for m in METHODS:
         total_stake = total_return = equity = peak = dd = 0.0
         daily = []
+        purchased_races = 0
         for day in days:
             stake = returned = 0.0
             for row in sorted(by_day[day], key=lambda x: str(x["raceId"])):
                 trade = row["methods"][m]
                 s, p = float(trade["stake"]), float(trade["returned"])
                 stake += s
+                purchased_races += int(s > 0)
                 returned += p
                 equity += p - s
                 peak = max(peak, equity)
@@ -44,7 +46,7 @@ def audit(rows):
             total_return += returned
             daily.append(dict(day=day, n=len(by_day[day]), stake=stake,
                               payout=returned, profit=returned-stake))
-        output[m] = dict(n=len(rows), stake=total_stake, payout=total_return,
+        output[m] = dict(n=len(rows), purchased_races=purchased_races, skipped_races=len(rows)-purchased_races, stake=total_stake, payout=total_return,
                          profit=total_return-total_stake, roi=total_return/total_stake if total_stake else None,
                          max_drawdown=dd, profitable_days=sum(x["profit"]>0 for x in daily),
                          daily=daily)
@@ -71,6 +73,7 @@ def audit(rows):
                 limitations=["Historical settlements alone cannot prove pre-cutoff odds or prediction provenance.",
                              "Day-level differences are descriptive, not independent OOS.",
                              "Same total stake does not guarantee identical per-race stake or odds; inspect same_per_race_stake.",
+                             "Zero-stake skips are allowed only with zero payout; selected ROI is undefined if all races are skipped.",
                              "Refunds and special settlements must be separately reconciled."])
 
 def main():
