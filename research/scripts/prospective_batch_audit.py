@@ -15,12 +15,12 @@ def audit_files(paths, expected_targets=1029, expected_saved=932, expected_settl
             continue
         records = doc.get("records") if isinstance(doc, dict) else doc
         if not isinstance(records, list):
-            invalid.append(str(path))
+            invalid.append({"file": str(path), "reason": "InvalidRecordsContainer"})
             continue
         source_counts[str(path)] = len(records)
         for index, row in enumerate(records):
             if not isinstance(row, dict):
-                invalid.append(f"{path}:{index}")
+                invalid.append({"file": str(path), "index": index, "reason": "NonObjectRecord"})
                 continue
             rows.append((str(row.get("raceId") or ""), str(path), index, row))
     by_id = defaultdict(list)
@@ -31,16 +31,20 @@ def audit_files(paths, expected_targets=1029, expected_saved=932, expected_settl
     missing_id = [{"file": p, "index": i} for rid, p, i, _ in rows if not rid]
     missing_odds_capture = sum(not (r.get("oddsCapturedAt") or r.get("odds_captured_at")) for _, _, _, r in rows)
     missing_raw_mass = sum(r.get("raw_mass") is None for _, _, _, r in rows)
+    blank_id = sum(not rid for rid, _, _, _ in rows)
+    valid_unique = len(by_id)
     timestamp_present = len(rows) - missing_odds_capture
     raw_mass_present = len(rows) - missing_raw_mass
     return {
         "expected": {"targets": expected_targets, "saved": expected_saved, "normal_settlements": expected_settled},
         "observed": {"files": len(source_counts), "rows": len(rows), "unique_race_ids": len(by_id),
-                     "duplicate_race_ids": len(duplicates), "missing_race_ids": len(missing_id),
+                     "duplicate_race_ids": len(duplicates), "duplicate_extra_rows": sum(len(v)-1 for v in duplicates.values()), "missing_race_ids": len(missing_id),
                      "missing_odds_capture_timestamp": missing_odds_capture, "missing_raw_mass": missing_raw_mass,
                      "odds_timestamp_present_unverified": timestamp_present,
                      "raw_mass_present_unverified": raw_mass_present},
         "saved_count_gap": expected_saved - len(rows),
+        "coverage_unique_vs_expected_saved": {"numerator": valid_unique, "denominator": expected_saved},
+        "identity_reconciliation_check": "PASS" if len(rows) == valid_unique + sum(len(v)-1 for v in duplicates.values()) + blank_id else "FAIL",
         "sources": source_counts, "duplicate_locations": duplicates, "missing_id_locations": missing_id,
         "invalid_entries": invalid,
         "settlement_reconciliation": "NOT_PERFORMED: requires row-level settlement ledger",
@@ -59,6 +63,8 @@ def selftest():
         assert result["observed"]["unique_race_ids"] == 3
         assert result["observed"]["duplicate_race_ids"] == 1
         assert result["saved_count_gap"] == 0
+        assert result["observed"]["duplicate_extra_rows"] == 1
+        assert result["identity_reconciliation_check"] == "PASS"
         assert len(result["duplicate_locations"]["r1"]) == 2
         assert result["observed"]["missing_odds_capture_timestamp"] == 4
         broken = Path(d)/"broken.json"
@@ -67,6 +73,12 @@ def selftest():
         assert result["observed"]["rows"] == 2
         assert result["saved_count_gap"] == 2
         assert result["invalid_entries"][0]["reason"] == "JSONDecodeError"
+        malformed = Path(d)/"malformed.json"
+        malformed.write_text(json.dumps({"records":[None, {"raceId":""}, {"raceId":"r4"}]}))
+        result = audit_files([malformed], expected_saved=3)
+        assert result["invalid_entries"][0]["reason"] == "NonObjectRecord"
+        assert result["identity_reconciliation_check"] == "PASS"
+        assert result["observed"]["missing_race_ids"] == 1
     print("self-test passed")
 
 if __name__ == "__main__":
