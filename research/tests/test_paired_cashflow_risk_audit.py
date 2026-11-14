@@ -30,7 +30,7 @@ class PairedCashflowTests(unittest.TestCase):
         row = race("2026102901", (0, 0, 0, 0))
         for method in ("3", "5", "7", "10"):
             row["methods"][method]["stake"] = 1000000
-        row["methods"]["5"]["stake"] = 1000000.5
+        row["methods"]["5"]["stake"] = 1000000.0005
         result = audit([row])
         pair = next(x for x in result["pairs"] if x["a"] == "3" and x["b"] == "5")
         self.assertFalse(pair["same_total_stake"])
