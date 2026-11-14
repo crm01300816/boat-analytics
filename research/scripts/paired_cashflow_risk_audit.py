@@ -55,7 +55,14 @@ def audit(rows):
             paired = [dict(day=d["day"], profit_difference=d["profit"]-e["profit"],
                            stake_difference=d["stake"]-e["stake"])
                       for d, e in zip(x["daily"], y["daily"])]
+            mismatched_races = [str(row["raceId"]) for row in rows
+                                if not math.isclose(float(row["methods"][a]["stake"]),
+                                                    float(row["methods"][b]["stake"]),
+                                                    rel_tol=0, abs_tol=1e-7)]
             pairs.append(dict(a=a, b=b, same_race_set=True,
+                              same_per_race_stake=(len(mismatched_races) == 0),
+                              per_race_stake_mismatch_count=len(mismatched_races),
+                              per_race_stake_mismatch_ids=mismatched_races[:25],
                               same_total_stake=math.isclose(x["stake"], y["stake"],abs_tol=1e-7),
                               profit_difference=x["profit"]-y["profit"],
                               daily_pairs=paired))
@@ -63,7 +70,7 @@ def audit(rows):
                 classification="retrospective_in_sample",
                 limitations=["Historical settlements alone cannot prove pre-cutoff odds or prediction provenance.",
                              "Day-level differences are descriptive, not independent OOS.",
-                             "Same total stake does not guarantee identical per-race stake or odds.",
+                             "Same total stake does not guarantee identical per-race stake or odds; inspect same_per_race_stake.",
                              "Refunds and special settlements must be separately reconciled."])
 
 def main():
