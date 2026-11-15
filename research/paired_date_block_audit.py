@@ -25,8 +25,8 @@ def compare(path, baseline, challenger, repeats=5000, seed=20261115):
             stake, payout = float(row["stake"]), float(row["payout"])
             if not (math.isfinite(stake) and math.isfinite(payout)):
                 raise ValueError("nonfinite financial amount")
-            if min(stake, payout) < 0:
-                raise ValueError("negative financial amount")
+            if stake <= 0 or payout < 0:
+                raise ValueError("stake must be positive and payout nonnegative")
             flag = row["eligible"].lower().strip()
             if flag not in ("true", "1", "yes", "false", "0", "no"):
                 raise ValueError("unknown eligibility flag; do not silently accept or exclude")
@@ -49,6 +49,8 @@ def compare(path, baseline, challenger, repeats=5000, seed=20261115):
             d[i] += v
     if not by_day:
         return {"status": "NO_VERIFIED_ELIGIBLE_PAIRS", "excluded": excluded}
+    if len(by_day) < 2:
+        return {"status": "INSUFFICIENT_DATES_FOR_BOOTSTRAP", "paired_races": sum(d[4] for d in by_day.values()), "dates": len(by_day), "excluded": excluded, "caveat": "At least two distinct dates are required for date-block uncertainty estimation."}
     days = list(by_day.values())
     totals = [sum(day[i] for day in days) for i in range(5)]
     if totals[0] <= 0:
