@@ -7,6 +7,7 @@ This tool cannot establish betting feasibility or independent OOS status.
 """
 import argparse
 import csv
+import datetime
 import json
 import math
 import random
@@ -20,6 +21,12 @@ def compare(path, baseline, challenger, repeats=5000, seed=20261115):
         for row in csv.DictReader(handle):
             if not row["date"].strip() or not row["race_id"].strip():
                 raise ValueError("missing date or race_id")
+            day = row["date"].strip()
+            try:
+                if datetime.date.fromisoformat(day).isoformat() != day:
+                    raise ValueError("noncanonical date")
+            except ValueError as exc:
+                raise ValueError("invalid or noncanonical settlement date: " + day) from exc
             key = (row["date"].strip(), row["race_id"].strip())
             name = row["strategy"]
             if name in races[key]:
@@ -53,7 +60,7 @@ def compare(path, baseline, challenger, repeats=5000, seed=20261115):
         return {"status": "NO_VERIFIED_ELIGIBLE_PAIRS", "excluded": excluded}
     if len(by_day) < 2:
         d = next(iter(by_day.values()))
-        return {"status": "INSUFFICIENT_DATES_FOR_BOOTSTRAP", "paired_races": int(d[4]), "dates": 1, "excluded": excluded, "baseline": {"stake": d[0], "payout": d[1], "profit": d[1]-d[0], "roi_pct": 100*d[1]/d[0]}, "challenger": {"stake": d[2], "payout": d[3], "profit": d[3]-d[2], "roi_pct": 100*d[3]/d[2]}, "paired_profit_difference": d[3]-d[1], "paired_roi_difference_pp": 100*(d[3]-d[1])/d[0], "date_block_bootstrap_95pct_pp": None, "caveat": "Single-day descriptive result only; no valid date-block uncertainty or independent OOS inference."}
+        return {"status": "INSUFFICIENT_DATES_FOR_BOOTSTRAP", "paired_races": int(d[4]), "dates": 1, "excluded": excluded, "baseline": {"stake": d[0], "payout": d[1], "profit": d[1]-d[0], "roi_pct": 100*d[1]/d[0]}, "challenger": {"stake": d[2], "payout": d[3], "profit": d[3]-d[2], "roi_pct": 100*d[3]/d[2]}, "paired_profit_difference": d[3]-d[1], "paired_roi_difference_pp": 100*(d[3]-d[1])/d[0], "paired_difference_max_drawdown": max(0.0, d[1]-d[3]), "date_block_bootstrap_95pct_pp": None, "caveat": "Single-day descriptive result only; no valid date-block uncertainty or independent OOS inference."}
     days = [by_day[k] for k in sorted(by_day)]
     daily_profit_differences = [d[3] - d[1] for d in days]
     running = peak = max_drawdown = 0.0
