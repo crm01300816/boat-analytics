@@ -8,6 +8,7 @@ This tool cannot establish betting feasibility or independent OOS status.
 import argparse
 import csv
 import json
+import math
 import random
 from collections import defaultdict
 
@@ -15,14 +16,21 @@ def compare(path, baseline, challenger, repeats=5000, seed=20261115):
     races = defaultdict(dict)
     with open(path, encoding="utf-8-sig", newline="") as handle:
         for row in csv.DictReader(handle):
-            key = (row["date"], row["race_id"])
+            if not row["date"].strip() or not row["race_id"].strip():
+                raise ValueError("missing date or race_id")
+            key = (row["date"].strip(), row["race_id"].strip())
             name = row["strategy"]
             if name in races[key]:
                 raise ValueError("duplicate race/strategy: %r %s" % (key, name))
             stake, payout = float(row["stake"]), float(row["payout"])
+            if not (math.isfinite(stake) and math.isfinite(payout)):
+                raise ValueError("nonfinite financial amount")
             if min(stake, payout) < 0:
                 raise ValueError("negative financial amount")
-            eligible = row["eligible"].lower().strip() in ("true", "1", "yes")
+            flag = row["eligible"].lower().strip()
+            if flag not in ("true", "1", "yes", "false", "0", "no"):
+                raise ValueError("unknown eligibility flag; do not silently accept or exclude")
+            eligible = flag in ("true", "1", "yes")
             races[key][name] = (stake, payout, eligible)
     by_day = defaultdict(lambda: [0., 0., 0., 0., 0])
     excluded = 0
