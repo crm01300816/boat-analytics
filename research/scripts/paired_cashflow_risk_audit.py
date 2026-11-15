@@ -31,19 +31,26 @@ def audit(rows):
         total_stake = total_return = equity = peak = dd = 0.0
         daily = []
         daily_equity = daily_peak = daily_dd = 0.0
+        worst_order_equity = worst_order_peak = worst_order_dd = 0.0
         losing_streak = max_losing_streak = 0
         purchased_races = 0
         for day in days:
             stake = returned = 0.0
+            day_trade_profits = []
             for row in sorted(by_day[day], key=lambda x: str(x["raceId"])):
                 trade = row["methods"][m]
                 s, p = float(trade["stake"]), float(trade["returned"])
                 stake += s
                 purchased_races += int(s > 0)
                 returned += p
+                day_trade_profits.append(p - s)
                 equity += p - s
                 peak = max(peak, equity)
                 dd = max(dd, peak - equity)
+            for profit_item in sorted(day_trade_profits):
+                worst_order_equity += profit_item
+                worst_order_peak = max(worst_order_peak, worst_order_equity)
+                worst_order_dd = max(worst_order_dd, worst_order_peak - worst_order_equity)
             total_stake += stake
             total_return += returned
             day_profit = returned - stake
@@ -59,6 +66,8 @@ def audit(rows):
                          max_drawdown=dd, max_drawdown_order_verified=False,
                          max_drawdown_ordering_basis="lexicographic_raceId_proxy_not_verified_settlement_time",
                          daily_close_max_drawdown=daily_dd,
+                         intraday_order_agnostic_dd_upper_bound=worst_order_dd,
+                         intraday_order_agnostic_dd_lower_bound=daily_dd,
                          worst_day_profit=min((x["profit"] for x in daily), default=None),
                          losing_days=sum(x["profit"] < 0 for x in daily),
                          max_consecutive_losing_days=max_losing_streak, profitable_days=sum(x["profit"]>0 for x in daily),
@@ -88,7 +97,7 @@ def audit(rows):
                              "Same total stake does not guarantee identical per-race stake or odds; inspect same_per_race_stake.",
                              "Zero-stake skips are allowed only with zero payout; selected ROI is undefined if all races are skipped.",
                              "Trade-level max_drawdown is a raceId-order proxy, NOT a verified chronological maximum drawdown; max_drawdown_order_verified=false. Do not use for policy selection until actual settlement timestamps are available.",
-                             "Daily-close drawdown ignores intraday troughs; compare both risk metrics.",
+                             "Daily-close drawdown is a lower bound and losses-first within each calendar day gives a conservative upper bound for unknown intraday ordering; neither replaces timestamp-verified drawdown.",
                              "Refunds and special settlements must be separately reconciled."])
 
 def main():
