@@ -51,7 +51,7 @@ def compare(path, baseline, challenger, repeats=5000, seed=20261115):
         return {"status": "NO_VERIFIED_ELIGIBLE_PAIRS", "excluded": excluded}
     if len(by_day) < 2:
         return {"status": "INSUFFICIENT_DATES_FOR_BOOTSTRAP", "paired_races": sum(d[4] for d in by_day.values()), "dates": len(by_day), "excluded": excluded, "caveat": "At least two distinct dates are required for date-block uncertainty estimation."}
-    days = list(by_day.values())
+    if repeats <= 0:\n        raise ValueError("bootstrap repeats must be positive")\n    days = [by_day[k] for k in sorted(by_day)]\n    daily_profit_differences = [d[3] - d[1] for d in days]\n    running = peak = max_drawdown = 0.0\n    for delta in daily_profit_differences:\n        running += delta\n        peak = max(peak, running)\n        max_drawdown = max(max_drawdown, peak - running)
     totals = [sum(day[i] for day in days) for i in range(5)]
     if totals[0] <= 0:
         raise ValueError("zero invested stake")
@@ -70,7 +70,7 @@ def compare(path, baseline, challenger, repeats=5000, seed=20261115):
         "paired_races": int(totals[4]), "dates": len(days), "excluded": excluded,
         "baseline": summary(totals[0], totals[1]),
         "challenger": summary(totals[2], totals[3]),
-        "paired_profit_difference": totals[3]-totals[1],
+        "paired_profit_difference": totals[3]-totals[1],\n        "paired_difference_daily_positive_days": sum(x > 0 for x in daily_profit_differences),\n        "paired_difference_daily_negative_days": sum(x < 0 for x in daily_profit_differences),\n        "paired_difference_max_drawdown": max_drawdown,
         "paired_roi_difference_pp": 100*(totals[3]-totals[1])/totals[0],
         "date_block_bootstrap_95pct_pp": [samples[int(.025*(len(samples)-1))],samples[int(.975*(len(samples)-1))]] if samples else None,
         "caveat": "Bootstrap is descriptive only. Short date span, reused training data, missing odds timestamps, and post-selection invalidate confirmatory inference."
