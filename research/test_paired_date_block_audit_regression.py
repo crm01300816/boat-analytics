@@ -15,7 +15,7 @@ class PairedAuditRegression(unittest.TestCase):
                 writer = csv.DictWriter(f, fieldnames=FIELDS)
                 writer.writeheader()
                 writer.writerows(rows)
-            return compare(path, "three", "ten", repeats=300, seed=42, **kwargs)
+            return compare(path, "three", "ten", seed=42, **({"repeats": 300} | kwargs))
 
     @staticmethod
     def pair(date, race, a, b, stake=1000, eligible="true"):
@@ -41,7 +41,16 @@ class PairedAuditRegression(unittest.TestCase):
 
     def test_single_day_no_bootstrap(self):
         rows = self.pair("2026-11-01", "r1", 0, 100)
-        self.assertEqual(self.run_rows(rows)["status"], "INSUFFICIENT_DATES_FOR_BOOTSTRAP")
+        result = self.run_rows(rows)
+        self.assertEqual(result["status"], "INSUFFICIENT_DATES_FOR_BOOTSTRAP")
+        self.assertEqual(result["paired_profit_difference"], 100)
+        self.assertAlmostEqual(result["paired_roi_difference_pp"], 10)
+        self.assertIsNone(result["date_block_bootstrap_95pct_pp"])
+
+    def test_invalid_bootstrap_repeats_rejected_even_without_eligible_pairs(self):
+        rows = self.pair("2026-11-01", "r1", 0, 100, eligible="false")
+        with self.assertRaisesRegex(ValueError, "positive integer"):
+            self.run_rows(rows, repeats=0)
 
     def test_unequal_stake_rejected(self):
         rows = self.pair("2026-11-01", "r1", 0, 100)
