@@ -1,0 +1,240 @@
+name: Research settle frozen picks against official K (isolated)
+on:
+  workflow_dispatch:
+  push:
+    branches: [experiment/value-ensemble-research-20261030]
+    paths:
+      - .github/workflows/research-settle-official-k.yml
+      - research/scripts/paired_ledger_audit.py
+      - research/scripts/nested_profit_walkforward.py
+      - research/scripts/audit_nested_selection.py
+      - research/scripts/fixed_budget_counterfactual.py
+      - research/scripts/daily_budget_fragility.py
+      - research/scripts/paired_day_signflip.py
+      - research/scripts/venue_leave_one_out.py
+      - research/scripts/consolidated_roi_report.py
+      - research/tests/test_venue_leave_one_out.py
+      - research/tests/test_paired_day_signflip.py
+      - research/tests/test_paired_ledger_audit.py
+      - research/tests/test_nested_profit_walkforward.py
+      - research/tests/test_audit_nested_selection.py
+      - research/tests/test_fixed_budget_counterfactual.py
+      - research/tests/test_daily_budget_fragility.py
+permissions:
+  contents: read
+  actions: read
+jobs:
+  settle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install LZH reader
+        run: python -m pip install lhafile==0.3.1
+      - name: Reuse existing official B/K artifact, do not redownload
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p .local/official-bk .local/results
+          gh api repos/${{ github.repository }}/actions/artifacts/13489984777/zip > .local/official-bk.zip
+          unzip -q .local/official-bk.zip -d .local/official-bk
+          find .local/official-bk -maxdepth 3 -type f | sort
+          test -f .local/official-bk/manifest.json
+      - name: Normalize K and quarantine nonordinary results
+        run: |
+          set -euo pipefail
+          python scripts/normalize-recent-official-k.py --root .local/official-bk --out .local/results/official-normal.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('.local/results/official-normal.json')
+          rows=json.loads(p.read_text())
+          audit=json.loads(p.with_suffix('.audit.json').read_text())
+          assert len(rows)==1043,(len(rows),'unexpected ordinary cohort')
+          assert audit['unclassifiedRaceIds']==['202610311408'],audit['unclassifiedRaceIds']
+          rows.append(dict(raceId='202610311408',status='special'))
+          p.write_text(json.dumps(rows,ensure_ascii=False,indent=2)+'\n')
+          PY
+      - name: Settle original frozen Git commits and verify coverage
+        run: |
+          set -euo pipefail
+          node scripts/settle-frozen-picks.mjs .local/results/official-normal.json .local/results/settlement.json .local/results/per-race-ledger.json > .local/results/settlement-stdout.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('.local/results/settlement.json')
+          r=json.loads(p.read_text())
+          ledger=json.loads(Path('.local/results/per-race-ledger.json').read_text())['rows']
+          assert len(ledger)==931,len(ledger)
+          assert len({x['raceId'] for x in ledger})==931
+          for n in (3,5,7,10):
+            m=r['methods'][str(n)]
+            rows=[x['methods'][str(n)] for x in ledger]
+            assert sum(x['stake'] for x in rows)==m['stake']
+            assert sum(x['returned'] for x in rows)==m['returned']
+            assert sum(x['hit'] for x in rows)==m['hits']
+          assert r['freezeCount']==932,r['freezeCount']
+          assert r['matchedNormal']==931,r['matchedNormal']
+          assert r['excludedCounts']['nonNormal']==1,r['excludedCounts']
+          assert all(r['methods'][str(n)]['races']==931 for n in (3,5,7,10))
+          summary={'commit':'${{ github.sha }}','runId':'${{ github.run_id }}','officialCount':r['officialCount'],'freezeCount':r['freezeCount'],'matchedNormal':r['matchedNormal'],'excludedCounts':r['excludedCounts'],'warning':r['warning'],'methods':{str(n):{k:r['methods'][str(n)][k] for k in ('races','hits','hitRate','stake','returned','roi','net','maxDrawdown','byDay')} for n in (3,5,7,10)}}
+          Path('.local/results/summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n')
+          for n,m in summary['methods'].items():print(n,m['races'],m['hits'],m['hitRate'],m['roi'],m['net'],m['maxDrawdown'])
+          PY
+      - name: Analyze venue and chronological split on same frozen ledger
+        run: |
+          set -euo pipefail
+          node scripts/analyze-frozen-ledger.mjs .local/results/per-race-ledger.json .local/results/venue-split-analysis.json
+      - name: Analyze pre-race pick structure
+        run: |
+          set -euo pipefail
+          python scripts/analyze-pick-structure.py .local/results/per-race-ledger.json .local/results/pick-structure-analysis.json
+      - name: Diagnose pick structure within venue and date
+        run: |
+          set -euo pipefail
+          python scripts/analyze-pick-structure-stratified.py .local/results/per-race-ledger.json .local/results/pick-structure-stratified.json
+      - name: Test head-six filter day robustness and payout concentration
+        run: |
+          set -euo pipefail
+          python scripts/analyze-head6-robustness.py .local/results/per-race-ledger.json .local/results/head6-robustness.json
+      - name: Test first-ranked predicted head by chronological split
+        run: |
+          set -euo pipefail
+          node scripts/analyze-head-rank.mjs .local/results/per-race-ledger.json .local/results/head-rank-split.json
+      - name: Audit payout concentration and day-cluster uncertainty
+        run: |
+          python scripts/audit-payout-concentration.py .local/results/per-race-ledger.json > .local/results/payout-concentration.json
+      - name: Compare pick counts paired on identical races and stakes
+        run: |
+          set -euo pipefail
+          python scripts/analyze-paired-pickcounts.py .local/results/per-race-ledger.json .local/results/paired-pickcount-comparison.json
+      - name: Audit frozen prediction timestamp coverage
+        run: |
+          set -euo pipefail
+          python scripts/audit-freeze-timestamps.py .local/results/per-race-ledger.json .local/results/freeze-timestamp-audit.json
+      - name: Compare skip policy under cash-hold and equal-budget assumptions
+        run: |
+          set -euo pipefail
+          python scripts/analyze-skip-budget-policy.py .local/results/per-race-ledger.json .local/results/skip-budget-policy.json
+      - name: Nested chronological profit selection diagnostic (exploratory only)
+        run: |
+          set -euo pipefail
+          python research/scripts/nested_profit_walkforward.py .local/results/per-race-ledger.json .local/results/nested-profit-walkforward.json
+      - name: Audit nested selection against same-day always-buy benchmarks
+        run: |
+          set -euo pipefail
+          python research/scripts/audit_nested_selection.py .local/results/per-race-ledger.json .local/results/nested-profit-walkforward.json .local/results/nested-selection-paired-audit.json
+      - name: Compare equal per-race hypothetical budget (exploratory)
+        run: |
+          set -euo pipefail
+          python research/scripts/fixed_budget_counterfactual.py .local/results/per-race-ledger.json .local/results/fixed-budget-counterfactual.json
+          python -m unittest discover -s research/tests -p 'test_fixed_budget_counterfactual.py' -v
+      - name: Audit daily fragility of equal-budget counterfactual
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s research/tests -p 'test_daily_budget_fragility.py' -v
+          python -m research.scripts.daily_budget_fragility .local/results/per-race-ledger.json .local/results/daily-budget-fragility.json
+      - name: Test paired nested accounting
+        run: python -m unittest discover -s research/tests -p 'test_audit_nested_selection.py' -v
+      - name: Test research paired-ledger auditor
+        run: |
+          python -m unittest discover -s research/tests -p 'test_paired_ledger_audit.py' -v
+      - name: Test nested walkforward chronological isolation
+        run: python -m unittest discover -s research/tests -p 'test_nested_profit_walkforward.py' -v
+      - name: Convert frozen official settlement to research audit CSV
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import csv, json
+          from pathlib import Path
+          ledger=json.loads(Path('.local/results/per-race-ledger.json').read_text())['rows']
+          out=Path('.local/results/paired-ledger-normalized.csv')
+          fields=['race_id','date','policy','stake','payout','hit','prediction_saved_at','odds_snapshot_at','deadline_at']
+          with out.open('w',newline='',encoding='utf-8') as fh:
+              w=csv.DictWriter(fh,fieldnames=fields)
+              w.writeheader()
+              for row in ledger:
+                  race=row['raceId']
+                  for policy in ('3','5','7','10'):
+                      m=row['methods'][policy]
+                      w.writerow(dict(race_id=race,date=f'{race[:4]}-{race[4:6]}-{race[6:8]}',
+                          policy=policy,stake=m['stake'],payout=m['returned'],hit=int(m['hit']),
+                          prediction_saved_at=row.get('recordedAt') or '',
+                          odds_snapshot_at='',deadline_at=row.get('embeddedDeadline') or ''))
+          assert len(ledger)==931,len(ledger)
+          assert sum(1 for _ in csv.DictReader(out.open(encoding='utf-8')))==3724
+          PY
+      - name: Run real 931-race paired audit and assert exact settlement reconciliation
+        run: |
+          set -euo pipefail
+          python research/scripts/paired_ledger_audit.py .local/results/paired-ledger-normalized.csv > .local/results/paired-ledger-audit.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path('.local/results/paired-ledger-audit.json').read_text())
+          s=json.loads(Path('.local/results/settlement.json').read_text())
+          assert a['input_rows']==3724 and a['complete_races']==931,a
+          assert a['rejected_rows']==0 and a['equal_total_stake'],a
+          for p in ('3','5','7','10'):
+              x=a['results'][p]; y=s['methods'][p]
+              assert x['hits']==y['hits'] and x['stake']==y['stake'] and x['payout']==y['returned'],(p,x,y)
+          assert a['timestamp_unverified_races']==931,'Odds timestamps unexpectedly marked verified'
+          print('RECONCILED 931 races / 3724 policies; odds timestamps unverified; exploratory only')
+          PY
+      - name: Export reproducible paired-audit research summary
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path('.local/results/paired-ledger-audit.json').read_text())
+          s=json.loads(Path('.local/results/summary.json').read_text())
+          lines=['# Paired settlement audit (exploratory)', '',
+                 f"Run: {s['runId']} | SHA: {s['commit']}",
+                 f"Normal settlements: {a['complete_races']} | Input rows: {a['input_rows']} | Rejected: {a['rejected_rows']}",
+                 f"Equal total stake: {a['equal_total_stake']} | Timestamp unverified: {a['timestamp_unverified_races']}",
+                 '', '| Picks | N | Hits | Hit rate | Wilson 95% | ROI | Profit | Max DD |',
+                 '|---|---:|---:|---:|---|---:|---:|---:|']
+          for p,r in a['results'].items():
+              w=r['wilson95']
+              interval=f"{w[0]*100:.2f}–{w[1]*100:.2f}%" if w else 'NA'
+              lines.append(f"| {p} | {r['n']} | {r['hits']} | {r['hit_rate']*100:.2f}% | {interval} | {r['roi']*100:.2f}% | {r['profit']:.0f} | {r['max_drawdown']:.0f} |")
+          lines += ['', '## Daily payout concentration (stress test; not OOS)', '', '| Picks | Profitable days | Worst day net | Best day net | ROI excluding highest-payout day | Net excluding that day |', '|---|---:|---:|---:|---:|---:|']
+          for p,r in a['results'].items():
+              stress=r['exclude_max_payout_day']
+              roi=f"{stress['roi']*100:.2f}%" if stress and stress['roi'] is not None else 'NA'
+              net=f"{stress['profit']:.0f}" if stress else 'NA'
+              lines.append(f"| {p} | {r['profitable_days']}/{len(r['by_day'])} | {r['worst_day_profit']} | {r['best_day_profit']} | {roi} | {net} |")
+          lines += ['', 'Limitations: odds_snapshot_at unavailable; deadline not independently verified; no OOS claim.',
+                    'Source cohort: 1029 targets, 932 frozen predictions, 931 ordinary settled; one nonordinary excluded.',
+                    '36-month historical 5-pick 83.19% is exploratory and not independent OOS.']
+          Path('.local/results/paired-ledger-audit-summary.md').write_text('\n'.join(lines)+'\n')
+          print('\n'.join(lines))
+          PY
+      - name: Audit paired day-cluster uncertainty (exploratory)
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s research/tests -p 'test_paired_day_signflip.py' -v
+          python -m research.scripts.paired_day_signflip .local/results/per-race-ledger.json .local/results/paired-day-signflip.json
+      - name: Audit venue profit concentration and leave-one-venue-out fragility
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s research/tests -p 'test_venue_leave_one_out.py' -v
+          python -m research.scripts.venue_leave_one_out .local/results/per-race-ledger.json .local/results/venue-leave-one-out.json
+      - name: Consolidate observed ROI, fixed-budget fragility and evidence limitations
+        run: |
+          set -euo pipefail
+          python research/scripts/consolidated_roi_report.py .local/results .local/results/consolidated-roi-research.md
+          cat .local/results/consolidated-roi-research.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: research-official-k-settlement-${{ github.run_id }}
+          path: .local/results/
+          retention-days: 90

@@ -1,0 +1,25 @@
+name: Diagnose official K parsing (one historical day)
+on:
+  workflow_dispatch:
+  push:
+    branches: [experiment/value-ensemble-research-20261030]
+    paths:
+      - .github/workflows/diagnose-k-format.yml
+permissions:
+  contents: read
+jobs:
+  audit-one-day:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install archive extractor
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq 7zip
+      - name: Run existing regression tests
+        run: python -m unittest discover -s tests -p 'test_official_k_techniques.py' -v
+      # Recheck inline winner-method parsing with the latest research-branch parser on one historical day; no 36-month collection.
+      - name: Diagnose one historical day without exposing racer data
+        run: python scripts/diagnose-k-format.py --day 2026-10-20

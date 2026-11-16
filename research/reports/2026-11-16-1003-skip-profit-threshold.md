@@ -1,0 +1,14 @@
+# 2026-11-16 10:03 JST — Abstention profitability threshold (aggregate-only)
+
+## Evidence and status
+Source: previously recorded 2026-10-29 through 2026-11-04 10-ticket settlement totals; 931 normal settlements, 931,000 JPY staked, 689,110 JPY returned. No individual settlement file or timestamp evidence was independently rerun for this memo. 1,029 target races, 932 saved predictions, 931 normal settlements remain different populations; do not silently equate them. Odds capture timestamps unverified; eligible independent OOS sample remains 0. This is an algebraic diagnostic, not a discovered strategy or independent validation.
+
+## New exact break-even test for skip-only policies
+Let S be a subset of previously purchased races skipped entirely, and let s_i and p_i denote original stake and payout. Remaining profit = -241,890 - sum_{i in S}(p_i - s_i) = -241,890 + sum_{i in S}(s_i-p_i). Thus **strictly positive profit requires the skipped races' realized aggregate net loss to exceed 241,890 JPY**. Break-even requires at least 241,890 JPY of avoided losses. This is a necessary-and-sufficient *ex-post accounting identity*, not a prospective criterion: choosing S using realized p_i leaks outcomes. At 1,000 JPY/race, if every skipped race lost its entire stake, at least 242 fully losing races must be skipped for strictly positive profit; 241 cannot suffice. With some winning skipped races, the necessary count is higher. This lower bound is illustrative only and does not imply 242 races can be identified in advance.
+
+A policy skipping K races has invested capital (931-K)*1,000 JPY and must report ROI on that reduced denominator alongside net profit, coverage and risk. Cash held back has zero betting return and should not be relabeled as invested stake. A same-capital paired comparison requires a precommitted redistribution of the skipped stake to eligible races, under fixed per-race caps and executable odds; it cannot be inferred from aggregate totals. If no such strategy is feasible, report the equal-capital comparison as unavailable rather than fabricating one.
+
+## Constraints and next hypothesis
+The aggregate does not identify which races were negative, so no legitimate skip classifier, calibrated EV threshold, maximum drawdown, date-wise confidence interval or nested walk-forward OOS ROI can be computed. First retrieve the 931 individual settlements and pre-cutoff prediction/odds provenance, reconcile 1,029/932/931, and compare precommitted skip rules to all-buy and cash-hold with strictly future folds. Do not deploy or notify of a strategy improvement. No main/Pages/production changes.
+
+Run: research memo, no Actions execution; sample 931 aggregate settlements; hit rate N/A; ROI 74.02% historical provisional; profit -241,890 JPY; max DD not recomputed; independent OOS 0.

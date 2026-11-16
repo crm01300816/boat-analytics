@@ -1,0 +1,173 @@
+name: Research venue racer course technique models (official B/K 36m)
+on:
+  workflow_dispatch:
+  push:
+    branches: [experiment/value-ensemble-research-20261030]
+    paths:
+      - .github/workflows/research-technique-model.yml
+      - scripts/research-technique-model.py
+      - scripts/research-confidence.py
+      - scripts/research-stake-allocation.py
+      - tests/test_technique_model.py
+      - tests/test_confidence_calibration.py
+      - tests/test_stake_allocation.py
+permissions:
+  contents: read
+concurrency:
+  group: venue-racer-technique-research
+  cancel-in-progress: true
+jobs:
+  regression-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install model dependencies
+        run: python -m pip install --disable-pip-version-check 'numpy>=1.26,<3' 'lightgbm>=4.5,<5' 'xgboost>=3,<4' 'scikit-learn>=1.5,<2'
+      # Cancel superseded research runs to avoid repeated 36-month downloads.
+      - name: Test parsing, chronology and leakage protections
+        run: |
+          node --test tests/*.test.mjs
+          python -m unittest discover -s tests -p 'test_official_k_techniques.py' -v
+          python -m unittest discover -s tests -p 'test_technique_model.py' -v
+          python -m unittest discover -s tests -p 'test_confidence_calibration.py' -v
+          python -m unittest discover -s tests -p 'test_stake_allocation.py' -v
+          python -m unittest discover -s tests -p 'test_boosted_models.py' -v
+  collect-six-month-chunks:
+    needs: regression-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        chunk: [0, 1, 2, 3, 4, 5]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install archive tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq 7zip
+      - name: Collect six official B/K months (with racer IDs kept private)
+        shell: bash
+        env:
+          CHUNK: ${{ matrix.chunk }}
+        run: |
+          set -euo pipefail
+          mkdir -p .local/private
+          for MONTH in $(python - <<'PY'
+          import os
+          start=int(os.environ['CHUNK'])*6
+          for i in range(start,start+6):
+              year=2023+(10+i)//12
+              month=(10+i)%12+1
+              print(f'{year}-{month:02d}')
+          PY
+          ); do
+            START="$MONTH-01"
+            END=$(date -d "$START +1 month -1 day" +%F)
+            if [ "$MONTH" = "2026-10" ]; then END=2026-10-28; fi
+            echo "::group::Collect $MONTH"
+            python scripts/official-month-collector.py --start "$START" --end "$END" \
+              --include-technique --out ".local/private/official-$MONTH.json"
+            test -s ".local/private/official-$MONTH.json"
+            echo "::endgroup::"
+          done
+          test "$(find .local/private -maxdepth 1 -name 'official-20??-??.json' | wc -l)" -eq 6
+      - name: Upload PRIVATE chunk for downstream training
+        uses: actions/upload-artifact@v4
+        with:
+          name: private-technique-chunk-${{ matrix.chunk }}
+          path: .local/private/official-*.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+      - name: Remove local private racer data
+        if: always()
+        run: rm -rf .local /tmp/bkm-*.lzh
+  train-and-compare:
+    needs: collect-six-month-chunks
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free ML tools
+        run: python -m pip install --disable-pip-version-check 'numpy>=1.26,<3' 'lightgbm>=4.5,<5' 'xgboost>=3,<4' 'scikit-learn>=1.5,<2'
+      - name: Download all six PRIVATE chunks
+        uses: actions/download-artifact@v4
+        with:
+          pattern: private-technique-chunk-*
+          path: .local/private
+          merge-multiple: true
+      - name: Verify 36 unique monthly files
+        run: |
+          python - <<'PY'
+          import glob,re
+          files=glob.glob('.local/private/official-*.json')
+          names=[re.search(r'official-(\d{4}-\d{2})\.json$',p).group(1) for p in files]
+          assert len(names)==36 and len(set(names))==36,(len(names),names)
+          print('Verified 36 unique monthly files')
+          PY
+      - name: Recompute validation-selected purchase baseline
+        run: node scripts/research-race-selection.mjs .local/private technique-selection-baseline.json
+      - name: Export chronological PRIVATE features
+        run: node scripts/export-technique-input.mjs .local/private .local/technique-input.jsonl
+      - name: Train LightGBM/XGBoost and compare 3/5/7/10 picks
+        run: |
+          python scripts/research-technique-model.py --input .local/technique-input.jsonl --out technique-36m-aggregate.json
+          python - <<'PY'
+          import json,os
+          r=json.load(open('technique-36m-aggregate.json'))
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+              f.write('## 36-month venue × racer × course × technique research\n\n')
+              f.write(f"Status: **{r['status']}**. Technique coverage: **{r['audit']['techniqueCoverage']:.1%}**.\n\n")
+              f.write('| Model | 5-point test races | Hit rate | Provisional ROI | Profit |\n|---|---:|---:|---:|---:|\n')
+              for model in r['models']:
+                  m=next(x for x in model['counts'] if x['count']==5)['periods']['test']['ai']
+                  f.write(f"| {model['model']} | {m['races']} | {m['hitRate']:.2%} | {m['provisionalROI']:.2%} | {m['profitYen']:,} JPY |\n")
+              f.write('\n### Three-pick confidence reliability (diagnostic test)\n\n')
+              f.write('| Model | Raw Brier | Calibrated Brier | Raw ECE | Calibrated ECE |\n')
+              f.write('|---|---:|---:|---:|---:|\n')
+              for model in r['models']:
+                  c=next(x for x in model['counts'] if x['count']==3)['confidence']
+                  raw=c['diagnosticTest']['raw']; calibrated=c['diagnosticTest']['calibrated']
+                  fmt=lambda value: f'{value:.4f}' if value is not None else 'N/A'
+                  f.write(f"| {model['model']} | {fmt(raw['brier'])} | {fmt(calibrated['brier'] if calibrated else None)} | {fmt(raw['expectedCalibrationError'])} | {fmt(calibrated['expectedCalibrationError'] if calibrated else None)} |\n")
+              f.write('\n### Three-pick fixed ¥1,000 stake allocation (retrospective diagnostic)\n\n')
+              f.write('| Model | Selected on validation | Test ROI | Current on same races | Test races |\n')
+              f.write('|---|---|---:|---:|---:|\n')
+              for model in r['models']:
+                  allocation=next(x for x in model['counts'] if x['count']==3)['stakeAllocation']
+                  cohort=next(x for x in allocation['cohorts'] if x['cohort']=='all')
+                  chosen=cohort['validationNominated'] or 'current'
+                  cand=next(p for p in cohort['policies'] if p['name']==chosen)
+                  base=next(p for p in cohort['policies'] if p['name']=='current')
+                  f.write(f"| {model['model']} | {chosen} | {cand['test']['provisionalROI']:.2%} | {base['test']['provisionalROI']:.2%} | {cand['test']['races']} |\n")
+              f.write('\nRetrospective diagnostic only; historical odds and special settlements unaudited.\n')
+          PY
+      - name: Erase all PRIVATE racer IDs and race-level data
+        if: always()
+        run: rm -rf .local /tmp/bkm-*.lzh
+      - name: Upload aggregate-only research results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-bk-technique-36m-aggregates
+          path: |
+            technique-36m-aggregate.json
+            technique-selection-baseline.json
+          retention-days: 30
+          if-no-files-found: warn
