@@ -31,7 +31,7 @@ jobs:
           set -euo pipefail
           mkdir -p .local/private
           for i in 0 1 2 3 4 5; do
-            gh run download 41806566076 --repo "$GITHUB_REPOSITORY" --name "private-technique-chunk-$i" --dir ".local/private"
+            gh run download 43889289561 --repo "$GITHUB_REPOSITORY" --name "private-technique-chunk-$i" --dir ".local/private"
           done
           test "$(find .local/private -name 'official-20??-??.json' | wc -l)" -eq 36
       - name: Export private features and evaluate upset filtering
