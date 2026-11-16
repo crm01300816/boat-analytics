@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Experimental chronological venue/racer/course/technique boosted-tree rankers.
 PRIVATE racer-level B/K rows are erased on runner. Only aggregate report saved.
+Research objective: compare historical course-specific escape/attack and racer ability
+against baseline over 36 months; report chronological test ROI without promotion.
 """
 import argparse
 from collections import Counter,defaultdict
