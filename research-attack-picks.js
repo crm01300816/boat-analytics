@@ -25,5 +25,6 @@ export function researchAttackPicks(race) {
   // Best observed all-36-month provisional profit among six predefined allocations.
   // Frozen for prospective monitoring; historical selection is not an independent holdout.
   const stakes=[300,500,200];
-  return {picks:evaluated.map((x,i)=>({...x,stake:stakes[i],ev:x.odds===null?null:x.p*x.odds,estimatedPayout:x.odds===null?null:Math.round(x.odds*stakes[i])})),mass,total:1000,eligible,evQualified,confidenceScore:mass,oddsAvailable:evaluated.some(x=>x.odds!==null),method:'攻撃型AI・上位3点50%以上・300/500/200円（過去検証選択）'};
+  const forecast=evaluated.map((x,i)=>({...x,stake:stakes[i],ev:x.odds===null?null:x.p*x.odds,estimatedPayout:x.odds===null?null:Math.round(x.odds*stakes[i])}));
+  return {picks:eligible?forecast:[],forecast,mass,total:1000,eligible,evQualified,confidenceScore:mass,oddsAvailable:evaluated.some(x=>x.odds!==null),method:'攻撃型AI・上位3点50%以上・300/500/200円（過去検証選択）'};
 }
