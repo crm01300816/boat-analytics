@@ -1,50 +1,50 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-20T13:16:24.465Z",
+  "generatedAt": "2026-11-20T16:00:20.522Z",
   "source": "Frozen pre-deadline picks matched to public results; provisional, excludes ambiguous settlements",
   "dateRange": {
     "from": "2026-10-29",
-    "to": "2026-11-06",
-    "days": 9
+    "to": "2026-11-20",
+    "days": 10
   },
   "stability": {
     "3": {
       "eligibleForReview": true,
       "minimumRacesPerPeriod": 100,
-      "earlierRaces": 483,
-      "laterRaces": 695,
-      "earlierRoi": 0.7639751552795031,
-      "laterRoi": 0.74368345323741,
+      "earlierRaces": 631,
+      "laterRaces": 607,
+      "earlierRoi": 0.7424881141045959,
+      "laterRoi": 0.7758813838550247,
       "bothPeriodsAboveBreakEven": false,
       "decision": "NO_STABLE_PROFIT"
     },
     "5": {
       "eligibleForReview": true,
       "minimumRacesPerPeriod": 100,
-      "earlierRaces": 483,
-      "laterRaces": 695,
-      "earlierRoi": 0.6746376811594202,
-      "laterRoi": 0.7253237410071942,
+      "earlierRaces": 631,
+      "laterRaces": 607,
+      "earlierRoi": 0.6717749603803487,
+      "laterRoi": 0.7579077429983525,
       "bothPeriodsAboveBreakEven": false,
       "decision": "NO_STABLE_PROFIT"
     },
     "7": {
       "eligibleForReview": true,
       "minimumRacesPerPeriod": 100,
-      "earlierRaces": 483,
-      "laterRaces": 695,
-      "earlierRoi": 0.7251345755693582,
-      "laterRoi": 0.7705179856115107,
+      "earlierRaces": 631,
+      "laterRaces": 607,
+      "earlierRoi": 0.7195721077654517,
+      "laterRoi": 0.7955848434925865,
       "bothPeriodsAboveBreakEven": false,
       "decision": "NO_STABLE_PROFIT"
     },
     "10": {
       "eligibleForReview": true,
       "minimumRacesPerPeriod": 100,
-      "earlierRaces": 483,
-      "laterRaces": 695,
-      "earlierRoi": 0.8067908902691512,
-      "laterRoi": 0.7081870503597122,
+      "earlierRaces": 631,
+      "laterRaces": 607,
+      "earlierRoi": 0.7550713153724247,
+      "laterRoi": 0.7754200988467875,
       "bothPeriodsAboveBreakEven": false,
       "decision": "NO_STABLE_PROFIT"
     }
@@ -131,76 +131,76 @@
     "13": {
       "3": {
         "earlierRaces": 38,
-        "laterRaces": 0,
+        "laterRaces": 7,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "5": {
         "earlierRaces": 38,
-        "laterRaces": 0,
+        "laterRaces": 7,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "7": {
         "earlierRaces": 38,
-        "laterRaces": 0,
+        "laterRaces": 7,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "10": {
         "earlierRaces": 38,
-        "laterRaces": 0,
+        "laterRaces": 7,
         "minimumPerPeriod": 100,
         "eligible": false
       }
     },
     "14": {
       "3": {
-        "earlierRaces": 27,
-        "laterRaces": 22,
+        "earlierRaces": 37,
+        "laterRaces": 15,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "5": {
-        "earlierRaces": 27,
-        "laterRaces": 22,
+        "earlierRaces": 37,
+        "laterRaces": 15,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "7": {
-        "earlierRaces": 27,
-        "laterRaces": 22,
+        "earlierRaces": 37,
+        "laterRaces": 15,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "10": {
-        "earlierRaces": 27,
-        "laterRaces": 22,
+        "earlierRaces": 37,
+        "laterRaces": 15,
         "minimumPerPeriod": 100,
         "eligible": false
       }
     },
     "15": {
       "3": {
-        "earlierRaces": 36,
+        "earlierRaces": 48,
         "laterRaces": 57,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "5": {
-        "earlierRaces": 36,
+        "earlierRaces": 48,
         "laterRaces": 57,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "7": {
-        "earlierRaces": 36,
+        "earlierRaces": 48,
         "laterRaces": 57,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "10": {
-        "earlierRaces": 36,
+        "earlierRaces": 48,
         "laterRaces": 57,
         "minimumPerPeriod": 100,
         "eligible": false
@@ -234,130 +234,130 @@
     },
     "17": {
       "3": {
-        "earlierRaces": 12,
-        "laterRaces": 56,
+        "earlierRaces": 24,
+        "laterRaces": 49,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "5": {
-        "earlierRaces": 12,
-        "laterRaces": 56,
+        "earlierRaces": 24,
+        "laterRaces": 49,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "7": {
-        "earlierRaces": 12,
-        "laterRaces": 56,
+        "earlierRaces": 24,
+        "laterRaces": 49,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "10": {
-        "earlierRaces": 12,
-        "laterRaces": 56,
+        "earlierRaces": 24,
+        "laterRaces": 49,
         "minimumPerPeriod": 100,
         "eligible": false
       }
     },
     "18": {
       "3": {
-        "earlierRaces": 30,
-        "laterRaces": 20,
+        "earlierRaces": 40,
+        "laterRaces": 13,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "5": {
-        "earlierRaces": 30,
-        "laterRaces": 20,
+        "earlierRaces": 40,
+        "laterRaces": 13,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "7": {
-        "earlierRaces": 30,
-        "laterRaces": 20,
+        "earlierRaces": 40,
+        "laterRaces": 13,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "10": {
-        "earlierRaces": 30,
-        "laterRaces": 20,
+        "earlierRaces": 40,
+        "laterRaces": 13,
         "minimumPerPeriod": 100,
         "eligible": false
       }
     },
     "19": {
       "3": {
-        "earlierRaces": 11,
-        "laterRaces": 33,
+        "earlierRaces": 22,
+        "laterRaces": 22,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "5": {
-        "earlierRaces": 11,
-        "laterRaces": 33,
+        "earlierRaces": 22,
+        "laterRaces": 22,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "7": {
-        "earlierRaces": 11,
-        "laterRaces": 33,
+        "earlierRaces": 22,
+        "laterRaces": 22,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "10": {
-        "earlierRaces": 11,
-        "laterRaces": 33,
+        "earlierRaces": 22,
+        "laterRaces": 22,
         "minimumPerPeriod": 100,
         "eligible": false
       }
     },
     "21": {
       "3": {
-        "earlierRaces": 10,
-        "laterRaces": 38,
+        "earlierRaces": 20,
+        "laterRaces": 28,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "5": {
-        "earlierRaces": 10,
-        "laterRaces": 38,
+        "earlierRaces": 20,
+        "laterRaces": 28,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "7": {
-        "earlierRaces": 10,
-        "laterRaces": 38,
+        "earlierRaces": 20,
+        "laterRaces": 28,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "10": {
-        "earlierRaces": 10,
-        "laterRaces": 38,
+        "earlierRaces": 20,
+        "laterRaces": 28,
         "minimumPerPeriod": 100,
         "eligible": false
       }
     },
     "22": {
       "3": {
-        "earlierRaces": 12,
-        "laterRaces": 59,
+        "earlierRaces": 24,
+        "laterRaces": 47,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "5": {
-        "earlierRaces": 12,
-        "laterRaces": 59,
+        "earlierRaces": 24,
+        "laterRaces": 47,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "7": {
-        "earlierRaces": 12,
-        "laterRaces": 59,
+        "earlierRaces": 24,
+        "laterRaces": 47,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "10": {
-        "earlierRaces": 12,
-        "laterRaces": 59,
+        "earlierRaces": 24,
+        "laterRaces": 47,
         "minimumPerPeriod": 100,
         "eligible": false
       }
@@ -390,25 +390,25 @@
     },
     "24": {
       "3": {
-        "earlierRaces": 36,
+        "earlierRaces": 48,
         "laterRaces": 36,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "5": {
-        "earlierRaces": 36,
+        "earlierRaces": 48,
         "laterRaces": 36,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "7": {
-        "earlierRaces": 36,
+        "earlierRaces": 48,
         "laterRaces": 36,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "10": {
-        "earlierRaces": 36,
+        "earlierRaces": 48,
         "laterRaces": 36,
         "minimumPerPeriod": 100,
         "eligible": false
@@ -417,103 +417,103 @@
     "01": {
       "3": {
         "earlierRaces": 24,
-        "laterRaces": 46,
+        "laterRaces": 57,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "5": {
         "earlierRaces": 24,
-        "laterRaces": 46,
+        "laterRaces": 57,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "7": {
         "earlierRaces": 24,
-        "laterRaces": 46,
+        "laterRaces": 57,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "10": {
         "earlierRaces": 24,
-        "laterRaces": 46,
+        "laterRaces": 57,
         "minimumPerPeriod": 100,
         "eligible": false
       }
     },
     "02": {
       "3": {
-        "earlierRaces": 24,
-        "laterRaces": 34,
+        "earlierRaces": 35,
+        "laterRaces": 23,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "5": {
-        "earlierRaces": 24,
-        "laterRaces": 34,
+        "earlierRaces": 35,
+        "laterRaces": 23,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "7": {
-        "earlierRaces": 24,
-        "laterRaces": 34,
+        "earlierRaces": 35,
+        "laterRaces": 23,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "10": {
-        "earlierRaces": 24,
-        "laterRaces": 34,
+        "earlierRaces": 35,
+        "laterRaces": 23,
         "minimumPerPeriod": 100,
         "eligible": false
       }
     },
     "03": {
       "3": {
-        "earlierRaces": 35,
-        "laterRaces": 35,
+        "earlierRaces": 47,
+        "laterRaces": 23,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "5": {
-        "earlierRaces": 35,
-        "laterRaces": 35,
+        "earlierRaces": 47,
+        "laterRaces": 23,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "7": {
-        "earlierRaces": 35,
-        "laterRaces": 35,
+        "earlierRaces": 47,
+        "laterRaces": 23,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "10": {
-        "earlierRaces": 35,
-        "laterRaces": 35,
+        "earlierRaces": 47,
+        "laterRaces": 23,
         "minimumPerPeriod": 100,
         "eligible": false
       }
     },
     "04": {
       "3": {
-        "earlierRaces": 23,
-        "laterRaces": 48,
+        "earlierRaces": 35,
+        "laterRaces": 43,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "5": {
-        "earlierRaces": 23,
-        "laterRaces": 48,
+        "earlierRaces": 35,
+        "laterRaces": 43,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "7": {
-        "earlierRaces": 23,
-        "laterRaces": 48,
+        "earlierRaces": 35,
+        "laterRaces": 43,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "10": {
-        "earlierRaces": 23,
-        "laterRaces": 48,
+        "earlierRaces": 35,
+        "laterRaces": 43,
         "minimumPerPeriod": 100,
         "eligible": false
       }
@@ -546,26 +546,26 @@
     },
     "06": {
       "3": {
-        "earlierRaces": 34,
-        "laterRaces": 35,
+        "earlierRaces": 46,
+        "laterRaces": 23,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "5": {
-        "earlierRaces": 34,
-        "laterRaces": 35,
+        "earlierRaces": 46,
+        "laterRaces": 23,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "7": {
-        "earlierRaces": 34,
-        "laterRaces": 35,
+        "earlierRaces": 46,
+        "laterRaces": 23,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "10": {
-        "earlierRaces": 34,
-        "laterRaces": 35,
+        "earlierRaces": 46,
+        "laterRaces": 23,
         "minimumPerPeriod": 100,
         "eligible": false
       }
@@ -624,26 +624,26 @@
     },
     "09": {
       "3": {
-        "earlierRaces": 24,
-        "laterRaces": 48,
+        "earlierRaces": 36,
+        "laterRaces": 36,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "5": {
-        "earlierRaces": 24,
-        "laterRaces": 48,
+        "earlierRaces": 36,
+        "laterRaces": 36,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "7": {
-        "earlierRaces": 24,
-        "laterRaces": 48,
+        "earlierRaces": 36,
+        "laterRaces": 36,
         "minimumPerPeriod": 100,
         "eligible": false
       },
       "10": {
-        "earlierRaces": 24,
-        "laterRaces": 48,
+        "earlierRaces": 36,
+        "laterRaces": 36,
         "minimumPerPeriod": 100,
         "eligible": false
       }
@@ -659,116 +659,117 @@
       "2026-10-29",
       "2026-10-30",
       "2026-10-31",
-      "2026-11-01"
+      "2026-11-01",
+      "2026-11-02"
     ],
     "laterDates": [
-      "2026-11-02",
       "2026-11-03",
       "2026-11-04",
       "2026-11-05",
-      "2026-11-06"
+      "2026-11-06",
+      "2026-11-20"
     ]
   },
   "overall": {
     "3": {
-      "races": 1178,
-      "hits": 218,
-      "stakeYen": 1178000,
-      "payoutYen": 885860,
-      "hitRate": 0.18505942275042445,
-      "roi": 0.7520033955857386
+      "races": 1238,
+      "hits": 232,
+      "stakeYen": 1238000,
+      "payoutYen": 939470,
+      "hitRate": 0.18739903069466882,
+      "roi": 0.7588610662358642
     },
     "5": {
-      "races": 1178,
-      "hits": 315,
-      "stakeYen": 1178000,
-      "payoutYen": 829950,
-      "hitRate": 0.267402376910017,
-      "roi": 0.7045415959252971
+      "races": 1238,
+      "hits": 337,
+      "stakeYen": 1238000,
+      "payoutYen": 883940,
+      "hitRate": 0.27221324717285944,
+      "roi": 0.7140064620355412
     },
     "7": {
-      "races": 1178,
-      "hits": 410,
-      "stakeYen": 1178000,
-      "payoutYen": 885750,
-      "hitRate": 0.34804753820033957,
-      "roi": 0.7519100169779287
+      "races": 1238,
+      "hits": 437,
+      "stakeYen": 1238000,
+      "payoutYen": 936970,
+      "hitRate": 0.3529886914378029,
+      "roi": 0.7568416801292407
     },
     "10": {
-      "races": 1178,
-      "hits": 518,
-      "stakeYen": 1178000,
-      "payoutYen": 881870,
-      "hitRate": 0.4397283531409168,
-      "roi": 0.748616298811545
+      "races": 1238,
+      "hits": 555,
+      "stakeYen": 1238000,
+      "payoutYen": 947130,
+      "hitRate": 0.4483037156704362,
+      "roi": 0.765048465266559
     }
   },
   "earlier": {
     "3": {
-      "races": 483,
-      "hits": 95,
-      "stakeYen": 483000,
-      "payoutYen": 369000,
-      "hitRate": 0.19668737060041408,
-      "roi": 0.7639751552795031
+      "races": 631,
+      "hits": 122,
+      "stakeYen": 631000,
+      "payoutYen": 468510,
+      "hitRate": 0.19334389857369255,
+      "roi": 0.7424881141045959
     },
     "5": {
-      "races": 483,
-      "hits": 130,
-      "stakeYen": 483000,
-      "payoutYen": 325850,
-      "hitRate": 0.2691511387163561,
-      "roi": 0.6746376811594202
+      "races": 631,
+      "hits": 171,
+      "stakeYen": 631000,
+      "payoutYen": 423890,
+      "hitRate": 0.27099841521394613,
+      "roi": 0.6717749603803487
     },
     "7": {
-      "races": 483,
-      "hits": 166,
-      "stakeYen": 483000,
-      "payoutYen": 350240,
-      "hitRate": 0.34368530020703936,
-      "roi": 0.7251345755693582
+      "races": 631,
+      "hits": 220,
+      "stakeYen": 631000,
+      "payoutYen": 454050,
+      "hitRate": 0.3486529318541997,
+      "roi": 0.7195721077654517
     },
     "10": {
-      "races": 483,
-      "hits": 221,
-      "stakeYen": 483000,
-      "payoutYen": 389680,
-      "hitRate": 0.4575569358178054,
-      "roi": 0.8067908902691512
+      "races": 631,
+      "hits": 282,
+      "stakeYen": 631000,
+      "payoutYen": 476450,
+      "hitRate": 0.4469096671949287,
+      "roi": 0.7550713153724247
     }
   },
   "later": {
     "3": {
-      "races": 695,
-      "hits": 123,
-      "stakeYen": 695000,
-      "payoutYen": 516860,
-      "hitRate": 0.17697841726618704,
-      "roi": 0.74368345323741
+      "races": 607,
+      "hits": 110,
+      "stakeYen": 607000,
+      "payoutYen": 470960,
+      "hitRate": 0.1812191103789127,
+      "roi": 0.7758813838550247
     },
     "5": {
-      "races": 695,
-      "hits": 185,
-      "stakeYen": 695000,
-      "payoutYen": 504100,
-      "hitRate": 0.26618705035971224,
-      "roi": 0.7253237410071942
+      "races": 607,
+      "hits": 166,
+      "stakeYen": 607000,
+      "payoutYen": 460050,
+      "hitRate": 0.27347611202635913,
+      "roi": 0.7579077429983525
     },
     "7": {
-      "races": 695,
-      "hits": 244,
-      "stakeYen": 695000,
-      "payoutYen": 535510,
-      "hitRate": 0.3510791366906475,
-      "roi": 0.7705179856115107
+      "races": 607,
+      "hits": 217,
+      "stakeYen": 607000,
+      "payoutYen": 482920,
+      "hitRate": 0.357495881383855,
+      "roi": 0.7955848434925865
     },
     "10": {
-      "races": 695,
-      "hits": 297,
-      "stakeYen": 695000,
-      "payoutYen": 492190,
-      "hitRate": 0.4273381294964029,
-      "roi": 0.7081870503597122
+      "races": 607,
+      "hits": 273,
+      "stakeYen": 607000,
+      "payoutYen": 470680,
+      "hitRate": 0.4497528830313015,
+      "roi": 0.7754200988467875
     }
   },
   "byVenue": {
@@ -1087,36 +1088,36 @@
     "13": {
       "overall": {
         "3": {
-          "races": 38,
-          "hits": 8,
-          "stakeYen": 38000,
-          "payoutYen": 42830,
-          "hitRate": 0.21052631578947367,
-          "roi": 1.1271052631578948
+          "races": 45,
+          "hits": 10,
+          "stakeYen": 45000,
+          "payoutYen": 50990,
+          "hitRate": 0.2222222222222222,
+          "roi": 1.1331111111111112
         },
         "5": {
-          "races": 38,
-          "hits": 8,
-          "stakeYen": 38000,
-          "payoutYen": 22000,
-          "hitRate": 0.21052631578947367,
-          "roi": 0.5789473684210527
+          "races": 45,
+          "hits": 10,
+          "stakeYen": 45000,
+          "payoutYen": 26800,
+          "hitRate": 0.2222222222222222,
+          "roi": 0.5955555555555555
         },
         "7": {
-          "races": 38,
-          "hits": 12,
-          "stakeYen": 38000,
-          "payoutYen": 29820,
-          "hitRate": 0.3157894736842105,
-          "roi": 0.7847368421052632
+          "races": 45,
+          "hits": 15,
+          "stakeYen": 45000,
+          "payoutYen": 35980,
+          "hitRate": 0.3333333333333333,
+          "roi": 0.7995555555555556
         },
         "10": {
-          "races": 38,
-          "hits": 17,
-          "stakeYen": 38000,
-          "payoutYen": 37140,
-          "hitRate": 0.4473684210526316,
-          "roi": 0.9773684210526316
+          "races": 45,
+          "hits": 23,
+          "stakeYen": 45000,
+          "payoutYen": 52350,
+          "hitRate": 0.5111111111111111,
+          "roi": 1.1633333333333333
         }
       },
       "earlier": {
@@ -1155,244 +1156,244 @@
       },
       "later": {
         "3": {
-          "races": 0,
-          "hits": 0,
-          "stakeYen": 0,
-          "payoutYen": 0,
-          "hitRate": null,
-          "roi": null
+          "races": 7,
+          "hits": 2,
+          "stakeYen": 7000,
+          "payoutYen": 8160,
+          "hitRate": 0.2857142857142857,
+          "roi": 1.1657142857142857
         },
         "5": {
-          "races": 0,
-          "hits": 0,
-          "stakeYen": 0,
-          "payoutYen": 0,
-          "hitRate": null,
-          "roi": null
+          "races": 7,
+          "hits": 2,
+          "stakeYen": 7000,
+          "payoutYen": 4800,
+          "hitRate": 0.2857142857142857,
+          "roi": 0.6857142857142857
         },
         "7": {
-          "races": 0,
-          "hits": 0,
-          "stakeYen": 0,
-          "payoutYen": 0,
-          "hitRate": null,
-          "roi": null
+          "races": 7,
+          "hits": 3,
+          "stakeYen": 7000,
+          "payoutYen": 6160,
+          "hitRate": 0.42857142857142855,
+          "roi": 0.88
         },
         "10": {
-          "races": 0,
-          "hits": 0,
-          "stakeYen": 0,
-          "payoutYen": 0,
-          "hitRate": null,
-          "roi": null
+          "races": 7,
+          "hits": 6,
+          "stakeYen": 7000,
+          "payoutYen": 15210,
+          "hitRate": 0.8571428571428571,
+          "roi": 2.172857142857143
         }
       }
     },
     "14": {
       "overall": {
         "3": {
-          "races": 49,
-          "hits": 8,
-          "stakeYen": 49000,
-          "payoutYen": 37970,
-          "hitRate": 0.16326530612244897,
-          "roi": 0.7748979591836734
+          "races": 52,
+          "hits": 10,
+          "stakeYen": 52000,
+          "payoutYen": 45360,
+          "hitRate": 0.19230769230769232,
+          "roi": 0.8723076923076923
         },
         "5": {
-          "races": 49,
-          "hits": 12,
-          "stakeYen": 49000,
-          "payoutYen": 30540,
-          "hitRate": 0.24489795918367346,
-          "roi": 0.623265306122449
+          "races": 52,
+          "hits": 14,
+          "stakeYen": 52000,
+          "payoutYen": 34860,
+          "hitRate": 0.2692307692307692,
+          "roi": 0.6703846153846154
         },
         "7": {
-          "races": 49,
-          "hits": 17,
-          "stakeYen": 49000,
-          "payoutYen": 40870,
-          "hitRate": 0.3469387755102041,
-          "roi": 0.8340816326530612
+          "races": 52,
+          "hits": 19,
+          "stakeYen": 52000,
+          "payoutYen": 45190,
+          "hitRate": 0.36538461538461536,
+          "roi": 0.8690384615384615
         },
         "10": {
-          "races": 49,
-          "hits": 17,
-          "stakeYen": 49000,
-          "payoutYen": 30060,
-          "hitRate": 0.3469387755102041,
-          "roi": 0.6134693877551021
+          "races": 52,
+          "hits": 19,
+          "stakeYen": 52000,
+          "payoutYen": 32220,
+          "hitRate": 0.36538461538461536,
+          "roi": 0.6196153846153846
         }
       },
       "earlier": {
         "3": {
-          "races": 27,
-          "hits": 5,
-          "stakeYen": 27000,
-          "payoutYen": 28510,
-          "hitRate": 0.18518518518518517,
-          "roi": 1.055925925925926
+          "races": 37,
+          "hits": 7,
+          "stakeYen": 37000,
+          "payoutYen": 34580,
+          "hitRate": 0.1891891891891892,
+          "roi": 0.9345945945945946
         },
         "5": {
-          "races": 27,
-          "hits": 7,
-          "stakeYen": 27000,
-          "payoutYen": 21440,
-          "hitRate": 0.25925925925925924,
-          "roi": 0.794074074074074
+          "races": 37,
+          "hits": 10,
+          "stakeYen": 37000,
+          "payoutYen": 26740,
+          "hitRate": 0.2702702702702703,
+          "roi": 0.7227027027027026
         },
         "7": {
-          "races": 27,
-          "hits": 10,
-          "stakeYen": 27000,
-          "payoutYen": 26770,
-          "hitRate": 0.37037037037037035,
-          "roi": 0.9914814814814815
+          "races": 37,
+          "hits": 14,
+          "stakeYen": 37000,
+          "payoutYen": 34200,
+          "hitRate": 0.3783783783783784,
+          "roi": 0.9243243243243243
         },
         "10": {
-          "races": 27,
-          "hits": 10,
-          "stakeYen": 27000,
-          "payoutYen": 18760,
-          "hitRate": 0.37037037037037035,
-          "roi": 0.6948148148148148
+          "races": 37,
+          "hits": 14,
+          "stakeYen": 37000,
+          "payoutYen": 24520,
+          "hitRate": 0.3783783783783784,
+          "roi": 0.6627027027027027
         }
       },
       "later": {
         "3": {
-          "races": 22,
+          "races": 15,
           "hits": 3,
-          "stakeYen": 22000,
-          "payoutYen": 9460,
-          "hitRate": 0.13636363636363635,
-          "roi": 0.43
+          "stakeYen": 15000,
+          "payoutYen": 10780,
+          "hitRate": 0.2,
+          "roi": 0.7186666666666667
         },
         "5": {
-          "races": 22,
-          "hits": 5,
-          "stakeYen": 22000,
-          "payoutYen": 9100,
-          "hitRate": 0.22727272727272727,
-          "roi": 0.41363636363636364
+          "races": 15,
+          "hits": 4,
+          "stakeYen": 15000,
+          "payoutYen": 8120,
+          "hitRate": 0.26666666666666666,
+          "roi": 0.5413333333333333
         },
         "7": {
-          "races": 22,
-          "hits": 7,
-          "stakeYen": 22000,
-          "payoutYen": 14100,
-          "hitRate": 0.3181818181818182,
-          "roi": 0.6409090909090909
+          "races": 15,
+          "hits": 5,
+          "stakeYen": 15000,
+          "payoutYen": 10990,
+          "hitRate": 0.3333333333333333,
+          "roi": 0.7326666666666667
         },
         "10": {
-          "races": 22,
-          "hits": 7,
-          "stakeYen": 22000,
-          "payoutYen": 11300,
-          "hitRate": 0.3181818181818182,
-          "roi": 0.5136363636363637
+          "races": 15,
+          "hits": 5,
+          "stakeYen": 15000,
+          "payoutYen": 7700,
+          "hitRate": 0.3333333333333333,
+          "roi": 0.5133333333333333
         }
       }
     },
     "15": {
       "overall": {
         "3": {
-          "races": 93,
+          "races": 105,
           "hits": 19,
-          "stakeYen": 93000,
+          "stakeYen": 105000,
           "payoutYen": 74280,
-          "hitRate": 0.20430107526881722,
-          "roi": 0.7987096774193548
+          "hitRate": 0.18095238095238095,
+          "roi": 0.7074285714285714
         },
         "5": {
-          "races": 93,
-          "hits": 30,
-          "stakeYen": 93000,
-          "payoutYen": 81080,
-          "hitRate": 0.3225806451612903,
-          "roi": 0.8718279569892473
+          "races": 105,
+          "hits": 31,
+          "stakeYen": 105000,
+          "payoutYen": 82960,
+          "hitRate": 0.29523809523809524,
+          "roi": 0.7900952380952381
         },
         "7": {
-          "races": 93,
-          "hits": 36,
-          "stakeYen": 93000,
-          "payoutYen": 70730,
-          "hitRate": 0.3870967741935484,
-          "roi": 0.7605376344086021
+          "races": 105,
+          "hits": 39,
+          "stakeYen": 105000,
+          "payoutYen": 75850,
+          "hitRate": 0.37142857142857144,
+          "roi": 0.7223809523809523
         },
         "10": {
-          "races": 93,
-          "hits": 43,
-          "stakeYen": 93000,
-          "payoutYen": 73890,
-          "hitRate": 0.46236559139784944,
-          "roi": 0.7945161290322581
+          "races": 105,
+          "hits": 50,
+          "stakeYen": 105000,
+          "payoutYen": 91240,
+          "hitRate": 0.47619047619047616,
+          "roi": 0.8689523809523809
         }
       },
       "earlier": {
         "3": {
-          "races": 36,
-          "hits": 8,
-          "stakeYen": 36000,
-          "payoutYen": 23070,
-          "hitRate": 0.2222222222222222,
-          "roi": 0.6408333333333334
+          "races": 48,
+          "hits": 11,
+          "stakeYen": 48000,
+          "payoutYen": 35230,
+          "hitRate": 0.22916666666666666,
+          "roi": 0.7339583333333334
         },
         "5": {
-          "races": 36,
-          "hits": 14,
-          "stakeYen": 36000,
-          "payoutYen": 29380,
-          "hitRate": 0.3888888888888889,
-          "roi": 0.8161111111111111
+          "races": 48,
+          "hits": 18,
+          "stakeYen": 48000,
+          "payoutYen": 41780,
+          "hitRate": 0.375,
+          "roi": 0.8704166666666666
         },
         "7": {
-          "races": 36,
-          "hits": 15,
-          "stakeYen": 36000,
-          "payoutYen": 22060,
-          "hitRate": 0.4166666666666667,
-          "roi": 0.6127777777777778
+          "races": 48,
+          "hits": 19,
+          "stakeYen": 48000,
+          "payoutYen": 31000,
+          "hitRate": 0.3958333333333333,
+          "roi": 0.6458333333333334
         },
         "10": {
-          "races": 36,
-          "hits": 21,
-          "stakeYen": 36000,
-          "payoutYen": 36710,
-          "hitRate": 0.5833333333333334,
-          "roi": 1.0197222222222222
+          "races": 48,
+          "hits": 25,
+          "stakeYen": 48000,
+          "payoutYen": 42610,
+          "hitRate": 0.5208333333333334,
+          "roi": 0.8877083333333333
         }
       },
       "later": {
         "3": {
           "races": 57,
-          "hits": 11,
+          "hits": 8,
           "stakeYen": 57000,
-          "payoutYen": 51210,
-          "hitRate": 0.19298245614035087,
-          "roi": 0.8984210526315789
+          "payoutYen": 39050,
+          "hitRate": 0.14035087719298245,
+          "roi": 0.6850877192982456
         },
         "5": {
           "races": 57,
-          "hits": 16,
+          "hits": 13,
           "stakeYen": 57000,
-          "payoutYen": 51700,
-          "hitRate": 0.2807017543859649,
-          "roi": 0.9070175438596492
+          "payoutYen": 41180,
+          "hitRate": 0.22807017543859648,
+          "roi": 0.7224561403508772
         },
         "7": {
           "races": 57,
-          "hits": 21,
+          "hits": 20,
           "stakeYen": 57000,
-          "payoutYen": 48670,
-          "hitRate": 0.3684210526315789,
-          "roi": 0.853859649122807
+          "payoutYen": 44850,
+          "hitRate": 0.3508771929824561,
+          "roi": 0.7868421052631579
         },
         "10": {
           "races": 57,
-          "hits": 22,
+          "hits": 25,
           "stakeYen": 57000,
-          "payoutYen": 37180,
-          "hitRate": 0.38596491228070173,
-          "roi": 0.652280701754386
+          "payoutYen": 48630,
+          "hitRate": 0.43859649122807015,
+          "roi": 0.8531578947368421
         }
       }
     },
@@ -1503,208 +1504,208 @@
     "17": {
       "overall": {
         "3": {
-          "races": 68,
-          "hits": 9,
-          "stakeYen": 68000,
-          "payoutYen": 52280,
-          "hitRate": 0.1323529411764706,
-          "roi": 0.7688235294117647
+          "races": 73,
+          "hits": 10,
+          "stakeYen": 73000,
+          "payoutYen": 55640,
+          "hitRate": 0.136986301369863,
+          "roi": 0.7621917808219179
         },
         "5": {
-          "races": 68,
-          "hits": 17,
-          "stakeYen": 68000,
-          "payoutYen": 46070,
-          "hitRate": 0.25,
-          "roi": 0.6775
+          "races": 73,
+          "hits": 19,
+          "stakeYen": 73000,
+          "payoutYen": 50790,
+          "hitRate": 0.2602739726027397,
+          "roi": 0.6957534246575342
         },
         "7": {
-          "races": 68,
-          "hits": 24,
-          "stakeYen": 68000,
-          "payoutYen": 51100,
-          "hitRate": 0.35294117647058826,
-          "roi": 0.7514705882352941
+          "races": 73,
+          "hits": 26,
+          "stakeYen": 73000,
+          "payoutYen": 54300,
+          "hitRate": 0.3561643835616438,
+          "roi": 0.7438356164383562
         },
         "10": {
-          "races": 68,
-          "hits": 31,
-          "stakeYen": 68000,
-          "payoutYen": 50790,
-          "hitRate": 0.45588235294117646,
-          "roi": 0.7469117647058824
+          "races": 73,
+          "hits": 33,
+          "stakeYen": 73000,
+          "payoutYen": 53150,
+          "hitRate": 0.4520547945205479,
+          "roi": 0.7280821917808219
         }
       },
       "earlier": {
         "3": {
-          "races": 12,
-          "hits": 2,
-          "stakeYen": 12000,
-          "payoutYen": 6080,
-          "hitRate": 0.16666666666666666,
-          "roi": 0.5066666666666667
+          "races": 24,
+          "hits": 3,
+          "stakeYen": 24000,
+          "payoutYen": 8520,
+          "hitRate": 0.125,
+          "roi": 0.355
         },
         "5": {
-          "races": 12,
-          "hits": 2,
-          "stakeYen": 12000,
-          "payoutYen": 3950,
-          "hitRate": 0.16666666666666666,
-          "roi": 0.32916666666666666
+          "races": 24,
+          "hits": 3,
+          "stakeYen": 24000,
+          "payoutYen": 5780,
+          "hitRate": 0.125,
+          "roi": 0.24083333333333334
         },
         "7": {
-          "races": 12,
-          "hits": 3,
-          "stakeYen": 12000,
-          "payoutYen": 4530,
-          "hitRate": 0.25,
-          "roi": 0.3775
+          "races": 24,
+          "hits": 7,
+          "stakeYen": 24000,
+          "payoutYen": 10790,
+          "hitRate": 0.2916666666666667,
+          "roi": 0.44958333333333333
         },
         "10": {
-          "races": 12,
-          "hits": 4,
-          "stakeYen": 12000,
-          "payoutYen": 6850,
-          "hitRate": 0.3333333333333333,
-          "roi": 0.5708333333333333
+          "races": 24,
+          "hits": 9,
+          "stakeYen": 24000,
+          "payoutYen": 13920,
+          "hitRate": 0.375,
+          "roi": 0.58
         }
       },
       "later": {
         "3": {
-          "races": 56,
+          "races": 49,
           "hits": 7,
-          "stakeYen": 56000,
-          "payoutYen": 46200,
-          "hitRate": 0.125,
-          "roi": 0.825
+          "stakeYen": 49000,
+          "payoutYen": 47120,
+          "hitRate": 0.14285714285714285,
+          "roi": 0.9616326530612245
         },
         "5": {
-          "races": 56,
-          "hits": 15,
-          "stakeYen": 56000,
-          "payoutYen": 42120,
-          "hitRate": 0.26785714285714285,
-          "roi": 0.7521428571428571
+          "races": 49,
+          "hits": 16,
+          "stakeYen": 49000,
+          "payoutYen": 45010,
+          "hitRate": 0.32653061224489793,
+          "roi": 0.9185714285714286
         },
         "7": {
-          "races": 56,
-          "hits": 21,
-          "stakeYen": 56000,
-          "payoutYen": 46570,
-          "hitRate": 0.375,
-          "roi": 0.8316071428571429
+          "races": 49,
+          "hits": 19,
+          "stakeYen": 49000,
+          "payoutYen": 43510,
+          "hitRate": 0.3877551020408163,
+          "roi": 0.8879591836734694
         },
         "10": {
-          "races": 56,
-          "hits": 27,
-          "stakeYen": 56000,
-          "payoutYen": 43940,
-          "hitRate": 0.48214285714285715,
-          "roi": 0.7846428571428572
+          "races": 49,
+          "hits": 24,
+          "stakeYen": 49000,
+          "payoutYen": 39230,
+          "hitRate": 0.4897959183673469,
+          "roi": 0.8006122448979592
         }
       }
     },
     "18": {
       "overall": {
         "3": {
-          "races": 50,
-          "hits": 13,
-          "stakeYen": 50000,
-          "payoutYen": 41380,
-          "hitRate": 0.26,
-          "roi": 0.8276
+          "races": 53,
+          "hits": 15,
+          "stakeYen": 53000,
+          "payoutYen": 47020,
+          "hitRate": 0.2830188679245283,
+          "roi": 0.8871698113207547
         },
         "5": {
-          "races": 50,
-          "hits": 18,
-          "stakeYen": 50000,
-          "payoutYen": 47230,
-          "hitRate": 0.36,
-          "roi": 0.9446
+          "races": 53,
+          "hits": 20,
+          "stakeYen": 53000,
+          "payoutYen": 50990,
+          "hitRate": 0.37735849056603776,
+          "roi": 0.9620754716981132
         },
         "7": {
-          "races": 50,
-          "hits": 21,
-          "stakeYen": 50000,
-          "payoutYen": 50370,
-          "hitRate": 0.42,
-          "roi": 1.0074
+          "races": 53,
+          "hits": 23,
+          "stakeYen": 53000,
+          "payoutYen": 54130,
+          "hitRate": 0.4339622641509434,
+          "roi": 1.0213207547169811
         },
         "10": {
-          "races": 50,
-          "hits": 25,
-          "stakeYen": 50000,
-          "payoutYen": 54670,
-          "hitRate": 0.5,
-          "roi": 1.0934
+          "races": 53,
+          "hits": 28,
+          "stakeYen": 53000,
+          "payoutYen": 58300,
+          "hitRate": 0.5283018867924528,
+          "roi": 1.1
         }
       },
       "earlier": {
         "3": {
-          "races": 30,
-          "hits": 8,
-          "stakeYen": 30000,
-          "payoutYen": 27600,
-          "hitRate": 0.26666666666666666,
-          "roi": 0.92
+          "races": 40,
+          "hits": 10,
+          "stakeYen": 40000,
+          "payoutYen": 35100,
+          "hitRate": 0.25,
+          "roi": 0.8775
         },
         "5": {
-          "races": 30,
-          "hits": 11,
-          "stakeYen": 30000,
-          "payoutYen": 22130,
-          "hitRate": 0.36666666666666664,
-          "roi": 0.7376666666666667
+          "races": 40,
+          "hits": 14,
+          "stakeYen": 40000,
+          "payoutYen": 31850,
+          "hitRate": 0.35,
+          "roi": 0.79625
         },
         "7": {
-          "races": 30,
-          "hits": 13,
-          "stakeYen": 30000,
-          "payoutYen": 25220,
-          "hitRate": 0.43333333333333335,
-          "roi": 0.8406666666666667
+          "races": 40,
+          "hits": 16,
+          "stakeYen": 40000,
+          "payoutYen": 32320,
+          "hitRate": 0.4,
+          "roi": 0.808
         },
         "10": {
-          "races": 30,
-          "hits": 16,
-          "stakeYen": 30000,
-          "payoutYen": 31050,
-          "hitRate": 0.5333333333333333,
-          "roi": 1.035
+          "races": 40,
+          "hits": 19,
+          "stakeYen": 40000,
+          "payoutYen": 35910,
+          "hitRate": 0.475,
+          "roi": 0.89775
         }
       },
       "later": {
         "3": {
-          "races": 20,
+          "races": 13,
           "hits": 5,
-          "stakeYen": 20000,
-          "payoutYen": 13780,
-          "hitRate": 0.25,
-          "roi": 0.689
+          "stakeYen": 13000,
+          "payoutYen": 11920,
+          "hitRate": 0.38461538461538464,
+          "roi": 0.916923076923077
         },
         "5": {
-          "races": 20,
-          "hits": 7,
-          "stakeYen": 20000,
-          "payoutYen": 25100,
-          "hitRate": 0.35,
-          "roi": 1.255
+          "races": 13,
+          "hits": 6,
+          "stakeYen": 13000,
+          "payoutYen": 19140,
+          "hitRate": 0.46153846153846156,
+          "roi": 1.4723076923076923
         },
         "7": {
-          "races": 20,
-          "hits": 8,
-          "stakeYen": 20000,
-          "payoutYen": 25150,
-          "hitRate": 0.4,
-          "roi": 1.2575
+          "races": 13,
+          "hits": 7,
+          "stakeYen": 13000,
+          "payoutYen": 21810,
+          "hitRate": 0.5384615384615384,
+          "roi": 1.6776923076923076
         },
         "10": {
-          "races": 20,
+          "races": 13,
           "hits": 9,
-          "stakeYen": 20000,
-          "payoutYen": 23620,
-          "hitRate": 0.45,
-          "roi": 1.181
+          "stakeYen": 13000,
+          "payoutYen": 22390,
+          "hitRate": 0.6923076923076923,
+          "roi": 1.7223076923076923
         }
       }
     },
@@ -1745,70 +1746,70 @@
       },
       "earlier": {
         "3": {
-          "races": 11,
-          "hits": 3,
-          "stakeYen": 11000,
-          "payoutYen": 8160,
+          "races": 22,
+          "hits": 6,
+          "stakeYen": 22000,
+          "payoutYen": 18080,
           "hitRate": 0.2727272727272727,
-          "roi": 0.7418181818181818
+          "roi": 0.8218181818181818
         },
         "5": {
-          "races": 11,
-          "hits": 4,
-          "stakeYen": 11000,
-          "payoutYen": 10720,
-          "hitRate": 0.36363636363636365,
-          "roi": 0.9745454545454545
+          "races": 22,
+          "hits": 9,
+          "stakeYen": 22000,
+          "payoutYen": 19990,
+          "hitRate": 0.4090909090909091,
+          "roi": 0.9086363636363637
         },
         "7": {
-          "races": 11,
-          "hits": 4,
-          "stakeYen": 11000,
-          "payoutYen": 7330,
-          "hitRate": 0.36363636363636365,
-          "roi": 0.6663636363636364
+          "races": 22,
+          "hits": 10,
+          "stakeYen": 22000,
+          "payoutYen": 15520,
+          "hitRate": 0.45454545454545453,
+          "roi": 0.7054545454545454
         },
         "10": {
-          "races": 11,
-          "hits": 5,
-          "stakeYen": 11000,
-          "payoutYen": 6570,
-          "hitRate": 0.45454545454545453,
-          "roi": 0.5972727272727273
+          "races": 22,
+          "hits": 12,
+          "stakeYen": 22000,
+          "payoutYen": 12910,
+          "hitRate": 0.5454545454545454,
+          "roi": 0.5868181818181818
         }
       },
       "later": {
         "3": {
-          "races": 33,
-          "hits": 10,
-          "stakeYen": 33000,
-          "payoutYen": 56330,
-          "hitRate": 0.30303030303030304,
-          "roi": 1.706969696969697
+          "races": 22,
+          "hits": 7,
+          "stakeYen": 22000,
+          "payoutYen": 46410,
+          "hitRate": 0.3181818181818182,
+          "roi": 2.1095454545454544
         },
         "5": {
-          "races": 33,
-          "hits": 13,
-          "stakeYen": 33000,
-          "payoutYen": 42300,
-          "hitRate": 0.3939393939393939,
-          "roi": 1.2818181818181817
+          "races": 22,
+          "hits": 8,
+          "stakeYen": 22000,
+          "payoutYen": 33030,
+          "hitRate": 0.36363636363636365,
+          "roi": 1.5013636363636365
         },
         "7": {
-          "races": 33,
-          "hits": 16,
-          "stakeYen": 33000,
-          "payoutYen": 41170,
-          "hitRate": 0.48484848484848486,
-          "roi": 1.2475757575757576
+          "races": 22,
+          "hits": 10,
+          "stakeYen": 22000,
+          "payoutYen": 32980,
+          "hitRate": 0.45454545454545453,
+          "roi": 1.499090909090909
         },
         "10": {
-          "races": 33,
-          "hits": 18,
-          "stakeYen": 33000,
-          "payoutYen": 26260,
-          "hitRate": 0.5454545454545454,
-          "roi": 0.7957575757575758
+          "races": 22,
+          "hits": 11,
+          "stakeYen": 22000,
+          "payoutYen": 19920,
+          "hitRate": 0.5,
+          "roi": 0.9054545454545454
         }
       }
     },
@@ -1849,70 +1850,70 @@
       },
       "earlier": {
         "3": {
-          "races": 10,
+          "races": 20,
           "hits": 3,
-          "stakeYen": 10000,
+          "stakeYen": 20000,
           "payoutYen": 8360,
-          "hitRate": 0.3,
-          "roi": 0.836
+          "hitRate": 0.15,
+          "roi": 0.418
         },
         "5": {
-          "races": 10,
-          "hits": 3,
-          "stakeYen": 10000,
-          "payoutYen": 6270,
-          "hitRate": 0.3,
-          "roi": 0.627
+          "races": 20,
+          "hits": 5,
+          "stakeYen": 20000,
+          "payoutYen": 12610,
+          "hitRate": 0.25,
+          "roi": 0.6305
         },
         "7": {
-          "races": 10,
-          "hits": 4,
-          "stakeYen": 10000,
-          "payoutYen": 4880,
-          "hitRate": 0.4,
-          "roi": 0.488
+          "races": 20,
+          "hits": 6,
+          "stakeYen": 20000,
+          "payoutYen": 8050,
+          "hitRate": 0.3,
+          "roi": 0.4025
         },
         "10": {
-          "races": 10,
-          "hits": 6,
-          "stakeYen": 10000,
-          "payoutYen": 6490,
-          "hitRate": 0.6,
-          "roi": 0.649
+          "races": 20,
+          "hits": 8,
+          "stakeYen": 20000,
+          "payoutYen": 9660,
+          "hitRate": 0.4,
+          "roi": 0.483
         }
       },
       "later": {
         "3": {
-          "races": 38,
+          "races": 28,
           "hits": 6,
-          "stakeYen": 38000,
+          "stakeYen": 28000,
           "payoutYen": 19890,
-          "hitRate": 0.15789473684210525,
-          "roi": 0.5234210526315789
+          "hitRate": 0.21428571428571427,
+          "roi": 0.7103571428571429
         },
         "5": {
-          "races": 38,
-          "hits": 10,
-          "stakeYen": 38000,
-          "payoutYen": 25360,
-          "hitRate": 0.2631578947368421,
-          "roi": 0.6673684210526316
+          "races": 28,
+          "hits": 8,
+          "stakeYen": 28000,
+          "payoutYen": 19020,
+          "hitRate": 0.2857142857142857,
+          "roi": 0.6792857142857143
         },
         "7": {
-          "races": 38,
-          "hits": 14,
-          "stakeYen": 38000,
-          "payoutYen": 22710,
-          "hitRate": 0.3684210526315789,
-          "roi": 0.5976315789473684
+          "races": 28,
+          "hits": 12,
+          "stakeYen": 28000,
+          "payoutYen": 19540,
+          "hitRate": 0.42857142857142855,
+          "roi": 0.6978571428571428
         },
         "10": {
-          "races": 38,
-          "hits": 17,
-          "stakeYen": 38000,
-          "payoutYen": 34220,
-          "hitRate": 0.4473684210526316,
-          "roi": 0.9005263157894737
+          "races": 28,
+          "hits": 15,
+          "stakeYen": 28000,
+          "payoutYen": 31050,
+          "hitRate": 0.5357142857142857,
+          "roi": 1.1089285714285715
         }
       }
     },
@@ -1953,70 +1954,70 @@
       },
       "earlier": {
         "3": {
-          "races": 12,
-          "hits": 2,
-          "stakeYen": 12000,
-          "payoutYen": 7630,
-          "hitRate": 0.16666666666666666,
-          "roi": 0.6358333333333334
+          "races": 24,
+          "hits": 5,
+          "stakeYen": 24000,
+          "payoutYen": 12800,
+          "hitRate": 0.20833333333333334,
+          "roi": 0.5333333333333333
         },
         "5": {
-          "races": 12,
-          "hits": 3,
-          "stakeYen": 12000,
-          "payoutYen": 6090,
-          "hitRate": 0.25,
-          "roi": 0.5075
+          "races": 24,
+          "hits": 7,
+          "stakeYen": 24000,
+          "payoutYen": 11520,
+          "hitRate": 0.2916666666666667,
+          "roi": 0.48
         },
         "7": {
-          "races": 12,
-          "hits": 3,
-          "stakeYen": 12000,
-          "payoutYen": 6090,
-          "hitRate": 0.25,
-          "roi": 0.5075
+          "races": 24,
+          "hits": 7,
+          "stakeYen": 24000,
+          "payoutYen": 10170,
+          "hitRate": 0.2916666666666667,
+          "roi": 0.42375
         },
         "10": {
-          "races": 12,
-          "hits": 5,
-          "stakeYen": 12000,
-          "payoutYen": 5320,
+          "races": 24,
+          "hits": 10,
+          "stakeYen": 24000,
+          "payoutYen": 9610,
           "hitRate": 0.4166666666666667,
-          "roi": 0.44333333333333336
+          "roi": 0.40041666666666664
         }
       },
       "later": {
         "3": {
-          "races": 59,
-          "hits": 14,
-          "stakeYen": 59000,
-          "payoutYen": 49960,
-          "hitRate": 0.23728813559322035,
-          "roi": 0.8467796610169491
+          "races": 47,
+          "hits": 11,
+          "stakeYen": 47000,
+          "payoutYen": 44790,
+          "hitRate": 0.23404255319148937,
+          "roi": 0.9529787234042553
         },
         "5": {
-          "races": 59,
-          "hits": 18,
-          "stakeYen": 59000,
-          "payoutYen": 35910,
-          "hitRate": 0.3050847457627119,
-          "roi": 0.6086440677966102
+          "races": 47,
+          "hits": 14,
+          "stakeYen": 47000,
+          "payoutYen": 30480,
+          "hitRate": 0.2978723404255319,
+          "roi": 0.6485106382978724
         },
         "7": {
-          "races": 59,
-          "hits": 20,
-          "stakeYen": 59000,
-          "payoutYen": 33500,
-          "hitRate": 0.3389830508474576,
-          "roi": 0.5677966101694916
+          "races": 47,
+          "hits": 16,
+          "stakeYen": 47000,
+          "payoutYen": 29420,
+          "hitRate": 0.3404255319148936,
+          "roi": 0.6259574468085106
         },
         "10": {
-          "races": 59,
-          "hits": 22,
-          "stakeYen": 59000,
-          "payoutYen": 28580,
-          "hitRate": 0.3728813559322034,
-          "roi": 0.484406779661017
+          "races": 47,
+          "hits": 17,
+          "stakeYen": 47000,
+          "payoutYen": 24290,
+          "hitRate": 0.3617021276595745,
+          "roi": 0.5168085106382979
         }
       }
     },
@@ -2127,140 +2128,140 @@
     "24": {
       "overall": {
         "3": {
-          "races": 72,
-          "hits": 13,
-          "stakeYen": 72000,
-          "payoutYen": 33920,
-          "hitRate": 0.18055555555555555,
-          "roi": 0.4711111111111111
+          "races": 84,
+          "hits": 15,
+          "stakeYen": 84000,
+          "payoutYen": 39370,
+          "hitRate": 0.17857142857142858,
+          "roi": 0.4686904761904762
         },
         "5": {
-          "races": 72,
-          "hits": 19,
-          "stakeYen": 72000,
-          "payoutYen": 35720,
-          "hitRate": 0.2638888888888889,
-          "roi": 0.4961111111111111
+          "races": 84,
+          "hits": 24,
+          "stakeYen": 84000,
+          "payoutYen": 50750,
+          "hitRate": 0.2857142857142857,
+          "roi": 0.6041666666666666
         },
         "7": {
-          "races": 72,
-          "hits": 22,
-          "stakeYen": 72000,
-          "payoutYen": 35140,
-          "hitRate": 0.3055555555555556,
-          "roi": 0.4880555555555556
+          "races": 84,
+          "hits": 28,
+          "stakeYen": 84000,
+          "payoutYen": 45540,
+          "hitRate": 0.3333333333333333,
+          "roi": 0.5421428571428571
         },
         "10": {
-          "races": 72,
-          "hits": 33,
-          "stakeYen": 72000,
-          "payoutYen": 50340,
-          "hitRate": 0.4583333333333333,
-          "roi": 0.6991666666666667
+          "races": 84,
+          "hits": 39,
+          "stakeYen": 84000,
+          "payoutYen": 59240,
+          "hitRate": 0.4642857142857143,
+          "roi": 0.7052380952380952
         }
       },
       "earlier": {
         "3": {
-          "races": 36,
-          "hits": 4,
-          "stakeYen": 36000,
-          "payoutYen": 9350,
-          "hitRate": 0.1111111111111111,
-          "roi": 0.25972222222222224
+          "races": 48,
+          "hits": 7,
+          "stakeYen": 48000,
+          "payoutYen": 16080,
+          "hitRate": 0.14583333333333334,
+          "roi": 0.335
         },
         "5": {
-          "races": 36,
-          "hits": 8,
-          "stakeYen": 36000,
-          "payoutYen": 13970,
-          "hitRate": 0.2222222222222222,
-          "roi": 0.38805555555555554
+          "races": 48,
+          "hits": 11,
+          "stakeYen": 48000,
+          "payoutYen": 17790,
+          "hitRate": 0.22916666666666666,
+          "roi": 0.370625
         },
         "7": {
-          "races": 36,
-          "hits": 9,
-          "stakeYen": 36000,
-          "payoutYen": 13730,
+          "races": 48,
+          "hits": 12,
+          "stakeYen": 48000,
+          "payoutYen": 17550,
           "hitRate": 0.25,
-          "roi": 0.3813888888888889
+          "roi": 0.365625
         },
         "10": {
-          "races": 36,
-          "hits": 15,
-          "stakeYen": 36000,
-          "payoutYen": 27670,
-          "hitRate": 0.4166666666666667,
-          "roi": 0.7686111111111111
+          "races": 48,
+          "hits": 18,
+          "stakeYen": 48000,
+          "payoutYen": 29580,
+          "hitRate": 0.375,
+          "roi": 0.61625
         }
       },
       "later": {
         "3": {
           "races": 36,
-          "hits": 9,
+          "hits": 8,
           "stakeYen": 36000,
-          "payoutYen": 24570,
-          "hitRate": 0.25,
-          "roi": 0.6825
+          "payoutYen": 23290,
+          "hitRate": 0.2222222222222222,
+          "roi": 0.6469444444444444
         },
         "5": {
           "races": 36,
-          "hits": 11,
+          "hits": 13,
           "stakeYen": 36000,
-          "payoutYen": 21750,
-          "hitRate": 0.3055555555555556,
-          "roi": 0.6041666666666666
+          "payoutYen": 32960,
+          "hitRate": 0.3611111111111111,
+          "roi": 0.9155555555555556
         },
         "7": {
           "races": 36,
-          "hits": 13,
+          "hits": 16,
           "stakeYen": 36000,
-          "payoutYen": 21410,
-          "hitRate": 0.3611111111111111,
-          "roi": 0.5947222222222223
+          "payoutYen": 27990,
+          "hitRate": 0.4444444444444444,
+          "roi": 0.7775
         },
         "10": {
           "races": 36,
-          "hits": 18,
+          "hits": 21,
           "stakeYen": 36000,
-          "payoutYen": 22670,
-          "hitRate": 0.5,
-          "roi": 0.6297222222222222
+          "payoutYen": 29660,
+          "hitRate": 0.5833333333333334,
+          "roi": 0.8238888888888889
         }
       }
     },
     "01": {
       "overall": {
         "3": {
-          "races": 70,
-          "hits": 8,
-          "stakeYen": 70000,
-          "payoutYen": 23190,
-          "hitRate": 0.11428571428571428,
-          "roi": 0.3312857142857143
+          "races": 81,
+          "hits": 11,
+          "stakeYen": 81000,
+          "payoutYen": 32970,
+          "hitRate": 0.13580246913580246,
+          "roi": 0.40703703703703703
         },
         "5": {
-          "races": 70,
-          "hits": 10,
-          "stakeYen": 70000,
-          "payoutYen": 15850,
-          "hitRate": 0.14285714285714285,
-          "roi": 0.22642857142857142
+          "races": 81,
+          "hits": 13,
+          "stakeYen": 81000,
+          "payoutYen": 21470,
+          "hitRate": 0.16049382716049382,
+          "roi": 0.2650617283950617
         },
         "7": {
-          "races": 70,
-          "hits": 15,
-          "stakeYen": 70000,
-          "payoutYen": 28740,
-          "hitRate": 0.21428571428571427,
-          "roi": 0.4105714285714286
+          "races": 81,
+          "hits": 19,
+          "stakeYen": 81000,
+          "payoutYen": 36200,
+          "hitRate": 0.2345679012345679,
+          "roi": 0.4469135802469136
         },
         "10": {
-          "races": 70,
-          "hits": 26,
-          "stakeYen": 70000,
-          "payoutYen": 42120,
-          "hitRate": 0.37142857142857144,
-          "roi": 0.6017142857142858
+          "races": 81,
+          "hits": 32,
+          "stakeYen": 81000,
+          "payoutYen": 50840,
+          "hitRate": 0.3950617283950617,
+          "roi": 0.6276543209876543
         }
       },
       "earlier": {
@@ -2299,36 +2300,36 @@
       },
       "later": {
         "3": {
-          "races": 46,
-          "hits": 4,
-          "stakeYen": 46000,
-          "payoutYen": 11200,
-          "hitRate": 0.08695652173913043,
-          "roi": 0.24347826086956523
+          "races": 57,
+          "hits": 7,
+          "stakeYen": 57000,
+          "payoutYen": 20980,
+          "hitRate": 0.12280701754385964,
+          "roi": 0.3680701754385965
         },
         "5": {
-          "races": 46,
-          "hits": 4,
-          "stakeYen": 46000,
-          "payoutYen": 6100,
-          "hitRate": 0.08695652173913043,
-          "roi": 0.13260869565217392
+          "races": 57,
+          "hits": 7,
+          "stakeYen": 57000,
+          "payoutYen": 11720,
+          "hitRate": 0.12280701754385964,
+          "roi": 0.2056140350877193
         },
         "7": {
-          "races": 46,
-          "hits": 8,
-          "stakeYen": 46000,
-          "payoutYen": 16580,
-          "hitRate": 0.17391304347826086,
-          "roi": 0.36043478260869566
+          "races": 57,
+          "hits": 12,
+          "stakeYen": 57000,
+          "payoutYen": 24040,
+          "hitRate": 0.21052631578947367,
+          "roi": 0.42175438596491227
         },
         "10": {
-          "races": 46,
-          "hits": 15,
-          "stakeYen": 46000,
-          "payoutYen": 25350,
-          "hitRate": 0.32608695652173914,
-          "roi": 0.5510869565217391
+          "races": 57,
+          "hits": 21,
+          "stakeYen": 57000,
+          "payoutYen": 34070,
+          "hitRate": 0.3684210526315789,
+          "roi": 0.597719298245614
         }
       }
     },
@@ -2369,70 +2370,70 @@
       },
       "earlier": {
         "3": {
-          "races": 24,
-          "hits": 1,
-          "stakeYen": 24000,
-          "payoutYen": 11400,
-          "hitRate": 0.041666666666666664,
-          "roi": 0.475
+          "races": 35,
+          "hits": 3,
+          "stakeYen": 35000,
+          "payoutYen": 30920,
+          "hitRate": 0.08571428571428572,
+          "roi": 0.8834285714285715
         },
         "5": {
-          "races": 24,
-          "hits": 2,
-          "stakeYen": 24000,
-          "payoutYen": 10300,
-          "hitRate": 0.08333333333333333,
-          "roi": 0.42916666666666664
+          "races": 35,
+          "hits": 4,
+          "stakeYen": 35000,
+          "payoutYen": 20060,
+          "hitRate": 0.11428571428571428,
+          "roi": 0.5731428571428572
         },
         "7": {
-          "races": 24,
-          "hits": 8,
-          "stakeYen": 24000,
-          "payoutYen": 15670,
-          "hitRate": 0.3333333333333333,
-          "roi": 0.6529166666666667
+          "races": 35,
+          "hits": 13,
+          "stakeYen": 35000,
+          "payoutYen": 31010,
+          "hitRate": 0.37142857142857144,
+          "roi": 0.886
         },
         "10": {
-          "races": 24,
-          "hits": 9,
-          "stakeYen": 24000,
-          "payoutYen": 12730,
-          "hitRate": 0.375,
-          "roi": 0.5304166666666666
+          "races": 35,
+          "hits": 15,
+          "stakeYen": 35000,
+          "payoutYen": 25160,
+          "hitRate": 0.42857142857142855,
+          "roi": 0.7188571428571429
         }
       },
       "later": {
         "3": {
-          "races": 34,
-          "hits": 8,
-          "stakeYen": 34000,
-          "payoutYen": 33520,
-          "hitRate": 0.23529411764705882,
-          "roi": 0.9858823529411764
+          "races": 23,
+          "hits": 6,
+          "stakeYen": 23000,
+          "payoutYen": 14000,
+          "hitRate": 0.2608695652173913,
+          "roi": 0.6086956521739131
         },
         "5": {
-          "races": 34,
-          "hits": 10,
-          "stakeYen": 34000,
-          "payoutYen": 24800,
-          "hitRate": 0.29411764705882354,
-          "roi": 0.7294117647058823
+          "races": 23,
+          "hits": 8,
+          "stakeYen": 23000,
+          "payoutYen": 15040,
+          "hitRate": 0.34782608695652173,
+          "roi": 0.6539130434782608
         },
         "7": {
-          "races": 34,
-          "hits": 14,
-          "stakeYen": 34000,
-          "payoutYen": 28920,
-          "hitRate": 0.4117647058823529,
-          "roi": 0.8505882352941176
+          "races": 23,
+          "hits": 9,
+          "stakeYen": 23000,
+          "payoutYen": 13580,
+          "hitRate": 0.391304347826087,
+          "roi": 0.5904347826086956
         },
         "10": {
-          "races": 34,
-          "hits": 16,
-          "stakeYen": 34000,
-          "payoutYen": 23080,
-          "hitRate": 0.47058823529411764,
-          "roi": 0.6788235294117647
+          "races": 23,
+          "hits": 10,
+          "stakeYen": 23000,
+          "payoutYen": 10650,
+          "hitRate": 0.43478260869565216,
+          "roi": 0.46304347826086956
         }
       }
     },
@@ -2473,174 +2474,174 @@
       },
       "earlier": {
         "3": {
-          "races": 35,
-          "hits": 7,
-          "stakeYen": 35000,
-          "payoutYen": 33140,
-          "hitRate": 0.2,
-          "roi": 0.9468571428571428
+          "races": 47,
+          "hits": 10,
+          "stakeYen": 47000,
+          "payoutYen": 44470,
+          "hitRate": 0.2127659574468085,
+          "roi": 0.9461702127659575
         },
         "5": {
-          "races": 35,
-          "hits": 10,
-          "stakeYen": 35000,
-          "payoutYen": 35170,
-          "hitRate": 0.2857142857142857,
-          "roi": 1.004857142857143
+          "races": 47,
+          "hits": 14,
+          "stakeYen": 47000,
+          "payoutYen": 45160,
+          "hitRate": 0.2978723404255319,
+          "roi": 0.9608510638297872
         },
         "7": {
-          "races": 35,
-          "hits": 12,
-          "stakeYen": 35000,
-          "payoutYen": 30920,
-          "hitRate": 0.34285714285714286,
-          "roi": 0.8834285714285715
+          "races": 47,
+          "hits": 19,
+          "stakeYen": 47000,
+          "payoutYen": 46680,
+          "hitRate": 0.40425531914893614,
+          "roi": 0.9931914893617021
         },
         "10": {
-          "races": 35,
-          "hits": 18,
-          "stakeYen": 35000,
-          "payoutYen": 36710,
-          "hitRate": 0.5142857142857142,
-          "roi": 1.048857142857143
+          "races": 47,
+          "hits": 26,
+          "stakeYen": 47000,
+          "payoutYen": 50920,
+          "hitRate": 0.5531914893617021,
+          "roi": 1.083404255319149
         }
       },
       "later": {
         "3": {
-          "races": 35,
-          "hits": 8,
-          "stakeYen": 35000,
-          "payoutYen": 42270,
-          "hitRate": 0.22857142857142856,
-          "roi": 1.2077142857142857
+          "races": 23,
+          "hits": 5,
+          "stakeYen": 23000,
+          "payoutYen": 30940,
+          "hitRate": 0.21739130434782608,
+          "roi": 1.345217391304348
         },
         "5": {
-          "races": 35,
-          "hits": 10,
-          "stakeYen": 35000,
-          "payoutYen": 31770,
-          "hitRate": 0.2857142857142857,
-          "roi": 0.9077142857142857
+          "races": 23,
+          "hits": 6,
+          "stakeYen": 23000,
+          "payoutYen": 21780,
+          "hitRate": 0.2608695652173913,
+          "roi": 0.9469565217391305
         },
         "7": {
-          "races": 35,
-          "hits": 15,
-          "stakeYen": 35000,
-          "payoutYen": 39330,
-          "hitRate": 0.42857142857142855,
-          "roi": 1.1237142857142857
+          "races": 23,
+          "hits": 8,
+          "stakeYen": 23000,
+          "payoutYen": 23570,
+          "hitRate": 0.34782608695652173,
+          "roi": 1.0247826086956522
         },
         "10": {
-          "races": 35,
-          "hits": 17,
-          "stakeYen": 35000,
-          "payoutYen": 30910,
-          "hitRate": 0.4857142857142857,
-          "roi": 0.8831428571428571
+          "races": 23,
+          "hits": 9,
+          "stakeYen": 23000,
+          "payoutYen": 16700,
+          "hitRate": 0.391304347826087,
+          "roi": 0.7260869565217392
         }
       }
     },
     "04": {
       "overall": {
         "3": {
-          "races": 71,
-          "hits": 10,
-          "stakeYen": 71000,
-          "payoutYen": 38540,
-          "hitRate": 0.14084507042253522,
-          "roi": 0.5428169014084507
+          "races": 78,
+          "hits": 12,
+          "stakeYen": 78000,
+          "payoutYen": 52370,
+          "hitRate": 0.15384615384615385,
+          "roi": 0.6714102564102564
         },
         "5": {
-          "races": 71,
-          "hits": 17,
-          "stakeYen": 71000,
-          "payoutYen": 61400,
-          "hitRate": 0.23943661971830985,
-          "roi": 0.8647887323943662
+          "races": 78,
+          "hits": 22,
+          "stakeYen": 78000,
+          "payoutYen": 75260,
+          "hitRate": 0.28205128205128205,
+          "roi": 0.9648717948717949
         },
         "7": {
-          "races": 71,
-          "hits": 22,
-          "stakeYen": 71000,
-          "payoutYen": 55000,
-          "hitRate": 0.30985915492957744,
-          "roi": 0.7746478873239436
+          "races": 78,
+          "hits": 27,
+          "stakeYen": 78000,
+          "payoutYen": 65800,
+          "hitRate": 0.34615384615384615,
+          "roi": 0.8435897435897436
         },
         "10": {
-          "races": 71,
-          "hits": 26,
-          "stakeYen": 71000,
-          "payoutYen": 51610,
-          "hitRate": 0.36619718309859156,
-          "roi": 0.7269014084507043
+          "races": 78,
+          "hits": 31,
+          "stakeYen": 78000,
+          "payoutYen": 58540,
+          "hitRate": 0.3974358974358974,
+          "roi": 0.7505128205128205
         }
       },
       "earlier": {
         "3": {
-          "races": 23,
-          "hits": 5,
-          "stakeYen": 23000,
-          "payoutYen": 14750,
-          "hitRate": 0.21739130434782608,
-          "roi": 0.6413043478260869
+          "races": 35,
+          "hits": 7,
+          "stakeYen": 35000,
+          "payoutYen": 24650,
+          "hitRate": 0.2,
+          "roi": 0.7042857142857143
         },
         "5": {
-          "races": 23,
-          "hits": 6,
-          "stakeYen": 23000,
-          "payoutYen": 11860,
-          "hitRate": 0.2608695652173913,
-          "roi": 0.5156521739130435
+          "races": 35,
+          "hits": 9,
+          "stakeYen": 35000,
+          "payoutYen": 21140,
+          "hitRate": 0.2571428571428571,
+          "roi": 0.604
         },
         "7": {
-          "races": 23,
-          "hits": 7,
-          "stakeYen": 23000,
-          "payoutYen": 13620,
-          "hitRate": 0.30434782608695654,
-          "roi": 0.5921739130434782
+          "races": 35,
+          "hits": 10,
+          "stakeYen": 35000,
+          "payoutYen": 21560,
+          "hitRate": 0.2857142857142857,
+          "roi": 0.616
         },
         "10": {
-          "races": 23,
-          "hits": 8,
-          "stakeYen": 23000,
-          "payoutYen": 10440,
-          "hitRate": 0.34782608695652173,
-          "roi": 0.4539130434782609
+          "races": 35,
+          "hits": 12,
+          "stakeYen": 35000,
+          "payoutYen": 16590,
+          "hitRate": 0.34285714285714286,
+          "roi": 0.474
         }
       },
       "later": {
         "3": {
-          "races": 48,
+          "races": 43,
           "hits": 5,
-          "stakeYen": 48000,
-          "payoutYen": 23790,
-          "hitRate": 0.10416666666666667,
-          "roi": 0.495625
+          "stakeYen": 43000,
+          "payoutYen": 27720,
+          "hitRate": 0.11627906976744186,
+          "roi": 0.6446511627906977
         },
         "5": {
-          "races": 48,
-          "hits": 11,
-          "stakeYen": 48000,
-          "payoutYen": 49540,
-          "hitRate": 0.22916666666666666,
-          "roi": 1.0320833333333332
+          "races": 43,
+          "hits": 13,
+          "stakeYen": 43000,
+          "payoutYen": 54120,
+          "hitRate": 0.3023255813953488,
+          "roi": 1.2586046511627906
         },
         "7": {
-          "races": 48,
-          "hits": 15,
-          "stakeYen": 48000,
-          "payoutYen": 41380,
-          "hitRate": 0.3125,
-          "roi": 0.8620833333333333
+          "races": 43,
+          "hits": 17,
+          "stakeYen": 43000,
+          "payoutYen": 44240,
+          "hitRate": 0.3953488372093023,
+          "roi": 1.0288372093023255
         },
         "10": {
-          "races": 48,
-          "hits": 18,
-          "stakeYen": 48000,
-          "payoutYen": 41170,
-          "hitRate": 0.375,
-          "roi": 0.8577083333333333
+          "races": 43,
+          "hits": 19,
+          "stakeYen": 43000,
+          "payoutYen": 41950,
+          "hitRate": 0.4418604651162791,
+          "roi": 0.9755813953488373
         }
       }
     },
@@ -2785,70 +2786,70 @@
       },
       "earlier": {
         "3": {
-          "races": 34,
-          "hits": 6,
-          "stakeYen": 34000,
-          "payoutYen": 19800,
-          "hitRate": 0.17647058823529413,
-          "roi": 0.5823529411764706
+          "races": 46,
+          "hits": 8,
+          "stakeYen": 46000,
+          "payoutYen": 25770,
+          "hitRate": 0.17391304347826086,
+          "roi": 0.5602173913043478
         },
         "5": {
-          "races": 34,
-          "hits": 7,
-          "stakeYen": 34000,
-          "payoutYen": 21100,
-          "hitRate": 0.20588235294117646,
-          "roi": 0.6205882352941177
+          "races": 46,
+          "hits": 11,
+          "stakeYen": 46000,
+          "payoutYen": 31020,
+          "hitRate": 0.2391304347826087,
+          "roi": 0.6743478260869565
         },
         "7": {
-          "races": 34,
-          "hits": 10,
-          "stakeYen": 34000,
-          "payoutYen": 27280,
-          "hitRate": 0.29411764705882354,
-          "roi": 0.8023529411764706
+          "races": 46,
+          "hits": 15,
+          "stakeYen": 46000,
+          "payoutYen": 35480,
+          "hitRate": 0.32608695652173914,
+          "roi": 0.7713043478260869
         },
         "10": {
-          "races": 34,
-          "hits": 13,
-          "stakeYen": 34000,
-          "payoutYen": 25500,
-          "hitRate": 0.38235294117647056,
-          "roi": 0.75
+          "races": 46,
+          "hits": 18,
+          "stakeYen": 46000,
+          "payoutYen": 31710,
+          "hitRate": 0.391304347826087,
+          "roi": 0.6893478260869565
         }
       },
       "later": {
         "3": {
-          "races": 35,
-          "hits": 5,
-          "stakeYen": 35000,
-          "payoutYen": 26550,
-          "hitRate": 0.14285714285714285,
-          "roi": 0.7585714285714286
+          "races": 23,
+          "hits": 3,
+          "stakeYen": 23000,
+          "payoutYen": 20580,
+          "hitRate": 0.13043478260869565,
+          "roi": 0.8947826086956522
         },
         "5": {
-          "races": 35,
-          "hits": 8,
-          "stakeYen": 35000,
-          "payoutYen": 26820,
-          "hitRate": 0.22857142857142856,
-          "roi": 0.7662857142857142
+          "races": 23,
+          "hits": 4,
+          "stakeYen": 23000,
+          "payoutYen": 16900,
+          "hitRate": 0.17391304347826086,
+          "roi": 0.7347826086956522
         },
         "7": {
-          "races": 35,
-          "hits": 13,
-          "stakeYen": 35000,
-          "payoutYen": 34670,
-          "hitRate": 0.37142857142857144,
-          "roi": 0.9905714285714285
+          "races": 23,
+          "hits": 8,
+          "stakeYen": 23000,
+          "payoutYen": 26470,
+          "hitRate": 0.34782608695652173,
+          "roi": 1.1508695652173913
         },
         "10": {
-          "races": 35,
-          "hits": 15,
-          "stakeYen": 35000,
-          "payoutYen": 28540,
-          "hitRate": 0.42857142857142855,
-          "roi": 0.8154285714285714
+          "races": 23,
+          "hits": 10,
+          "stakeYen": 23000,
+          "payoutYen": 22330,
+          "hitRate": 0.43478260869565216,
+          "roi": 0.9708695652173913
         }
       }
     },
@@ -3097,70 +3098,70 @@
       },
       "earlier": {
         "3": {
-          "races": 24,
-          "hits": 7,
-          "stakeYen": 24000,
-          "payoutYen": 37370,
-          "hitRate": 0.2916666666666667,
-          "roi": 1.5570833333333334
+          "races": 36,
+          "hits": 8,
+          "stakeYen": 36000,
+          "payoutYen": 40170,
+          "hitRate": 0.2222222222222222,
+          "roi": 1.1158333333333332
         },
         "5": {
-          "races": 24,
-          "hits": 9,
-          "stakeYen": 24000,
-          "payoutYen": 28060,
-          "hitRate": 0.375,
-          "roi": 1.1691666666666667
+          "races": 36,
+          "hits": 12,
+          "stakeYen": 36000,
+          "payoutYen": 33040,
+          "hitRate": 0.3333333333333333,
+          "roi": 0.9177777777777778
         },
         "7": {
-          "races": 24,
-          "hits": 9,
-          "stakeYen": 24000,
-          "payoutYen": 25560,
-          "hitRate": 0.375,
-          "roi": 1.065
+          "races": 36,
+          "hits": 13,
+          "stakeYen": 36000,
+          "payoutYen": 33140,
+          "hitRate": 0.3611111111111111,
+          "roi": 0.9205555555555556
         },
         "10": {
-          "races": 24,
-          "hits": 10,
-          "stakeYen": 24000,
-          "payoutYen": 16040,
+          "races": 36,
+          "hits": 15,
+          "stakeYen": 36000,
+          "payoutYen": 24510,
           "hitRate": 0.4166666666666667,
-          "roi": 0.6683333333333333
+          "roi": 0.6808333333333333
         }
       },
       "later": {
         "3": {
-          "races": 48,
-          "hits": 8,
-          "stakeYen": 48000,
-          "payoutYen": 31220,
-          "hitRate": 0.16666666666666666,
-          "roi": 0.6504166666666666
+          "races": 36,
+          "hits": 7,
+          "stakeYen": 36000,
+          "payoutYen": 28420,
+          "hitRate": 0.19444444444444445,
+          "roi": 0.7894444444444444
         },
         "5": {
-          "races": 48,
-          "hits": 12,
-          "stakeYen": 48000,
-          "payoutYen": 29280,
+          "races": 36,
+          "hits": 9,
+          "stakeYen": 36000,
+          "payoutYen": 24300,
           "hitRate": 0.25,
-          "roi": 0.61
+          "roi": 0.675
         },
         "7": {
-          "races": 48,
-          "hits": 14,
-          "stakeYen": 48000,
-          "payoutYen": 28430,
-          "hitRate": 0.2916666666666667,
-          "roi": 0.5922916666666667
+          "races": 36,
+          "hits": 10,
+          "stakeYen": 36000,
+          "payoutYen": 20850,
+          "hitRate": 0.2777777777777778,
+          "roi": 0.5791666666666667
         },
         "10": {
-          "races": 48,
-          "hits": 18,
-          "stakeYen": 48000,
-          "payoutYen": 25170,
-          "hitRate": 0.375,
-          "roi": 0.524375
+          "races": 36,
+          "hits": 13,
+          "stakeYen": 36000,
+          "payoutYen": 16700,
+          "hitRate": 0.3611111111111111,
+          "roi": 0.4638888888888889
         }
       }
     }
