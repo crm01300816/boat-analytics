@@ -1,7 +1,8 @@
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {dirname} from 'node:path';
 import {execFileSync} from 'node:child_process';
-import {fetchCsv,jstToday} from '../csv.js';
+import {jstToday} from '../csv.js';
+import {readDataCsv} from './local-data.mjs';
 import {createRaceList,makePicks} from '../analytics.js';
 import {deadlineFor} from '../evaluation.js';
 
@@ -14,8 +15,8 @@ if(!Array.isArray(original.records)||original.date!==date)throw new Error('Inval
 const seen=new Set(original.records.map(r=>r.raceId));
 const modelId=execFileSync('git',['rev-parse','HEAD:analytics.js'],{encoding:'utf8'}).trim();
 const [cards,titles,wakus]=await Promise.all([
-  fetchCsv('programs/race_cards',date),fetchCsv('programs/title',date),
-  fetchCsv('programs/waku10',date).catch(()=>[])
+  readDataCsv('programs/race_cards',date),readDataCsv('programs/title',date),
+  readDataCsv('programs/waku10',date).catch(()=>[])
 ]);
 const races=createRaceList(cards,titles,wakus,{});
 // Match the strict selective-five page's pre-deadline confidence rule.
@@ -48,7 +49,7 @@ if(created.length){
   original.records.sort((a,b)=>a.raceId.localeCompare(b.raceId));
   original.schemaVersion=1;
   original.description='Before-deadline model picks only; no result data or raw entrant profiles. Model inputs may be revised by upstream.';
-  original.source='BoatraceCSV programs/race_cards, title, waku10';
+  original.source='BOATRACE公式 番組表・出走表 (programs/race_cards, title, waku10 via official-data pipeline)';
   await mkdir(dirname(target),{recursive:true});
   await writeFile(target,JSON.stringify(original,null,2)+'\n');
 }

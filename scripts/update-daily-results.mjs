@@ -1,6 +1,7 @@
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {dirname} from 'node:path';
-import {fetchCsv,jstToday,shiftDate} from '../csv.js';
+import {jstToday,shiftDate} from '../csv.js';
+import {readDataCsv} from './local-data.mjs';
 import {summarizeDay,mergeDailySummaries} from './daily-results.mjs';
 
 const target=process.argv[2]||'public/daily-trends.json';
@@ -15,9 +16,9 @@ catch(e){if(e.code!=='ENOENT')throw e;base={days:[]};}
 const changes=[],failed=[];
 for(const day of dates){
   let results=[],payouts=[];
-  try {results=await fetchCsv('results/realtime',day);}
+  try {results=await readDataCsv('results/realtime',day);}
   catch(e){failed.push({day,source:'results',error:e.message});continue;}
-  try {payouts=await fetchCsv('results/payouts',day);}
+  try {payouts=await readDataCsv('results/payouts',day);}
   catch(e){failed.push({day,source:'payouts',error:e.message});}
   const summary=summarizeDay(day,results,payouts);
   if(summary.results) changes.push(summary);

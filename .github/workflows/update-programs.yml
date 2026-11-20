@@ -1,0 +1,64 @@
+name: Generate daily official BOATRACE programs
+
+on:
+  schedule:
+    # 07:30 and 08:35 JST: build today's programs/title/waku10 CSVs from the
+    # official B file + race card pages before the 09:00 prospective capture.
+    - cron: '30 22 * * *'
+    - cron: '35 23 * * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/update-programs.yml
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: boat-programs
+  cancel-in-progress: false
+
+jobs:
+  programs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Unit tests
+        run: node --test tests/*.test.mjs
+      - name: Ensure 7z for official LZH archives
+        run: command -v 7z >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full)
+      - name: Generate today's official programs
+        run: node scripts/official-data.mjs programs
+      - name: Commit generated program CSVs
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git add -- public/data/
+          if git diff --cached --quiet; then
+            echo 'No program changes.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'data: official programs for today [skip ci]'
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main
+            if git push; then
+              break
+            fi
+            if [ "$attempt" = "5" ]; then
+              echo 'Push failed after 5 attempts.' >&2
+              exit 1
+            fi
+            sleep $((attempt * 5))
+          done
+          gh workflow run pages.yml --ref main

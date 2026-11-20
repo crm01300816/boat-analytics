@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "description": "Daily summary of published BOATRACE result/weather observations; not a prediction accuracy or training record",
   "sources": [
-    "BoatraceCSV results/realtime",
-    "BoatraceCSV results/payouts"
+    "BOATRACE公式 競走成績（Kファイル） results/realtime",
+    "BOATRACE公式 競走成績（Kファイル） results/payouts"
   ],
   "days": [
     {
@@ -314,6 +314,402 @@
         "抜き": 8,
         "まくり差し": 12,
         "恵まれ": 3
+      }
+    },
+    {
+      "date": "2026-11-06",
+      "results": 144,
+      "payoutRows": 144,
+      "joined": 144,
+      "waveObservations": 144,
+      "averageWaveCm": 3.28,
+      "maxWaveCm": 8,
+      "wave10CmOrMore": 0,
+      "windObservations": 144,
+      "averageWindMps": 3.24,
+      "winnerOneRate": 53.47,
+      "winnerValid": 144,
+      "averageTrifectaPayoutYen": 5746.39,
+      "trifectaPayoutObservations": 144,
+      "weatherCounts": {
+        "晴": 126,
+        "曇り": 15,
+        "雨": 3
+      },
+      "winningMethodCounts": {
+        "まくり": 31,
+        "逃げ": 74,
+        "差し": 20,
+        "まくり差し": 11,
+        "抜き": 7,
+        "恵まれ": 1
+      }
+    },
+    {
+      "date": "2026-11-07",
+      "results": 132,
+      "payoutRows": 130,
+      "joined": 130,
+      "waveObservations": 132,
+      "averageWaveCm": 4.43,
+      "maxWaveCm": 15,
+      "wave10CmOrMore": 9,
+      "windObservations": 132,
+      "averageWindMps": 4.6,
+      "winnerOneRate": 48.48,
+      "winnerValid": 132,
+      "averageTrifectaPayoutYen": 6723.54,
+      "trifectaPayoutObservations": 130,
+      "weatherCounts": {
+        "晴": 123,
+        "曇り": 6,
+        "雨": 3
+      },
+      "winningMethodCounts": {
+        "逃げ": 63,
+        "差し": 11,
+        "まくり差し": 19,
+        "まくり": 28,
+        "抜き": 9,
+        "恵まれ": 2
+      }
+    },
+    {
+      "date": "2026-11-08",
+      "results": 132,
+      "payoutRows": 132,
+      "joined": 132,
+      "waveObservations": 132,
+      "averageWaveCm": 2.27,
+      "maxWaveCm": 10,
+      "wave10CmOrMore": 6,
+      "windObservations": 132,
+      "averageWindMps": 2.31,
+      "winnerOneRate": 56.82,
+      "winnerValid": 132,
+      "averageTrifectaPayoutYen": 6023.26,
+      "trifectaPayoutObservations": 132,
+      "weatherCounts": {
+        "曇り": 35,
+        "晴": 97
+      },
+      "winningMethodCounts": {
+        "まくり": 20,
+        "逃げ": 75,
+        "まくり差し": 18,
+        "抜き": 8,
+        "差し": 10,
+        "恵まれ": 1
+      }
+    },
+    {
+      "date": "2026-11-09",
+      "results": 132,
+      "payoutRows": 132,
+      "joined": 132,
+      "waveObservations": 132,
+      "averageWaveCm": 1.39,
+      "maxWaveCm": 3,
+      "wave10CmOrMore": 0,
+      "windObservations": 132,
+      "averageWindMps": 1.27,
+      "winnerOneRate": 56.06,
+      "winnerValid": 132,
+      "averageTrifectaPayoutYen": 7266.82,
+      "trifectaPayoutObservations": 132,
+      "weatherCounts": {
+        "雨": 71,
+        "曇り": 61
+      },
+      "winningMethodCounts": {
+        "逃げ": 73,
+        "まくり差し": 15,
+        "差し": 16,
+        "まくり": 17,
+        "抜き": 10,
+        "恵まれ": 1
+      }
+    },
+    {
+      "date": "2026-11-10",
+      "results": 156,
+      "payoutRows": 156,
+      "joined": 156,
+      "waveObservations": 156,
+      "averageWaveCm": 3.01,
+      "maxWaveCm": 7,
+      "wave10CmOrMore": 0,
+      "windObservations": 156,
+      "averageWindMps": 3.44,
+      "winnerOneRate": 53.21,
+      "winnerValid": 156,
+      "averageTrifectaPayoutYen": 9026.6,
+      "trifectaPayoutObservations": 156,
+      "weatherCounts": {
+        "晴": 89,
+        "曇り": 57,
+        "雨": 10
+      },
+      "winningMethodCounts": {
+        "逃げ": 76,
+        "差し": 20,
+        "抜き": 14,
+        "まくり": 24,
+        "まくり差し": 22
+      }
+    },
+    {
+      "date": "2026-11-11",
+      "results": 144,
+      "payoutRows": 144,
+      "joined": 144,
+      "waveObservations": 144,
+      "averageWaveCm": 1.79,
+      "maxWaveCm": 4,
+      "wave10CmOrMore": 0,
+      "windObservations": 144,
+      "averageWindMps": 1.71,
+      "winnerOneRate": 58.33,
+      "winnerValid": 144,
+      "averageTrifectaPayoutYen": 11422.64,
+      "trifectaPayoutObservations": 144,
+      "weatherCounts": {
+        "晴": 139,
+        "曇り": 5
+      },
+      "winningMethodCounts": {
+        "逃げ": 82,
+        "差し": 17,
+        "まくり差し": 18,
+        "まくり": 22,
+        "抜き": 5
+      }
+    },
+    {
+      "date": "2026-11-12",
+      "results": 156,
+      "payoutRows": 156,
+      "joined": 156,
+      "waveObservations": 156,
+      "averageWaveCm": 1.42,
+      "maxWaveCm": 4,
+      "wave10CmOrMore": 0,
+      "windObservations": 156,
+      "averageWindMps": 1.48,
+      "winnerOneRate": 59.62,
+      "winnerValid": 156,
+      "averageTrifectaPayoutYen": 9157.05,
+      "trifectaPayoutObservations": 156,
+      "weatherCounts": {
+        "曇り": 68,
+        "晴": 88
+      },
+      "winningMethodCounts": {
+        "逃げ": 94,
+        "まくり": 25,
+        "差し": 15,
+        "まくり差し": 19,
+        "抜き": 2,
+        "恵まれ": 1
+      }
+    },
+    {
+      "date": "2026-11-13",
+      "results": 156,
+      "payoutRows": 156,
+      "joined": 156,
+      "waveObservations": 156,
+      "averageWaveCm": 1.71,
+      "maxWaveCm": 5,
+      "wave10CmOrMore": 0,
+      "windObservations": 156,
+      "averageWindMps": 1.66,
+      "winnerOneRate": 51.92,
+      "winnerValid": 156,
+      "averageTrifectaPayoutYen": 6790.06,
+      "trifectaPayoutObservations": 156,
+      "weatherCounts": {
+        "曇り": 30,
+        "雨": 1,
+        "晴": 125
+      },
+      "winningMethodCounts": {
+        "逃げ": 76,
+        "まくり差し": 20,
+        "恵まれ": 2,
+        "抜き": 13,
+        "まくり": 24,
+        "差し": 21
+      }
+    },
+    {
+      "date": "2026-11-14",
+      "results": 168,
+      "payoutRows": 168,
+      "joined": 168,
+      "waveObservations": 168,
+      "averageWaveCm": 1.86,
+      "maxWaveCm": 5,
+      "wave10CmOrMore": 0,
+      "windObservations": 168,
+      "averageWindMps": 1.54,
+      "winnerOneRate": 59.52,
+      "winnerValid": 168,
+      "averageTrifectaPayoutYen": 8720.12,
+      "trifectaPayoutObservations": 168,
+      "weatherCounts": {
+        "曇り": 120,
+        "雨": 38,
+        "晴": 10
+      },
+      "winningMethodCounts": {
+        "抜き": 14,
+        "逃げ": 92,
+        "差し": 15,
+        "まくり差し": 16,
+        "まくり": 30,
+        "恵まれ": 1
+      }
+    },
+    {
+      "date": "2026-11-15",
+      "results": 156,
+      "payoutRows": 156,
+      "joined": 156,
+      "waveObservations": 156,
+      "averageWaveCm": 1.59,
+      "maxWaveCm": 6,
+      "wave10CmOrMore": 0,
+      "windObservations": 156,
+      "averageWindMps": 1.49,
+      "winnerOneRate": 54.49,
+      "winnerValid": 156,
+      "averageTrifectaPayoutYen": 7044.42,
+      "trifectaPayoutObservations": 156,
+      "weatherCounts": {
+        "曇り": 69,
+        "晴": 9,
+        "雨": 78
+      },
+      "winningMethodCounts": {
+        "まくり差し": 21,
+        "逃げ": 85,
+        "差し": 21,
+        "まくり": 23,
+        "抜き": 6
+      }
+    },
+    {
+      "date": "2026-11-16",
+      "results": 120,
+      "payoutRows": 120,
+      "joined": 120,
+      "waveObservations": 120,
+      "averageWaveCm": 2.99,
+      "maxWaveCm": 15,
+      "wave10CmOrMore": 5,
+      "windObservations": 120,
+      "averageWindMps": 3.33,
+      "winnerOneRate": 60.83,
+      "winnerValid": 120,
+      "averageTrifectaPayoutYen": 9142.92,
+      "trifectaPayoutObservations": 120,
+      "weatherCounts": {
+        "晴": 88,
+        "曇り": 32
+      },
+      "winningMethodCounts": {
+        "逃げ": 70,
+        "差し": 15,
+        "まくり差し": 9,
+        "抜き": 9,
+        "まくり": 17
+      }
+    },
+    {
+      "date": "2026-11-17",
+      "results": 132,
+      "payoutRows": 132,
+      "joined": 132,
+      "waveObservations": 132,
+      "averageWaveCm": 2.01,
+      "maxWaveCm": 6,
+      "wave10CmOrMore": 0,
+      "windObservations": 132,
+      "averageWindMps": 2.39,
+      "winnerOneRate": 53.03,
+      "winnerValid": 132,
+      "averageTrifectaPayoutYen": 7902.5,
+      "trifectaPayoutObservations": 132,
+      "weatherCounts": {
+        "雨": 85,
+        "曇り": 39,
+        "晴": 8
+      },
+      "winningMethodCounts": {
+        "逃げ": 63,
+        "恵まれ": 2,
+        "まくり": 21,
+        "差し": 21,
+        "抜き": 11,
+        "まくり差し": 14
+      }
+    },
+    {
+      "date": "2026-11-18",
+      "results": 120,
+      "payoutRows": 120,
+      "joined": 120,
+      "waveObservations": 120,
+      "averageWaveCm": 3.08,
+      "maxWaveCm": 15,
+      "wave10CmOrMore": 7,
+      "windObservations": 120,
+      "averageWindMps": 2.88,
+      "winnerOneRate": 52.5,
+      "winnerValid": 120,
+      "averageTrifectaPayoutYen": 8193.08,
+      "trifectaPayoutObservations": 120,
+      "weatherCounts": {
+        "曇り": 37,
+        "雨": 4,
+        "晴": 79
+      },
+      "winningMethodCounts": {
+        "まくり差し": 13,
+        "逃げ": 60,
+        "まくり": 20,
+        "差し": 18,
+        "抜き": 9
+      }
+    },
+    {
+      "date": "2026-11-19",
+      "results": 120,
+      "payoutRows": 120,
+      "joined": 120,
+      "waveObservations": 120,
+      "averageWaveCm": 4.07,
+      "maxWaveCm": 9,
+      "wave10CmOrMore": 0,
+      "windObservations": 120,
+      "averageWindMps": 4.36,
+      "winnerOneRate": 59.17,
+      "winnerValid": 120,
+      "averageTrifectaPayoutYen": 7261.25,
+      "trifectaPayoutObservations": 120,
+      "weatherCounts": {
+        "曇り": 19,
+        "雨": 10,
+        "晴": 91
+      },
+      "winningMethodCounts": {
+        "まくり": 17,
+        "逃げ": 67,
+        "抜き": 7,
+        "まくり差し": 11,
+        "差し": 16,
+        "恵まれ": 2
       }
     }
   ]

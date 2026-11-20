@@ -1,5 +1,5 @@
 import {readFile,writeFile} from 'node:fs/promises';
-import {fetchCsv} from '../csv.js';
+import {readDataCsv} from './local-data.mjs';
 import {createRaceList,makePicks} from '../analytics.js';
 import {summarizeProspective} from './prospective-results.mjs';
 
@@ -21,7 +21,7 @@ for(const {date} of days){
  try{archived=JSON.parse(await readFile('data/prospective/'+date+'.json','utf8'));}
  catch(e){console.log('SKIP '+date+' '+e.message);continue;}
  let cards,titles,wakus,results,payouts;
- try{[cards,titles,wakus,results,payouts]=await Promise.all([fetchCsv('programs/race_cards',date),fetchCsv('programs/title',date),fetchCsv('programs/waku10',date).catch(()=>[]),fetchCsv('results/realtime',date),fetchCsv('results/payouts',date)]);}
+ try{[cards,titles,wakus,results,payouts]=await Promise.all([readDataCsv('programs/race_cards',date),readDataCsv('programs/title',date),readDataCsv('programs/waku10',date).catch(()=>[]),readDataCsv('results/realtime',date),readDataCsv('results/payouts',date)]);}
  catch(e){console.log('BACKFILL_SOURCE_UNAVAILABLE '+date+' '+e.message);continue;}
  const races=new Map(createRaceList(cards,titles,wakus,{}).map(r=>[r.id,r]));
  let eligible=0,matched=0,unverifiable=0,notEligible=0;

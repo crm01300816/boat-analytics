@@ -65,6 +65,6 @@ export function mergeDailySummaries(existing, incoming) {
   }
   return {schemaVersion:1,
     description:'Daily summary of published BOATRACE result/weather observations; not a prediction accuracy or training record',
-    sources:['BoatraceCSV results/realtime','BoatraceCSV results/payouts'],
+    sources:['BOATRACE公式 競走成績（Kファイル） results/realtime','BOATRACE公式 競走成績（Kファイル） results/payouts'],
     days:[...map.values()].sort((a,b)=>a.date.localeCompare(b.date))};
 }

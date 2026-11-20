@@ -1,6 +1,7 @@
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {dirname} from 'node:path';
-import {fetchCsv,jstToday,shiftDate} from '../csv.js';
+import {jstToday,shiftDate} from '../csv.js';
+import {readDataCsv} from './local-data.mjs';
 import {summarizeProspective,mergeProspective} from './prospective-results.mjs';
 
 const target=process.argv[2]||'public/prospective-summary.json';
@@ -19,7 +20,7 @@ for(let offset=lookback;offset>=1;offset--) {
   let results,payouts;
   try{
     [results,payouts]=await Promise.all([
-      fetchCsv('results/realtime',day),fetchCsv('results/payouts',day)
+      readDataCsv('results/realtime',day),readDataCsv('results/payouts',day)
     ]);
   }catch(e){console.log('RESULT_PENDING '+day+' '+e.message);continue;}
   const summary=summarizeProspective(day,snapshot.records,results,payouts);

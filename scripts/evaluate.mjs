@@ -1,7 +1,8 @@
 import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { resolve, dirname, join } from 'node:path';
-import { DATA_ROOT, datePart, jstToday, parseCSV } from '../csv.js';
+import { jstToday, parseCSV } from '../csv.js';
+import { dataFilePath } from './local-data.mjs';
 import { createRaceList } from '../analytics.js';
 import { recordPrediction, evaluatePredictions } from '../evaluation.js';
 
@@ -22,11 +23,9 @@ if (command === 'capture') {
   const sources=[], data={}, failures=[];
   const paths={cards:'programs/race_cards',title:'programs/title',waku:'programs/waku10',tkz:'previews/tkz',stt:'previews/stt',sui:'previews/sui',od3:'previews/od3'};
   for (const [key,path] of Object.entries(paths)) {
-    const url=`${DATA_ROOT}/${path}/${datePart(day)}.csv`;
+    const url=dataFilePath(path,day);
     try {
-      const response=await fetch(url,{signal:AbortSignal.timeout(25000),cache:'no-store'});
-      if (!response.ok) throw new Error('HTTP '+response.status);
-      const text=await response.text(), rows=parseCSV(text);
+      const text=await readFile(url,'utf8'), rows=parseCSV(text);
       if (!rows.length || rows.some(r=>!/^\d{12}$/.test(r['レースコード']) || !r['レースコード'].startsWith(day.replaceAll('-','')))) throw new Error('Empty or wrong-date CSV');
       data[key]=rows; sources.push({key,url,retrievedAt:new Date().toISOString(),sha256:hash(text)});
     } catch(error) {

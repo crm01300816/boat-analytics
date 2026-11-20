@@ -1,4 +1,7 @@
-export const DATA_ROOT = 'https://boatracecsv.github.io/data';
+// Since the 2026-11 migration the app reads official BOATRACE data that the
+// backend pipelines (scripts/official-data.mjs) convert and publish as CSVs
+// on this site itself under public/data/. No third-party feed is fetched.
+export const DATA_ROOT = 'public/data';
 
 // RFC 4180-ish CSV parser. Quoted commas, CRLF, and embedded newlines are supported.
 export function parseCSV(text) {
@@ -40,26 +43,13 @@ export function jstToday() {
 }
 
 export async function fetchCsv(path, date, signal) {
-  const rel = `${path}/${datePart(date)}.csv`;
-  const urls = [
-    `${DATA_ROOT}/${rel}`,
-    `https://raw.githubusercontent.com/BoatraceCSV/boatracecsv.github.io/main/data/${rel}`
-  ];
-  let last;
-  for (const url of urls) {
-    try {
-      const response = await fetch(url, { signal, cache: 'no-store' });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const rows = parseCSV(await response.text());
-      if (!rows.length) throw new Error('CSVが空です');
-      if (!('レースコード' in rows[0])) throw new Error('レースコードがないCSVです');
-      return rows;
-    } catch (error) {
-      if (signal?.aborted) throw error;
-      last = error;
-    }
-  }
-  throw new Error(`${path} ${date}: ${last?.message || '取得できません'}`);
+  const url = `${DATA_ROOT}/${path}/${datePart(date)}.csv`;
+  const response = await fetch(url, { signal, cache: 'no-store' });
+  if (!response.ok) throw new Error(`${path} ${date}: HTTP ${response.status}`);
+  const rows = parseCSV(await response.text());
+  if (!rows.length) throw new Error(`${path} ${date}: CSVが空です`);
+  if (!('レースコード' in rows[0])) throw new Error(`${path} ${date}: レースコードがないCSVです`);
+  return rows;
 }
 
 export const venueNames = ['桐生', '戸田', '江戸川', '平和島', '多摩川', '浜名湖', '蒲郡', '常滑', '津', '三国', 'びわこ', '住之江', '尼崎', '鳴門', '丸亀', '児島', '宮島', '徳山', '下関', '若松', '芦屋', '福岡', '唐津', '大村'];

@@ -1,0 +1,56 @@
+name: Collect official pre-race previews and odds
+
+on:
+  schedule:
+    # Every 30 minutes, 08:00-21:59 JST: refresh exhibition / start-exhibition /
+    # weather / trifecta odds for races whose deadline is within 3 hours.
+    - cron: '0,30 23,0,1,2,3,4,5,6,7,8,9,10,11,12 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: boat-previews
+  cancel-in-progress: false
+
+jobs:
+  previews:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Collect previews for upcoming races
+        run: node scripts/official-data.mjs previews
+      - name: Commit preview CSVs
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git add -- public/data/previews/
+          if git diff --cached --quiet; then
+            echo 'No preview changes.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'data: official pre-race previews [skip ci]'
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main
+            if git push; then
+              break
+            fi
+            if [ "$attempt" = "5" ]; then
+              echo 'Push failed after 5 attempts.' >&2
+              exit 1
+            fi
+            sleep $((attempt * 5))
+          done
+          gh workflow run pages.yml --ref main
