@@ -51,8 +51,17 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'Update daily result and wave statistics [skip ci]'
-          git pull --rebase origin main
-          git push
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main
+            if git push; then
+              break
+            fi
+            if [ "$attempt" = "5" ]; then
+              echo 'Push failed after 5 attempts.' >&2
+              exit 1
+            fi
+            sleep $((attempt * 5))
+          done
           # GITHUB_TOKEN bot pushes do not initiate ordinary push workflows;
           # explicitly publish the regenerated daily summary on Pages.
           gh workflow run pages.yml --ref main
