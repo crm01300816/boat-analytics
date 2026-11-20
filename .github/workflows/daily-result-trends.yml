@@ -51,6 +51,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'Update daily result and wave statistics [skip ci]'
+          git pull --rebase origin main
           git push
           # GITHUB_TOKEN bot pushes do not initiate ordinary push workflows;
           # explicitly publish the regenerated daily summary on Pages.
