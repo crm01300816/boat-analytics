@@ -145,6 +145,19 @@
       "payoutYen": 22330,
       "pending": 0,
       "excluded": 3
+    },
+    {
+      "date": "2026-11-22",
+      "matched": 139,
+      "eligible": 40,
+      "notEligible": 99,
+      "unverifiable": 0,
+      "settled": 38,
+      "hits": 16,
+      "stakeYen": 38000,
+      "payoutYen": 29010,
+      "pending": 0,
+      "excluded": 2
     }
   ]
 }
