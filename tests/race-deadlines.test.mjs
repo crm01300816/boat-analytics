@@ -62,3 +62,41 @@ test('daily scheduled capture writes cutoffs, then preserves them on later close
   assert.equal((await updateRaceDeadlines(date,root,late)).changed,false);
  }finally{await rm(root,{recursive:true,force:true});}
 });
+test('transient Boatcast 403s are retried inside one capture until success',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'boat-cutoff-'));
+ try {
+  let calls=0;
+  const flaky=async()=>{
+   calls++;
+   if(calls<3)return {ok:false,status:403,json:async()=>({})};
+   return {ok:true,status:200,json:async()=>holding(['09:12','09:42'])};
+  };
+  const result=await updateRaceDeadlines(date,root,flaky,{delaysMs:[0,0,0],sleep:async()=>{}});
+  assert.equal(result.changed,true);
+  assert.equal(calls,3);
+ }finally{await rm(root,{recursive:true,force:true});}
+});
+test('non-retryable Boatcast status fails immediately without retrying',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'boat-cutoff-'));
+ try {
+  let calls=0;
+  const missing=async()=>{calls++;return {ok:false,status:404,json:async()=>({})};}
+  await assert.rejects(
+   updateRaceDeadlines(date,root,missing,{delaysMs:[0,0,0],sleep:async()=>{}}),
+   /Boatcast 404/
+  );
+  assert.equal(calls,1);
+ }finally{await rm(root,{recursive:true,force:true});}
+});
+test('persistent 403 gives up after the configured retries and throws',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'boat-cutoff-'));
+ try {
+  let calls=0;
+  const blocked=async()=>{calls++;return {ok:false,status:403,json:async()=>({})};}
+  await assert.rejects(
+   updateRaceDeadlines(date,root,blocked,{delaysMs:[0,0],sleep:async()=>{}}),
+   /Boatcast 403/
+  );
+  assert.equal(calls,3);
+ }finally{await rm(root,{recursive:true,force:true});}
+});

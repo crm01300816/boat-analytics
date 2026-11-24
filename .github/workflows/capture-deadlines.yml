@@ -18,7 +18,9 @@ concurrency:
 jobs:
   capture:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    # The capture script retries transient Boatcast failures (e.g. early-morning
+    # 403s) with backoff for up to ~51 minutes, so allow the job to span that.
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
         with:
