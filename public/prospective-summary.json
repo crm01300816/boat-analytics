@@ -7848,6 +7848,371 @@
           }
         }
       }
+    },
+    {
+      "date": "2026-11-28",
+      "captured": 84,
+      "pending": 37,
+      "excluded": 5,
+      "settled": 42,
+      "byCount": {
+        "3": {
+          "predictions": 42,
+          "settled": 42,
+          "hits": 15,
+          "stakeYen": 42000,
+          "payoutYen": 54420,
+          "hitRate": 0.35714285714285715,
+          "provisionalRoi": 1.2957142857142858
+        },
+        "5": {
+          "predictions": 42,
+          "settled": 42,
+          "hits": 17,
+          "stakeYen": 42000,
+          "payoutYen": 40010,
+          "hitRate": 0.40476190476190477,
+          "provisionalRoi": 0.9526190476190476
+        },
+        "7": {
+          "predictions": 42,
+          "settled": 42,
+          "hits": 18,
+          "stakeYen": 42000,
+          "payoutYen": 40490,
+          "hitRate": 0.42857142857142855,
+          "provisionalRoi": 0.964047619047619
+        },
+        "10": {
+          "predictions": 42,
+          "settled": 42,
+          "hits": 21,
+          "stakeYen": 42000,
+          "payoutYen": 29710,
+          "hitRate": 0.5,
+          "provisionalRoi": 0.7073809523809523
+        }
+      },
+      "selectiveFive": {
+        "eligible": 22,
+        "pending": 12,
+        "excluded": 0,
+        "settled": 10,
+        "hits": 3,
+        "stakeYen": 10000,
+        "payoutYen": 3940,
+        "hitRate": 0.3,
+        "provisionalRoi": 0.394,
+        "missingConfidence": 0
+      },
+      "byVenue": {
+        "13": {
+          "3": {
+            "settled": 4,
+            "hits": 1,
+            "stakeYen": 4000,
+            "payoutYen": 3900,
+            "hitRate": 0.25,
+            "provisionalRoi": 0.975
+          },
+          "5": {
+            "settled": 4,
+            "hits": 1,
+            "stakeYen": 4000,
+            "payoutYen": 2600,
+            "hitRate": 0.25,
+            "provisionalRoi": 0.65
+          },
+          "7": {
+            "settled": 4,
+            "hits": 1,
+            "stakeYen": 4000,
+            "payoutYen": 2600,
+            "hitRate": 0.25,
+            "provisionalRoi": 0.65
+          },
+          "10": {
+            "settled": 4,
+            "hits": 1,
+            "stakeYen": 4000,
+            "payoutYen": 1300,
+            "hitRate": 0.25,
+            "provisionalRoi": 0.325
+          }
+        },
+        "17": {
+          "3": {
+            "settled": 2,
+            "hits": 2,
+            "stakeYen": 2000,
+            "payoutYen": 4040,
+            "hitRate": 1,
+            "provisionalRoi": 2.02
+          },
+          "5": {
+            "settled": 2,
+            "hits": 2,
+            "stakeYen": 2000,
+            "payoutYen": 2020,
+            "hitRate": 1,
+            "provisionalRoi": 1.01
+          },
+          "7": {
+            "settled": 2,
+            "hits": 2,
+            "stakeYen": 2000,
+            "payoutYen": 2020,
+            "hitRate": 1,
+            "provisionalRoi": 1.01
+          },
+          "10": {
+            "settled": 2,
+            "hits": 2,
+            "stakeYen": 2000,
+            "payoutYen": 1010,
+            "hitRate": 1,
+            "provisionalRoi": 0.505
+          }
+        },
+        "23": {
+          "3": {
+            "settled": 1,
+            "hits": 0,
+            "stakeYen": 1000,
+            "payoutYen": 0,
+            "hitRate": 0,
+            "provisionalRoi": 0
+          },
+          "5": {
+            "settled": 1,
+            "hits": 0,
+            "stakeYen": 1000,
+            "payoutYen": 0,
+            "hitRate": 0,
+            "provisionalRoi": 0
+          },
+          "7": {
+            "settled": 1,
+            "hits": 0,
+            "stakeYen": 1000,
+            "payoutYen": 0,
+            "hitRate": 0,
+            "provisionalRoi": 0
+          },
+          "10": {
+            "settled": 1,
+            "hits": 0,
+            "stakeYen": 1000,
+            "payoutYen": 0,
+            "hitRate": 0,
+            "provisionalRoi": 0
+          }
+        },
+        "01": {
+          "3": {
+            "settled": 9,
+            "hits": 3,
+            "stakeYen": 9000,
+            "payoutYen": 9840,
+            "hitRate": 0.3333333333333333,
+            "provisionalRoi": 1.0933333333333333
+          },
+          "5": {
+            "settled": 9,
+            "hits": 3,
+            "stakeYen": 9000,
+            "payoutYen": 6560,
+            "hitRate": 0.3333333333333333,
+            "provisionalRoi": 0.7288888888888889
+          },
+          "7": {
+            "settled": 9,
+            "hits": 3,
+            "stakeYen": 9000,
+            "payoutYen": 6560,
+            "hitRate": 0.3333333333333333,
+            "provisionalRoi": 0.7288888888888889
+          },
+          "10": {
+            "settled": 9,
+            "hits": 3,
+            "stakeYen": 9000,
+            "payoutYen": 3280,
+            "hitRate": 0.3333333333333333,
+            "provisionalRoi": 0.36444444444444446
+          }
+        },
+        "02": {
+          "3": {
+            "settled": 4,
+            "hits": 0,
+            "stakeYen": 4000,
+            "payoutYen": 0,
+            "hitRate": 0,
+            "provisionalRoi": 0
+          },
+          "5": {
+            "settled": 4,
+            "hits": 1,
+            "stakeYen": 4000,
+            "payoutYen": 680,
+            "hitRate": 0.25,
+            "provisionalRoi": 0.17
+          },
+          "7": {
+            "settled": 4,
+            "hits": 1,
+            "stakeYen": 4000,
+            "payoutYen": 680,
+            "hitRate": 0.25,
+            "provisionalRoi": 0.17
+          },
+          "10": {
+            "settled": 4,
+            "hits": 3,
+            "stakeYen": 4000,
+            "payoutYen": 5380,
+            "hitRate": 0.75,
+            "provisionalRoi": 1.345
+          }
+        },
+        "03": {
+          "3": {
+            "settled": 3,
+            "hits": 2,
+            "stakeYen": 3000,
+            "payoutYen": 8380,
+            "hitRate": 0.6666666666666666,
+            "provisionalRoi": 2.7933333333333334
+          },
+          "5": {
+            "settled": 3,
+            "hits": 2,
+            "stakeYen": 3000,
+            "payoutYen": 7830,
+            "hitRate": 0.6666666666666666,
+            "provisionalRoi": 2.61
+          },
+          "7": {
+            "settled": 3,
+            "hits": 2,
+            "stakeYen": 3000,
+            "payoutYen": 7280,
+            "hitRate": 0.6666666666666666,
+            "provisionalRoi": 2.4266666666666667
+          },
+          "10": {
+            "settled": 3,
+            "hits": 2,
+            "stakeYen": 3000,
+            "payoutYen": 3640,
+            "hitRate": 0.6666666666666666,
+            "provisionalRoi": 1.2133333333333334
+          }
+        },
+        "06": {
+          "3": {
+            "settled": 4,
+            "hits": 2,
+            "stakeYen": 4000,
+            "payoutYen": 12950,
+            "hitRate": 0.5,
+            "provisionalRoi": 3.2375
+          },
+          "5": {
+            "settled": 4,
+            "hits": 2,
+            "stakeYen": 4000,
+            "payoutYen": 7260,
+            "hitRate": 0.5,
+            "provisionalRoi": 1.815
+          },
+          "7": {
+            "settled": 4,
+            "hits": 2,
+            "stakeYen": 4000,
+            "payoutYen": 7260,
+            "hitRate": 0.5,
+            "provisionalRoi": 1.815
+          },
+          "10": {
+            "settled": 4,
+            "hits": 3,
+            "stakeYen": 4000,
+            "payoutYen": 6290,
+            "hitRate": 0.75,
+            "provisionalRoi": 1.5725
+          }
+        },
+        "07": {
+          "3": {
+            "settled": 11,
+            "hits": 3,
+            "stakeYen": 11000,
+            "payoutYen": 10000,
+            "hitRate": 0.2727272727272727,
+            "provisionalRoi": 0.9090909090909091
+          },
+          "5": {
+            "settled": 11,
+            "hits": 4,
+            "stakeYen": 11000,
+            "payoutYen": 9520,
+            "hitRate": 0.36363636363636365,
+            "provisionalRoi": 0.8654545454545455
+          },
+          "7": {
+            "settled": 11,
+            "hits": 5,
+            "stakeYen": 11000,
+            "payoutYen": 10550,
+            "hitRate": 0.45454545454545453,
+            "provisionalRoi": 0.9590909090909091
+          },
+          "10": {
+            "settled": 11,
+            "hits": 5,
+            "stakeYen": 11000,
+            "payoutYen": 7040,
+            "hitRate": 0.45454545454545453,
+            "provisionalRoi": 0.64
+          }
+        },
+        "08": {
+          "3": {
+            "settled": 4,
+            "hits": 2,
+            "stakeYen": 4000,
+            "payoutYen": 5310,
+            "hitRate": 0.5,
+            "provisionalRoi": 1.3275
+          },
+          "5": {
+            "settled": 4,
+            "hits": 2,
+            "stakeYen": 4000,
+            "payoutYen": 3540,
+            "hitRate": 0.5,
+            "provisionalRoi": 0.885
+          },
+          "7": {
+            "settled": 4,
+            "hits": 2,
+            "stakeYen": 4000,
+            "payoutYen": 3540,
+            "hitRate": 0.5,
+            "provisionalRoi": 0.885
+          },
+          "10": {
+            "settled": 4,
+            "hits": 2,
+            "stakeYen": 4000,
+            "payoutYen": 1770,
+            "hitRate": 0.5,
+            "provisionalRoi": 0.4425
+          }
+        }
+      }
     }
   ]
 }
